@@ -1,6 +1,7 @@
 import { GithubIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import type { WeatherResponse } from "@/api/types";
 import { WeatherClientError } from "@/api/weather";
 import { HistoryList } from "@/components/history-list";
 import { SearchBar } from "@/components/search-bar";
@@ -46,6 +47,16 @@ export function App() {
 
   // ─── Fetch ───────────────────────────────────────────────────────────
   const query = useWeather({ query: activeQuery, source });
+
+  // ─── Last successful result (kept visible across query transitions) ──
+  // Survives the "input cleared → typing new city" gap so the user never
+  // sees the result area blink to empty between successful fetches.
+  const [lastResult, setLastResult] = useState<WeatherResponse | null>(null);
+  useEffect(() => {
+    if (query.isSuccess && query.data) {
+      setLastResult(query.data);
+    }
+  }, [query.isSuccess, query.data]);
 
   // ─── Add successful user-initiated fetches to history ────────────────
   const lastCommittedQuery = useRef<string | null>(null);
@@ -161,7 +172,7 @@ export function App() {
         />
 
         <div aria-live="polite" aria-busy={query.isFetching}>
-          <WeatherResult query={query} onRetry={handleRetry} />
+          <WeatherResult query={query} fallbackData={lastResult} onRetry={handleRetry} />
         </div>
 
         <HistoryList

@@ -21,6 +21,22 @@ if (typeof window !== "undefined" && !window.matchMedia) {
   });
 }
 
+// jsdom doesn't implement Pointer Capture APIs (used by Radix primitives).
+if (typeof Element !== "undefined") {
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!Element.prototype.setPointerCapture) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+}
+
 // Start MSW once for the whole test suite.
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
