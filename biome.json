@@ -7,7 +7,15 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!dist", "!.wrangler", "!node_modules", "!coverage"]
+    "includes": [
+      "**",
+      "!dist",
+      "!.wrangler",
+      "!node_modules",
+      "!coverage",
+      "!src/components/ui",
+      "!src/index.css"
+    ]
   },
   "formatter": {
     "enabled": true,

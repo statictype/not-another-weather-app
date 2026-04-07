@@ -21,14 +21,24 @@
     "ci": "biome ci . && pnpm typecheck && pnpm test:run && pnpm build"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.62.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.469.0",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.4.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
     "@cloudflare/vite-plugin": "^1.0.0",
     "@cloudflare/vitest-pool-workers": "^0.8.0",
     "@cloudflare/workers-types": "^4.20250101.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@tanstack/react-query-devtools": "^5.62.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
@@ -38,6 +48,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^25.0.1",
     "msw": "^2.7.0",
+    "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.0.0",
     "vitest": "^3.0.0",
