@@ -1,0 +1,10 @@
+{
+  // Wrangler config used ONLY by @cloudflare/vitest-pool-workers.
+  // It mirrors wrangler.jsonc but omits the static-asset binding,
+  // so tests don't require a prior `pnpm build`.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oasis-test",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"]
+}
