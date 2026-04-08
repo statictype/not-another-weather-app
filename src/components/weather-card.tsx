@@ -90,7 +90,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       {/* HERO ─── 8 col × 2 rows */}
       <section
         className={cn(
-          "swap-in swap-d-1 relative col-span-1 overflow-hidden rounded-[2rem] p-8 text-white sm:col-span-8 sm:row-span-2 sm:p-10",
+          "swap-in swap-d-1 relative col-span-1 overflow-hidden rounded-[2rem] p-8 text-white sm:col-span-12 sm:p-10 lg:col-span-8",
           isDay
             ? "bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 shadow-[0_30px_60px_-25px_rgba(56,140,255,0.55)]"
             : "hero-night shadow-[0_30px_60px_-25px_rgba(8,8,24,0.85)]",
@@ -152,7 +152,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       </section>
 
       {/* ATMOSPHERE ─── 4 col × 2 rows */}
-      <section className="swap-in swap-d-2 bento-tile flex flex-col p-7 sm:col-span-4 sm:row-span-2">
+      <section className="swap-in swap-d-2 bento-tile flex flex-col p-7 sm:col-span-6 sm:row-span-2 lg:col-span-4 lg:row-span-1">
         <ul className="flex flex-1 flex-col divide-y divide-foreground/10">
         <AtmosphereRow
             icon={DropletsIcon}
@@ -183,8 +183,8 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
         </ul>
       </section>
 
-      {/* SKY (sunrise/sunset/moon) ─── 3 col */}
-      <section className="swap-in swap-d-3 tile-sun bento-tile relative overflow-hidden p-7 sm:col-span-3">
+      {/* LOCAL TIME */}
+      <section className="swap-in swap-d-3 tile-sun bento-tile relative overflow-hidden p-7 sm:col-span-6 lg:col-span-2">
         {isDay && (
           <div className="absolute -right-16 -top-16 size-56 rounded-full bg-rose-300/40 blur-3xl" />
         )}
@@ -199,10 +199,11 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
             </span>
           </p>
         </div>
+      </section>
 
-        <div className="bg-foreground/10 relative mt-6 h-px w-full" />
-
-        <div className="relative mt-5 flex flex-col gap-3.5">
+      {/* ASTRO (sunrise/sunset/moon) */}
+      <section className="swap-in swap-d-3b bento-tile relative overflow-hidden p-7 sm:col-span-6 lg:col-span-4">
+        <div className="flex flex-col lg:divide-y lg:divide-foreground/10">
           <SkyRow
             icon={
               <SunriseIcon
@@ -240,25 +241,25 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       </section>
 
       {/* WIND ─── 5 col */}
-      <section className="swap-in swap-d-4 tile-wind bento-tile relative overflow-hidden p-7 sm:col-span-5">
+      <section className="swap-in swap-d-4 tile-wind bento-tile relative overflow-hidden p-7 sm:col-span-8 lg:col-span-4">
         <WindIcon
           className="text-foreground/30 absolute -right-6 -top-6 size-44"
           strokeWidth={0.9}
           aria-hidden="true"
         />
         <TileLabel>Wind</TileLabel>
-        <div className="relative mt-4 flex items-baseline gap-3">
-          <span className="font-display text-7xl leading-[0.85] tracking-tight sm:text-[6rem]">
+        <div className="relative mt-2 flex items-baseline gap-2">
+          <span className="font-display text-5xl leading-[0.85] tracking-tight">
             {Math.round(current.windKph)}
           </span>
-          <span className="font-display font-light text-foreground/55 text-xl">
+          <span className="font-display font-light text-foreground/55 text-base">
             km/h
           </span>
         </div>
-        <p className="font-display font-normal text-foreground/55 mt-3 text-xs uppercase tracking-[0.18em]">
+        <p className="font-display font-normal text-foreground/55 mt-1.5 text-xs uppercase tracking-[0.18em]">
           {beaufort(current.windKph)}
         </p>
-        <div className="relative mt-5 grid grid-cols-3 gap-4 border-t border-foreground/10 pt-4">
+        <div className="relative mt-3 grid grid-cols-3 gap-3 border-t border-foreground/10 pt-3">
           <WindStat
             label="Direction"
             value={current.windDir}
@@ -280,7 +281,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       {/* UV INDEX ─── 4 col */}
       <section
         className={cn(
-          "swap-in swap-d-5 bento-tile relative overflow-hidden p-7 sm:col-span-4",
+          "swap-in swap-d-5 bento-tile relative overflow-hidden p-7 sm:col-span-4 lg:col-span-2",
           !isDay && "tile-uv-off opacity-55",
         )}
         style={{ background: isDay ? uvTint(current.uv ?? 0) : undefined }}
@@ -293,7 +294,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
         <TileLabel>UV index</TileLabel>
         <p
           className={cn(
-            "font-display mt-4 text-7xl leading-none tracking-tight",
+            "font-display mt-4 text-5xl leading-none tracking-tight",
             !isDay && "text-white/25",
           )}
         >
@@ -310,12 +311,11 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       <section className="swap-in swap-d-6 bento-tile flex flex-col p-7 sm:col-span-12">
         <div
           className={cn(
-            "mt-4 grid grid-cols-1 gap-4 sm:gap-0 sm:divide-x sm:divide-foreground/10",
-            days.length === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3",
+            "mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-0 sm:gap-y-6 sm:[&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(odd)]:border-foreground/10 md:grid-cols-4 md:gap-0 md:[&>*]:border-r md:[&>*]:border-foreground/10 md:[&>*:last-child]:border-r-0",
           )}
         >
-          {days.map(({ day, label }, i) => (
-            <div key={day.date} className={cn("sm:px-6", i === 0 && "sm:pl-0")}>
+          {days.map(({ day, label }) => (
+            <div key={day.date} className="sm:px-6">
               <ForecastRow day={day} label={label} />
             </div>
           ))}
@@ -388,8 +388,8 @@ function SkyRow({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="bg-foreground/10 shrink-0 rounded-xl p-1.5 backdrop-blur">{icon}</div>
+    <div className="flex items-center gap-3 py-2 first:pt-0 last:pb-0 lg:py-3">
+      <div className="bg-foreground/10 shrink-0 rounded-xl p-2 backdrop-blur">{icon}</div>
       <div>
         <p className="font-display text-base leading-tight tracking-tight">{value}</p>
         <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.16em]">
@@ -433,7 +433,7 @@ function WindStat({ label, value, sub }: { label: string; value: string; sub?: s
       <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.18em]">
         {label}
       </p>
-      <p className="font-display mt-1 text-2xl tracking-tight">
+      <p className="font-display mt-0.5 text-lg tracking-tight">
         {value}
         {sub && (
           <span className="font-display font-light text-foreground/45 ml-1 text-sm">{sub}</span>
