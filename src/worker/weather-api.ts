@@ -11,6 +11,17 @@ import type { ForecastDay, WeatherResponse } from "./types";
 
 const UPSTREAM_BASE = "https://api.weatherapi.com/v1/forecast.json";
 const UPSTREAM_HISTORY = "https://api.weatherapi.com/v1/history.json";
+const UPSTREAM_SEARCH = "https://api.weatherapi.com/v1/search.json";
+
+export interface SearchResult {
+  id: number;
+  name: string;
+  region: string;
+  country: string;
+  lat: number;
+  lon: number;
+  url: string;
+}
 
 /**
  * Subset of the WeatherAPI response we actually use. Anything not listed
@@ -255,4 +266,44 @@ function shape(raw: UpstreamForecast): WeatherResponse {
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10;
+}
+
+export async function fetchSearch(
+  query: string,
+  apiKey: string,
+  signal?: AbortSignal,
+): Promise<SearchResult[]> {
+  const url = new URL(UPSTREAM_SEARCH);
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("q", query);
+
+  let res: Response;
+  try {
+    res = await fetch(url.toString(), {
+      ...(signal ? { signal } : {}),
+      headers: { Accept: "application/json" },
+    });
+  } catch (err) {
+    console.error("[oasis] search upstream fetch threw", err);
+    throw new WeatherApiError("network", "Could not reach weather service.");
+  }
+
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch (err) {
+    console.error("[oasis] search upstream returned non-JSON body", res.status, err);
+    throw new WeatherApiError("upstream", "Weather service returned an invalid response.");
+  }
+
+  if (!res.ok) {
+    const upstreamError = body as { error?: { code?: number } };
+    const code = upstreamError?.error?.code;
+    if (typeof code === "number") {
+      throw mapUpstreamErrorCode(code);
+    }
+    throw new WeatherApiError("upstream", "Weather service is unavailable.");
+  }
+
+  return body as SearchResult[];
 }

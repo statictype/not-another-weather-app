@@ -1,5 +1,5 @@
-import { FileTextIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
-import { type FormEvent, useEffect, useId, useState } from "react";
+import { FileTextIcon, MapPinIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
+import { type FormEvent, useId, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,70 +13,85 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
 
-const DEBOUNCE_MS = 500;
-const MIN_LENGTH = 3;
+const MIN_SUGGESTION_LENGTH = 3;
 
 interface SearchBarProps {
   value: string;
   onValueChange: (next: string) => void;
-  onCommit: (query: string) => void;
-  onActiveQueryChange: (query: string | null) => void;
-  inlineError?: string | null;
   recentItems: HistoryItem[];
+  suggestions: SuggestionItem[];
+  isSuggestionsLoading: boolean;
+  onSuggestionSelect: (item: SuggestionItem) => void;
   onRecentSelect: (item: HistoryItem) => void;
   onRecentRemove: (item: HistoryItem) => void;
   onRecentClearAll: () => void;
 }
 
 /**
- * Search input with a recent-searches dropdown.
+ * Search input with an adaptive dropdown:
+ *   - focused + empty → recent searches
+ *   - focused + 1–2 chars → filtered recents + "keep typing" hint
+ *   - focused + 3+ chars → filtered recents on top, then city suggestions
  *
- * The dropdown opens whenever the input is focused and there is at least
- * one recent item. Items use mousedown+preventDefault so clicking them
- * doesn't blur the input before the click registers.
+ * Weather is only fetched when the user explicitly selects a city (suggestion
+ * or recent item). Typing alone never triggers a fetch.
  */
 export function SearchBar({
   value,
   onValueChange,
-  onCommit,
-  onActiveQueryChange,
-  inlineError,
   recentItems,
+  suggestions,
+  isSuggestionsLoading,
+  onSuggestionSelect,
   onRecentSelect,
   onRecentRemove,
   onRecentClearAll,
 }: SearchBarProps) {
   const inputId = useId();
-  const errorId = useId();
-  const debounced = useDebouncedValue(value, DEBOUNCE_MS);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [hasFocus, setHasFocus] = useState(false);
+  const [showSelectPrompt, setShowSelectPrompt] = useState(false);
 
-  useEffect(() => {
-    const trimmed = debounced.trim();
-    onActiveQueryChange(trimmed.length >= MIN_LENGTH ? trimmed : null);
-  }, [debounced, onActiveQueryChange]);
+  const trimmed = value.trim();
+  const len = trimmed.length;
+
+  // Filter recent items by case-insensitive substring match when there's input.
+  const filteredRecent =
+    len === 0
+      ? recentItems
+      : recentItems.filter((item) =>
+          item.displayName.toLowerCase().includes(trimmed.toLowerCase()),
+        );
+
+  const showDropdown =
+    hasFocus && (recentItems.length > 0 || len > 0);
+
+  function handleChange(next: string) {
+    onValueChange(next);
+    if (showSelectPrompt) setShowSelectPrompt(false);
+  }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const trimmed = value.trim();
-    if (trimmed.length >= MIN_LENGTH) {
-      onCommit(trimmed);
+    if (len >= MIN_SUGGESTION_LENGTH) {
+      setShowSelectPrompt(true);
     }
   }
 
-  function handleBlur() {
-    setHasFocus(false);
-    const trimmed = value.trim();
-    if (trimmed.length >= MIN_LENGTH) {
-      onCommit(trimmed);
-    }
+  function handleRecentSelect(item: HistoryItem) {
+    setShowSelectPrompt(false);
+    inputRef.current?.blur();
+    onRecentSelect(item);
   }
 
-  const showError = !!inlineError && !hasFocus;
-  const showDropdown = hasFocus && recentItems.length > 0;
+  function handleSuggestionSelect(item: SuggestionItem) {
+    setShowSelectPrompt(false);
+    inputRef.current?.blur();
+    onSuggestionSelect(item);
+  }
 
   return (
     <search>
@@ -96,6 +111,7 @@ export function SearchBar({
               aria-hidden="true"
             />
             <Input
+              ref={inputRef}
               id={inputId}
               type="search"
               inputMode="search"
@@ -103,11 +119,9 @@ export function SearchBar({
               spellCheck={false}
               placeholder="Search a city…"
               value={value}
-              onChange={(e) => onValueChange(e.target.value)}
+              onChange={(e) => handleChange(e.target.value)}
               onFocus={() => setHasFocus(true)}
-              onBlur={handleBlur}
-              aria-invalid={showError ? true : undefined}
-              aria-describedby={showError ? errorId : undefined}
+              onBlur={() => setHasFocus(false)}
               className="font-display font-light h-auto flex-1 border-0 bg-transparent p-0 text-xl tracking-tight shadow-none placeholder:font-light placeholder:text-foreground/35 focus-visible:ring-0 sm:text-2xl"
             />
             <kbd className="text-foreground/60 hidden rounded-lg bg-white/80 px-2.5 py-1.5 font-mono text-xs sm:inline-block">
@@ -116,25 +130,123 @@ export function SearchBar({
           </div>
 
           {showDropdown && (
-            <RecentDropdown
-              items={recentItems}
-              onSelect={onRecentSelect}
-              onRemove={onRecentRemove}
-              onClearAll={onRecentClearAll}
+            <SearchDropdown
+              trimmed={trimmed}
+              filteredRecent={filteredRecent}
+              allRecent={recentItems}
+              suggestions={suggestions}
+              isSuggestionsLoading={isSuggestionsLoading}
+              showSelectPrompt={showSelectPrompt}
+              onRecentSelect={handleRecentSelect}
+              onRecentRemove={onRecentRemove}
+              onRecentClearAll={onRecentClearAll}
+              onSuggestionSelect={handleSuggestionSelect}
             />
           )}
         </div>
-        {showError && (
-          <p id={errorId} role="alert" className="text-destructive mt-2 pl-6 text-sm">
-            {inlineError}
-          </p>
-        )}
       </form>
     </search>
   );
 }
 
-function RecentDropdown({
+function SearchDropdown({
+  trimmed,
+  filteredRecent,
+  allRecent,
+  suggestions,
+  isSuggestionsLoading,
+  showSelectPrompt,
+  onRecentSelect,
+  onRecentRemove,
+  onRecentClearAll,
+  onSuggestionSelect,
+}: {
+  trimmed: string;
+  filteredRecent: HistoryItem[];
+  allRecent: HistoryItem[];
+  suggestions: SuggestionItem[];
+  isSuggestionsLoading: boolean;
+  showSelectPrompt: boolean;
+  onRecentSelect: (item: HistoryItem) => void;
+  onRecentRemove: (item: HistoryItem) => void;
+  onRecentClearAll: () => void;
+  onSuggestionSelect: (item: SuggestionItem) => void;
+}) {
+  const len = trimmed.length;
+
+  return (
+    <div className="bg-popover text-popover-foreground absolute left-0 right-0 top-full z-20 mt-2 max-h-[60vh] overflow-y-auto rounded-3xl border border-border p-3 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.25)]">
+      {/* Empty input: show all recent searches */}
+      {len === 0 && allRecent.length > 0 && (
+        <RecentSection
+          items={allRecent}
+          onSelect={onRecentSelect}
+          onRemove={onRecentRemove}
+          onClearAll={onRecentClearAll}
+        />
+      )}
+
+      {/* 1–2 chars: filtered recents + keep-typing hint */}
+      {len > 0 && len < MIN_SUGGESTION_LENGTH && (
+        <>
+          {filteredRecent.length > 0 && (
+            <RecentSection
+              items={filteredRecent}
+              onSelect={onRecentSelect}
+              onRemove={onRecentRemove}
+              onClearAll={onRecentClearAll}
+            />
+          )}
+          <p className="px-3 py-3 text-sm text-foreground/50">
+            Keep typing to see city suggestions…
+          </p>
+        </>
+      )}
+
+      {/* 3+ chars: filtered recents on top, then suggestions */}
+      {len >= MIN_SUGGESTION_LENGTH && (
+        <>
+          {filteredRecent.length > 0 && (
+            <RecentSection
+              items={filteredRecent}
+              onSelect={onRecentSelect}
+              onRemove={onRecentRemove}
+              onClearAll={onRecentClearAll}
+            />
+          )}
+
+          {isSuggestionsLoading ? (
+            <SuggestionsLoading />
+          ) : suggestions.length > 0 ? (
+            <SuggestionsList
+              items={suggestions}
+              showHeader={filteredRecent.length > 0}
+              onSelect={onSuggestionSelect}
+            />
+          ) : !isSuggestionsLoading && filteredRecent.length === 0 ? (
+            <p className="px-3 py-3 text-sm text-foreground/50">No cities found.</p>
+          ) : null}
+
+          {showSelectPrompt && (
+            <p role="alert" className="px-3 pt-1 pb-2 text-sm text-destructive">
+              Select a city from the list to search.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <span className="font-display font-normal text-foreground/55 text-[11px] uppercase tracking-[0.18em]">
+      {label}
+    </span>
+  );
+}
+
+function RecentSection({
   items,
   onSelect,
   onRemove,
@@ -146,11 +258,9 @@ function RecentDropdown({
   onClearAll: () => void;
 }) {
   return (
-    <div className="bg-popover text-popover-foreground absolute left-0 right-0 top-full z-20 mt-2 max-h-[60vh] overflow-y-auto rounded-3xl border border-border p-3 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.25)]">
+    <div>
       <div className="flex items-center justify-between px-3 pb-2 pt-1">
-        <span className="font-display font-normal text-foreground/55 text-[11px] uppercase tracking-[0.18em]">
-          Recent
-        </span>
+        <SectionHeader label="Recent" />
         <ClearAllButton onConfirm={onClearAll} />
       </div>
       <ul className="flex flex-col">
@@ -190,6 +300,69 @@ function RecentDropdown({
         ))}
       </ul>
     </div>
+  );
+}
+
+function SuggestionsList({
+  items,
+  showHeader,
+  onSelect,
+}: {
+  items: SuggestionItem[];
+  showHeader: boolean;
+  onSelect: (item: SuggestionItem) => void;
+}) {
+  return (
+    <div>
+      {showHeader && (
+        <div className="px-3 pb-2 pt-3">
+          <SectionHeader label="Suggestions" />
+        </div>
+      )}
+      <ul className="flex flex-col">
+        {items.map((item) => {
+          const label = [item.name, item.region, item.country].filter(Boolean).join(", ");
+          return (
+            <li
+              key={item.id}
+              className="hover:bg-muted flex items-center gap-3 rounded-2xl px-3 py-2.5"
+            >
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onSelect(item);
+                }}
+                className="flex flex-1 items-center gap-3 text-left focus-visible:outline-none"
+                aria-label={`Search weather for ${label}`}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-foreground/15 text-foreground/60">
+                  <MapPinIcon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                </span>
+                <span className="font-display font-normal text-base text-foreground tracking-tight">
+                  {label}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function SuggestionsLoading() {
+  return (
+    <ul className="flex flex-col">
+      {[1, 2, 3].map((i) => (
+        <li key={i} className="flex items-center gap-3 rounded-2xl px-3 py-2.5">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-foreground/15">
+            <MapPinIcon className="size-4 text-foreground/20" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <span className="h-4 w-40 animate-pulse rounded bg-foreground/10" />
+        </li>
+      ))}
+    </ul>
   );
 }
 

@@ -8,6 +8,16 @@
  * purpose so duplication is cheap and explicit.
  */
 
+export interface SuggestionItem {
+  id: number;
+  name: string;
+  region: string;
+  country: string;
+  lat: number;
+  lon: number;
+  url: string;
+}
+
 export type WeatherErrorKind =
   | "not_found"
   | "quota_exceeded"

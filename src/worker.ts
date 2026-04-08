@@ -1,3 +1,4 @@
+import { handleSearch } from "./worker/search-handler";
 import { handleWeather } from "./worker/handler";
 import type { Env } from "./worker/types";
 
@@ -15,6 +16,10 @@ export default {
 
     if (url.pathname === "/api/weather" && request.method === "GET") {
       return handleWeather(request, env);
+    }
+
+    if (url.pathname === "/api/search" && request.method === "GET") {
+      return handleSearch(request, env);
     }
 
     if (url.pathname.startsWith("/api/")) {

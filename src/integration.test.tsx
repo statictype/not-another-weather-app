@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "@/App";
-import type { WeatherResponse } from "@/api/types";
+import type { SuggestionItem, WeatherResponse } from "@/api/types";
 import { __resetHistoryStoreForTests } from "@/hooks/use-history";
 import { server } from "@/test/msw-server";
 
@@ -72,6 +72,16 @@ const parisFixture: WeatherResponse = {
   current: { ...londonFixture.current, tempC: 18.0, conditionText: "Sunny", conditionCode: 1000 },
 };
 
+const londonSuggestion: SuggestionItem = {
+  id: 1,
+  name: "London",
+  region: "Greater London",
+  country: "United Kingdom",
+  lat: 51.52,
+  lon: -0.11,
+  url: "london-greater-london-united-kingdom",
+};
+
 function renderApp() {
   __resetHistoryStoreForTests();
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
@@ -84,7 +94,6 @@ function renderApp() {
 
 beforeEach(() => {
   __resetHistoryStoreForTests();
-  // Default handler: route by query so the same setup serves multiple cities.
   server.use(
     http.get("/api/weather", ({ request }) => {
       const q = new URL(request.url).searchParams.get("q")?.toLowerCase() ?? "";
@@ -95,11 +104,16 @@ beforeEach(() => {
         { status: 404 },
       );
     }),
+    http.get("/api/search", ({ request }) => {
+      const q = new URL(request.url).searchParams.get("q")?.toLowerCase() ?? "";
+      if (q.includes("london")) return HttpResponse.json([londonSuggestion]);
+      return HttpResponse.json([]);
+    }),
   );
 });
 
 describe("Oasis (integration)", () => {
-  it("typing a city debounces, fetches, renders the card, and adds to history", async () => {
+  it("selecting a city suggestion fetches weather, renders the card, and adds to history", async () => {
     const user = userEvent.setup();
     renderApp();
 
@@ -109,40 +123,36 @@ describe("Oasis (integration)", () => {
     const input = screen.getByLabelText(/city/i);
     await user.type(input, "London");
 
+    // Suggestion appears in the dropdown.
+    const suggestion = await screen.findByRole("button", { name: /search weather for london/i });
+    await user.click(suggestion);
+
     // Card eventually appears with the right condition and rounded temperature.
     await screen.findByText(/partly cloudy/i);
     expect(screen.getByText("12")).toBeInTheDocument();
 
-    // History entry for London appears in the dropdown once committed.
-    await user.tab();
+    // History entry for London appears when re-opening the dropdown.
     await user.click(input);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();
     });
   });
 
-  it("shows an inline validation error for unknown cities and keeps the previous card", async () => {
+  it("pressing Enter without selecting shows a validation error and does not fetch", async () => {
     const user = userEvent.setup();
     renderApp();
 
     const input = screen.getByLabelText(/city/i);
     await user.type(input, "London");
-    await screen.findByText(/partly cloudy/i);
-    await user.tab(); // commit London
+    await user.keyboard("{Enter}");
 
-    // Now type an unknown city.
-    await user.click(input);
-    await user.clear(input);
-    await user.type(input, "Xyznotacity");
-    await user.tab(); // blur to defocus, error becomes visible
-
-    // Inline error surfaces.
+    // Select-prompt error shown inside the dropdown.
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent(/no city named/i);
+      expect(screen.getByRole("alert")).toHaveTextContent(/select a city from the list/i);
     });
 
-    // Previous London card should still be on screen.
-    expect(screen.getByText(/partly cloudy/i)).toBeInTheDocument();
+    // No weather card loaded — empty state heading still present.
+    expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
   });
 
   it("removes a history item, shows undo toast, and restores it", async () => {
@@ -151,8 +161,10 @@ describe("Oasis (integration)", () => {
 
     const input = screen.getByLabelText(/city/i);
     await user.type(input, "London");
+
+    const suggestion = await screen.findByRole("button", { name: /search weather for london/i });
+    await user.click(suggestion);
     await screen.findByText(/partly cloudy/i);
-    await user.tab();
 
     // Re-focus input to open the recent dropdown.
     await user.click(input);

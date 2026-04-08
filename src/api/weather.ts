@@ -1,4 +1,4 @@
-import type { WeatherErrorKind, WeatherResponse } from "./types";
+import type { SuggestionItem, WeatherErrorKind, WeatherResponse } from "./types";
 
 /**
  * Typed client for the Oasis proxy at `/api/weather`.
@@ -67,6 +67,34 @@ function statusToKind(status: number): WeatherErrorKind {
     default:
       return "upstream";
   }
+}
+
+export async function fetchSearch(query: string, signal?: AbortSignal): Promise<SuggestionItem[]> {
+  const url = `/api/search?q=${encodeURIComponent(query)}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, signal ? { signal } : undefined);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw err;
+    }
+    throw new WeatherClientError("network", "Could not reach the weather service.");
+  }
+
+  if (!res.ok) {
+    let body: ErrorBody = {};
+    try {
+      body = (await res.json()) as ErrorBody;
+    } catch {
+      // ignore
+    }
+    const kind = body.error?.kind ?? statusToKind(res.status);
+    const message = body.error?.message ?? defaultMessage(kind);
+    throw new WeatherClientError(kind, message);
+  }
+
+  return (await res.json()) as SuggestionItem[];
 }
 
 function defaultMessage(kind: WeatherErrorKind): string {

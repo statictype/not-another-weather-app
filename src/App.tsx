@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { WeatherResponse } from "@/api/types";
-import { WeatherClientError } from "@/api/weather";
+import type { SuggestionItem, WeatherResponse } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
 import { Toaster } from "@/components/ui/sonner";
 import { WeatherResult } from "@/components/weather-result";
 import { type HistoryItem, useHistory } from "@/hooks/use-history";
+import { useSuggestions } from "@/hooks/use-suggestions";
 import { useUndo } from "@/hooks/use-undo";
 import { useWeather, type WeatherSource } from "@/hooks/use-weather";
 
@@ -25,8 +25,10 @@ export function App() {
   } = useHistory();
   const undo = useUndo<HistoryItem>(5000);
 
+  // ─── City suggestions (debounced, 3+ chars) ──────────────────────────
+  const suggestions = useSuggestions(inputValue);
+
   // ─── Auto-load most-recent on first mount ────────────────────────────
-  // Use a ref guard so React Strict Mode's double-effect doesn't fight us.
   const didAutoLoad = useRef(false);
   useEffect(() => {
     if (didAutoLoad.current) return;
@@ -34,21 +36,16 @@ export function App() {
 
     const mostRecent = history[0];
     if (mostRecent) {
-      setInputValue(mostRecent.query);
+      setInputValue("");
       setActiveQuery(mostRecent.query);
       setSource("auto");
     }
-    // The ref guard above ensures this body only runs once even though
-    // `history` is in the dep array — we just need a value-stable trigger
-    // so the linter is happy and we can read the initial snapshot.
   }, [history]);
 
   // ─── Fetch ───────────────────────────────────────────────────────────
   const query = useWeather({ query: activeQuery, source });
 
   // ─── Last successful result (kept visible across query transitions) ──
-  // Survives the "input cleared → typing new city" gap so the user never
-  // sees the result area blink to empty between successful fetches.
   const [lastResult, setLastResult] = useState<WeatherResponse | null>(null);
   useEffect(() => {
     if (query.isSuccess && query.data) {
@@ -77,23 +74,23 @@ export function App() {
     setSource("user");
   }, []);
 
-  const handleActiveQueryChange = useCallback((next: string | null) => {
-    setActiveQuery(next);
-  }, []);
-
-  const handleCommit = useCallback((q: string) => {
-    setSource("user");
+  // ─── Suggestion / history selection (the only things that trigger a fetch) ──
+  const handleSuggestionSelect = useCallback((item: SuggestionItem) => {
+    const q = item.region
+      ? `${item.name}, ${item.region}, ${item.country}`
+      : `${item.name}, ${item.country}`;
+    setInputValue("");
     setActiveQuery(q);
+    setSource("user");
   }, []);
 
-  // ─── History interactions ────────────────────────────────────────────
   const handleHistorySelect = useCallback((item: HistoryItem) => {
-    setInputValue(item.query);
+    setInputValue("");
     setActiveQuery(item.query);
     setSource("user");
-    lastCommittedQuery.current = item.query.toLowerCase();
   }, []);
 
+  // ─── History management ──────────────────────────────────────────────
   const handleHistoryRemove = useCallback(
     (item: HistoryItem) => {
       removeHistory(item.id);
@@ -127,15 +124,6 @@ export function App() {
     });
   }, [history, clearHistory, undo, restore]);
 
-  // ─── Inline error: only `not_found` from a user query, only when the
-  //     active query still matches what triggered the error. ───────────
-  const inlineError =
-    query.error instanceof WeatherClientError &&
-    query.error.kind === "not_found" &&
-    source === "user"
-      ? `No city named "${activeQuery}" found. Check the spelling?`
-      : null;
-
   const handleRetry = useCallback(() => {
     void query.refetch();
   }, [query]);
@@ -160,10 +148,10 @@ export function App() {
             <SearchBar
               value={inputValue}
               onValueChange={handleValueChange}
-              onCommit={handleCommit}
-              onActiveQueryChange={handleActiveQueryChange}
-              inlineError={inlineError}
               recentItems={history}
+              suggestions={suggestions.data}
+              isSuggestionsLoading={suggestions.isLoading}
+              onSuggestionSelect={handleSuggestionSelect}
               onRecentSelect={handleHistorySelect}
               onRecentRemove={handleHistoryRemove}
               onRecentClearAll={handleClearAll}
