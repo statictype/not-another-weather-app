@@ -21,10 +21,10 @@ body,
  */
 
 @theme inline {
-  --font-sans: "PT Sans", system-ui, sans-serif;
-  --font-display: "Nunito", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-serif: "Nunito", system-ui, sans-serif;
+  --font-sans: "Work Sans", system-ui, sans-serif;
+  --font-display: "Work Sans", system-ui, sans-serif;
+  --font-mono: "Work Sans", ui-monospace, monospace;
+  --font-serif: "Work Sans", system-ui, sans-serif;
   --radius: 1.25rem;
   --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
   --tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -226,20 +226,46 @@ body,
 }
 
 /* ---break--- sky atmosphere */
-html, body { background: oklch(0.9750 0.0180 235); }
+html, body { background: oklch(0.13 0.008 250); }
 
 .sky {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
+}
+.sky::before,
+.sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transition: opacity 1.2s ease;
+}
+/* Day layer */
+.sky::before {
+  opacity: 1;
   background:
     radial-gradient(60vw 60vw at 8% 0%, oklch(0.90 0.08 220 / 0.85), transparent 60%),
     radial-gradient(55vw 55vw at 100% 12%, oklch(0.92 0.07 195 / 0.8), transparent 60%),
     radial-gradient(50vw 50vw at 80% 100%, oklch(0.93 0.06 260 / 0.7), transparent 60%),
     radial-gradient(45vw 45vw at 0% 100%, oklch(0.94 0.05 320 / 0.6), transparent 60%),
     linear-gradient(180deg, oklch(0.97 0.02 230), oklch(0.95 0.03 220));
+}
+/* Night layer — very dark, barely tinted */
+.sky::after {
+  opacity: 0;
+  background:
+    radial-gradient(70vw 70vw at 12% 0%, oklch(0.20 0.025 250 / 0.55), transparent 65%),
+    radial-gradient(55vw 55vw at 100% 20%, oklch(0.18 0.02 240 / 0.45), transparent 60%),
+    radial-gradient(50vw 50vw at 85% 100%, oklch(0.17 0.025 270 / 0.55), transparent 65%),
+    linear-gradient(180deg, oklch(0.135 0.01 250), oklch(0.115 0.008 245));
+}
+.sky.night::before {
+  opacity: 0;
+}
+.sky.night::after {
+  opacity: 1;
 }
 
 .card-surface {
@@ -271,12 +297,85 @@ html, body { background: oklch(0.9750 0.0180 235); }
     0 20px 40px -18px oklch(0.4 0.15 240 / 0.35);
 }
 
-.tile-sun   { background: linear-gradient(160deg, oklch(0.95 0.08 90 / 0.9), oklch(0.90 0.10 60 / 0.6)); }
+.tile-sun   { background: linear-gradient(160deg, oklch(0.95 0.04 15 / 0.9), oklch(0.91 0.06 355 / 0.55)); }
 .tile-wind  { background: linear-gradient(160deg, oklch(0.94 0.06 200 / 0.9), oklch(0.88 0.09 220 / 0.6)); }
 .tile-drop  { background: linear-gradient(160deg, oklch(0.94 0.06 240 / 0.9), oklch(0.86 0.10 250 / 0.6)); }
 .tile-rain  { background: linear-gradient(160deg, oklch(0.93 0.07 270 / 0.9), oklch(0.86 0.10 285 / 0.6)); }
 .tile-temp  { background: linear-gradient(160deg, oklch(0.94 0.07 30 / 0.9),  oklch(0.88 0.10 15 / 0.6));  }
 .tile-feels { background: linear-gradient(160deg, oklch(0.94 0.06 160 / 0.9), oklch(0.88 0.09 175 / 0.6)); }
+
+/* ── Night overrides ─────────────────────────────────────────────── */
+/* Scoped under .night (applied on the App root when current is night). */
+.night {
+  --foreground: oklch(0.95 0.008 240);
+  --background: oklch(0.13 0.008 250);
+  --card: oklch(0.20 0.015 250);
+  --card-foreground: oklch(0.95 0.008 240);
+  --popover: oklch(0.18 0.015 250);
+  --popover-foreground: oklch(0.95 0.008 240);
+  --muted: oklch(0.22 0.015 250);
+  --muted-foreground: oklch(0.70 0.01 240);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.08);
+}
+
+/* Search input / glass surfaces */
+.night .card-surface {
+  background:
+    linear-gradient(180deg, oklch(0.22 0.015 250 / 0.85), oklch(0.18 0.02 255 / 0.55));
+  border: 1px solid oklch(1 0 0 / 0.1);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.06) inset,
+    0 30px 60px -30px oklch(0 0 0 / 0.6),
+    0 8px 24px -12px oklch(0 0 0 / 0.35);
+}
+
+/* Generic tiles — only a touch lighter than the page bg */
+.night .bento-tile {
+  background:
+    linear-gradient(160deg, oklch(0.17 0.012 255 / 0.9), oklch(0.15 0.015 260 / 0.6));
+  border: 1px solid oklch(1 0 0 / 0.06);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.04) inset,
+    0 12px 30px -18px oklch(0 0 0 / 0.6);
+}
+.night .bento-tile:hover {
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.06) inset,
+    0 20px 40px -18px oklch(0 0 0 / 0.7);
+}
+
+/* Sky tile: elegant muted rose / mauve */
+.night .tile-sun {
+  background:
+    linear-gradient(160deg, oklch(0.22 0.04 15 / 0.9), oklch(0.16 0.05 355 / 0.6));
+}
+/* Wind tile: muted deep indigo */
+.night .tile-wind {
+  background:
+    linear-gradient(160deg, oklch(0.20 0.05 280 / 0.9), oklch(0.15 0.06 275 / 0.6));
+}
+/* UV tile at night — fully greyed, no hue, flatter than active tiles */
+.night .tile-uv-off {
+  background:
+    linear-gradient(160deg, oklch(0.15 0 0 / 0.7), oklch(0.13 0 0 / 0.5));
+  border-color: oklch(1 0 0 / 0.04);
+}
+
+/* Hero night: dark blue → indigo → near-black */
+.hero-night {
+  background:
+    linear-gradient(135deg,
+      oklch(0.22 0.08 250) 0%,
+      oklch(0.16 0.07 260) 45%,
+      oklch(0.10 0.05 270) 100%);
+}
+
+/* Tighter dividers and borders in dark tiles */
+.night .divide-foreground\/10 > :not([hidden]) ~ :not([hidden]),
+.night .border-foreground\/10 {
+  border-color: oklch(1 0 0 / 0.1) !important;
+}
 
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }

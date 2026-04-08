@@ -1,9 +1,7 @@
-import { GithubIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { WeatherResponse } from "@/api/types";
 import { WeatherClientError } from "@/api/weather";
-import { HistoryList } from "@/components/history-list";
 import { SearchBar } from "@/components/search-bar";
 import { Toaster } from "@/components/ui/sonner";
 import { WeatherResult } from "@/components/weather-result";
@@ -143,51 +141,38 @@ export function App() {
   }, [query]);
 
   return (
-    <div className="text-foreground relative min-h-screen overflow-x-hidden">
-      <div className="sky" aria-hidden="true" />
+    <div
+      className={`text-foreground relative min-h-screen overflow-x-hidden${
+        (query.data ?? lastResult)?.current.timeOfDay === "night" ? " night" : ""
+      }`}
+    >
+      <div
+        className={`sky${(query.data ?? lastResult)?.current.timeOfDay === "night" ? " night" : ""}`}
+        aria-hidden="true"
+      />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
-        <header className="rise rise-1 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-300 to-blue-500 text-white shadow-[0_8px_20px_-6px_rgba(56,140,255,0.6)]">
-              <span className="font-display text-2xl leading-none">O</span>
-            </div>
-            <h1 className="font-display font-light text-3xl tracking-tight">
-              Oasis
-            </h1>
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
+        <header className="rise rise-1 relative z-30 mb-8 flex items-center gap-6">
+          <h1 className="font-display font-light text-2xl sm:text-3xl tracking-tight shrink-0">
+            not another weather app
+          </h1>
+          <div className="flex-1 min-w-0">
+            <SearchBar
+              value={inputValue}
+              onValueChange={handleValueChange}
+              onCommit={handleCommit}
+              onActiveQueryChange={handleActiveQueryChange}
+              inlineError={inlineError}
+              recentItems={history}
+              onRecentSelect={handleHistorySelect}
+              onRecentRemove={handleHistoryRemove}
+              onRecentClearAll={handleClearAll}
+            />
           </div>
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="text-foreground/70 hover:text-foreground inline-flex size-11 items-center justify-center rounded-2xl bg-white/60 backdrop-blur-sm transition hover:bg-white/90"
-            aria-label="GitHub repository"
-          >
-            <GithubIcon className="size-5" aria-hidden="true" strokeWidth={2} />
-          </a>
         </header>
 
-        <div className="rise rise-2">
-          <SearchBar
-            value={inputValue}
-            onValueChange={handleValueChange}
-            onCommit={handleCommit}
-            onActiveQueryChange={handleActiveQueryChange}
-            inlineError={inlineError}
-          />
-        </div>
-
-        <div className="rise rise-3 mt-5">
-          <HistoryList
-            items={history}
-            onSelect={handleHistorySelect}
-            onRemove={handleHistoryRemove}
-            onClearAll={handleClearAll}
-          />
-        </div>
-
         <div
-          className="rise rise-4 mt-6 flex-1"
+          className="rise rise-3 flex-1"
           aria-live="polite"
           aria-busy={query.isFetching}
         >
