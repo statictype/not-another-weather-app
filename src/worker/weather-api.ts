@@ -1,5 +1,5 @@
 import { WeatherApiError } from "./errors";
-import type { WeatherResponse } from "./types";
+import type { ForecastDay, WeatherResponse } from "./types";
 
 /**
  * Upstream client for WeatherAPI.com.
@@ -10,6 +10,7 @@ import type { WeatherResponse } from "./types";
  */
 
 const UPSTREAM_BASE = "https://api.weatherapi.com/v1/forecast.json";
+const UPSTREAM_HISTORY = "https://api.weatherapi.com/v1/history.json";
 
 /**
  * Subset of the WeatherAPI response we actually use. Anything not listed
@@ -21,6 +22,7 @@ interface UpstreamForecast {
     region: string;
     country: string;
     localtime: string;
+    tz_id: string;
     lat: number;
     lon: number;
   };
@@ -103,6 +105,17 @@ export async function fetchForecast(
   url.searchParams.set("aqi", "no");
   url.searchParams.set("alerts", "no");
 
+  // Run forecast + yesterday in parallel. Yesterday failures don't fail the
+  // whole request — we just return null and the UI omits the column.
+  const [forecast, yesterday] = await Promise.all([
+    fetchUpstream(url, signal),
+    fetchYesterday(query, apiKey, signal),
+  ]);
+
+  return { ...shape(forecast), yesterday };
+}
+
+async function fetchUpstream(url: URL, signal?: AbortSignal): Promise<UpstreamForecast> {
   let res: Response;
   try {
     res = await fetch(url.toString(), {
@@ -114,8 +127,6 @@ export async function fetchForecast(
     throw new WeatherApiError("network", "Could not reach weather service.");
   }
 
-  // Try to parse the body either way — both success and error responses
-  // are JSON, and we need the body to determine the error kind.
   let body: unknown;
   try {
     body = await res.json();
@@ -134,7 +145,47 @@ export async function fetchForecast(
     throw new WeatherApiError("upstream", "Weather service is unavailable.");
   }
 
-  return shape(body as UpstreamForecast);
+  return body as UpstreamForecast;
+}
+
+async function fetchYesterday(
+  query: string,
+  apiKey: string,
+  signal?: AbortSignal,
+): Promise<ForecastDay | null> {
+  // UTC-based "yesterday". Good enough for the free tier; the upstream
+  // resolves the date against the queried location anyway.
+  const d = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const dt = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+
+  const url = new URL(UPSTREAM_HISTORY);
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("q", query);
+  url.searchParams.set("dt", dt);
+
+  try {
+    const res = await fetch(url.toString(), {
+      ...(signal ? { signal } : {}),
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as UpstreamForecast;
+    const day = body.forecast?.forecastday?.[0];
+    if (!day) return null;
+    return {
+      date: day.date,
+      minC: round1(day.day.mintemp_c),
+      maxC: round1(day.day.maxtemp_c),
+      avgC: round1(day.day.avgtemp_c),
+      chanceOfRain: day.day.daily_chance_of_rain,
+      conditionText: day.day.condition.text,
+      conditionCode: day.day.condition.code,
+      isDay: true,
+    };
+  } catch (err) {
+    console.warn("[oasis] yesterday fetch failed (non-fatal)", err);
+    return null;
+  }
 }
 
 function shape(raw: UpstreamForecast): WeatherResponse {
@@ -151,6 +202,7 @@ function shape(raw: UpstreamForecast): WeatherResponse {
       region: raw.location.region,
       country: raw.location.country,
       localTime: raw.location.localtime,
+      tz: raw.location.tz_id,
       lat: raw.location.lat,
       lon: raw.location.lon,
     },
@@ -176,6 +228,7 @@ function shape(raw: UpstreamForecast): WeatherResponse {
       maxC: round1(today.day.maxtemp_c),
       chanceOfRain: today.day.daily_chance_of_rain,
     },
+    yesterday: null,
     forecast: raw.forecast.forecastday.map((d) => ({
       date: d.date,
       minC: round1(d.day.mintemp_c),

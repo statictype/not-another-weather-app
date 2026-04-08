@@ -24,6 +24,7 @@ const londonFixture: WeatherResponse = {
     region: "Greater London",
     country: "United Kingdom",
     localTime: "",
+    tz: "Europe/London",
     lat: 51.52,
     lon: -0.11,
   },
@@ -46,6 +47,7 @@ const londonFixture: WeatherResponse = {
   },
   today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
   forecast: [],
+  yesterday: null,
   astro: {
     sunrise: "06:32 AM",
     sunset: "07:48 PM",
@@ -63,6 +65,7 @@ const parisFixture: WeatherResponse = {
     region: "Île-de-France",
     country: "France",
     localTime: "",
+    tz: "Europe/London",
     lat: 48.85,
     lon: 2.35,
   },

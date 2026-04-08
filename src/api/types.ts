@@ -41,6 +41,7 @@ export interface WeatherResponse {
     region: string;
     country: string;
     localTime: string;
+    tz: string;
     lat: number;
     lon: number;
   };
@@ -67,5 +68,6 @@ export interface WeatherResponse {
     chanceOfRain: number;
   };
   forecast: ForecastDay[];
+  yesterday: ForecastDay | null;
   astro: Astro;
 }

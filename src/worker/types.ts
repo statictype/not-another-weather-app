@@ -57,6 +57,8 @@ export interface WeatherResponse {
     country: string;
     /** ISO 8601 local time at the queried location. */
     localTime: string;
+    /** IANA timezone id, e.g. "America/Anchorage". */
+    tz: string;
     lat: number;
     lon: number;
   };
@@ -84,5 +86,7 @@ export interface WeatherResponse {
     chanceOfRain: number;
   };
   forecast: ForecastDay[];
+  /** Previous day at the queried location, when available (free tier: 1 day). */
+  yesterday: ForecastDay | null;
   astro: Astro;
 }

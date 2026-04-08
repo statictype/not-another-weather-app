@@ -10,6 +10,7 @@ const okFixture: WeatherResponse = {
     region: "",
     country: "UK",
     localTime: "2026-04-07T14:32",
+    tz: "Europe/London",
     lat: 51.52,
     lon: -0.11,
   },
@@ -32,6 +33,7 @@ const okFixture: WeatherResponse = {
   },
   today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
   forecast: [],
+  yesterday: null,
   astro: {
     sunrise: "06:32 AM",
     sunset: "07:48 PM",

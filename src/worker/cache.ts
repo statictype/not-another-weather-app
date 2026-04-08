@@ -39,7 +39,7 @@ export function buildCacheKey(normalizedQuery: string): Request {
   const url = new URL("/weather", CACHE_KEY_HOST);
   url.searchParams.set("q", normalizedQuery);
   // Bump when the DTO shape changes so old entries are skipped.
-  url.searchParams.set("v", "2");
+  url.searchParams.set("v", "4");
   return new Request(url.toString(), { method: "GET" });
 }
 

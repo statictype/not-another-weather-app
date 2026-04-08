@@ -32,6 +32,7 @@ const upstreamFixture = {
     region: "City of London, Greater London",
     country: "United Kingdom",
     localtime: "2026-04-07 14:32",
+    tz_id: "Europe/London",
     lat: 51.52,
     lon: -0.11,
   },
