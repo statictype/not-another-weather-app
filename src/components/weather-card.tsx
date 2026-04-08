@@ -96,18 +96,12 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
             : "hero-night shadow-[0_30px_60px_-25px_rgba(8,8,24,0.85)]",
         )}
       >
-        <div
-          className={cn(
-            "absolute -right-24 -top-24 size-80 rounded-full blur-3xl",
-            isDay ? "bg-white/20" : "bg-indigo-500/15",
-          )}
-        />
-        <div
-          className={cn(
-            "absolute -bottom-32 -left-16 size-80 rounded-full blur-3xl",
-            isDay ? "bg-cyan-300/40" : "bg-violet-600/20",
-          )}
-        />
+        {isDay && (
+          <>
+            <div className="absolute -right-24 -top-24 size-80 rounded-full bg-white/20 blur-3xl" />
+            <div className="absolute -bottom-32 -left-16 size-80 rounded-full bg-cyan-300/40 blur-3xl" />
+          </>
+        )}
 
         {/* Decorative condition icon, behind the text */}
         <ConditionIcon
@@ -159,8 +153,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
 
       {/* ATMOSPHERE ─── 4 col × 2 rows */}
       <section className="swap-in swap-d-2 bento-tile flex flex-col p-7 sm:col-span-4 sm:row-span-2">
-      <TileLabel>Atmosphere</TileLabel>
-        <ul className="mt-2 flex flex-1 flex-col divide-y divide-foreground/10">
+        <ul className="flex flex-1 flex-col divide-y divide-foreground/10">
         <AtmosphereRow
             icon={DropletsIcon}
             label="Humidity"
@@ -370,7 +363,7 @@ function AtmosphereRow({
       <div className="flex items-center gap-3">
         <Icon className="text-foreground/55 size-6" strokeWidth={1.5} aria-hidden="true" />
         <div className="flex flex-col">
-          <span className="font-display font-normal text-foreground/65 text-sm uppercase tracking-[0.14em]">
+          <span className="font-display font-normal text-foreground/65 text-xs uppercase tracking-[0.14em]">
             {label}
           </span>
           {sub && (
@@ -380,7 +373,7 @@ function AtmosphereRow({
           )}
         </div>
       </div>
-      <span className="font-display text-2xl tracking-tight">{value}</span>
+      <span className="font-display text-xl tracking-tight">{value}</span>
     </li>
   );
 }
