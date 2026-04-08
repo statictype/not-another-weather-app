@@ -21,6 +21,8 @@ interface UpstreamForecast {
     region: string;
     country: string;
     localtime: string;
+    lat: number;
+    lon: number;
   };
   current: {
     temp_c: number;
@@ -29,14 +31,32 @@ interface UpstreamForecast {
     condition: { text: string; code: number };
     wind_kph: number;
     wind_dir: string;
+    gust_kph: number;
     humidity: number;
+    pressure_mb: number;
+    vis_km: number;
+    uv: number;
+    cloud: number;
+    dewpoint_c: number;
+    precip_mm: number;
   };
   forecast: {
     forecastday: Array<{
+      date: string;
       day: {
         mintemp_c: number;
         maxtemp_c: number;
+        avgtemp_c: number;
         daily_chance_of_rain: number;
+        condition: { text: string; code: number };
+      };
+      astro: {
+        sunrise: string;
+        sunset: string;
+        moonrise: string;
+        moonset: string;
+        moon_phase: string;
+        moon_illumination: number | string;
       };
     }>;
   };
@@ -79,7 +99,7 @@ export async function fetchForecast(
   const url = new URL(UPSTREAM_BASE);
   url.searchParams.set("key", apiKey);
   url.searchParams.set("q", query);
-  url.searchParams.set("days", "1");
+  url.searchParams.set("days", "3");
   url.searchParams.set("aqi", "no");
   url.searchParams.set("alerts", "no");
 
@@ -131,6 +151,8 @@ function shape(raw: UpstreamForecast): WeatherResponse {
       region: raw.location.region,
       country: raw.location.country,
       localTime: raw.location.localtime,
+      lat: raw.location.lat,
+      lon: raw.location.lon,
     },
     current: {
       tempC: round1(raw.current.temp_c),
@@ -140,12 +162,40 @@ function shape(raw: UpstreamForecast): WeatherResponse {
       timeOfDay: raw.current.is_day === 1 ? "day" : "night",
       windKph: round1(raw.current.wind_kph),
       windDir: raw.current.wind_dir,
+      gustKph: round1(raw.current.gust_kph ?? 0),
       humidity: raw.current.humidity,
+      pressureMb: round1(raw.current.pressure_mb ?? 0),
+      visibilityKm: round1(raw.current.vis_km ?? 0),
+      uv: raw.current.uv ?? 0,
+      cloud: raw.current.cloud ?? 0,
+      dewpointC: round1(raw.current.dewpoint_c ?? 0),
+      precipMm: round1(raw.current.precip_mm ?? 0),
     },
     today: {
       minC: round1(today.day.mintemp_c),
       maxC: round1(today.day.maxtemp_c),
       chanceOfRain: today.day.daily_chance_of_rain,
+    },
+    forecast: raw.forecast.forecastday.map((d) => ({
+      date: d.date,
+      minC: round1(d.day.mintemp_c),
+      maxC: round1(d.day.maxtemp_c),
+      avgC: round1(d.day.avgtemp_c),
+      chanceOfRain: d.day.daily_chance_of_rain,
+      conditionText: d.day.condition.text,
+      conditionCode: d.day.condition.code,
+      isDay: true,
+    })),
+    astro: {
+      sunrise: today.astro.sunrise,
+      sunset: today.astro.sunset,
+      moonrise: today.astro.moonrise,
+      moonset: today.astro.moonset,
+      moonPhase: today.astro.moon_phase,
+      moonIllumination:
+        typeof today.astro.moon_illumination === "string"
+          ? Number.parseInt(today.astro.moon_illumination, 10) || 0
+          : today.astro.moon_illumination,
     },
   };
 }

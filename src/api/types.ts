@@ -15,12 +15,34 @@ export type WeatherErrorKind =
   | "upstream"
   | "network";
 
+export interface ForecastDay {
+  date: string;
+  minC: number;
+  maxC: number;
+  avgC: number;
+  chanceOfRain: number;
+  conditionText: string;
+  conditionCode: number;
+  isDay: boolean;
+}
+
+export interface Astro {
+  sunrise: string;
+  sunset: string;
+  moonrise: string;
+  moonset: string;
+  moonPhase: string;
+  moonIllumination: number;
+}
+
 export interface WeatherResponse {
   location: {
     name: string;
     region: string;
     country: string;
     localTime: string;
+    lat: number;
+    lon: number;
   };
   current: {
     tempC: number;
@@ -30,11 +52,20 @@ export interface WeatherResponse {
     timeOfDay: "day" | "night";
     windKph: number;
     windDir: string;
+    gustKph: number;
     humidity: number;
+    pressureMb: number;
+    visibilityKm: number;
+    uv: number;
+    cloud: number;
+    dewpointC: number;
+    precipMm: number;
   };
   today: {
     minC: number;
     maxC: number;
     chanceOfRain: number;
   };
+  forecast: ForecastDay[];
+  astro: Astro;
 }

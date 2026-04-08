@@ -8,7 +8,14 @@ import { server } from "@/test/msw-server";
 import { useWeather } from "./use-weather";
 
 const fixture: WeatherResponse = {
-  location: { name: "London", region: "", country: "UK", localTime: "2026-04-07T14:32" },
+  location: {
+    name: "London",
+    region: "",
+    country: "UK",
+    localTime: "2026-04-07T14:32",
+    lat: 51.52,
+    lon: -0.11,
+  },
   current: {
     tempC: 12.3,
     feelsLikeC: 11.1,
@@ -17,9 +24,25 @@ const fixture: WeatherResponse = {
     timeOfDay: "day",
     windKph: 14.4,
     windDir: "WSW",
+    gustKph: 22,
     humidity: 67,
+    pressureMb: 1015,
+    visibilityKm: 10,
+    uv: 4,
+    cloud: 40,
+    dewpointC: 6.2,
+    precipMm: 0,
   },
   today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+  forecast: [],
+  astro: {
+    sunrise: "06:32 AM",
+    sunset: "07:48 PM",
+    moonrise: "10:00 PM",
+    moonset: "08:14 AM",
+    moonPhase: "Waxing Gibbous",
+    moonIllumination: 72,
+  },
 };
 
 function makeWrapper() {

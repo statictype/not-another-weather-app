@@ -17,12 +17,23 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
  *   - normalize  → "London", " london ", "LONDON" all hit one cache entry
  */
 
+const upstreamAstro = {
+  sunrise: "06:32 AM",
+  sunset: "07:48 PM",
+  moonrise: "10:00 PM",
+  moonset: "08:14 AM",
+  moon_phase: "Waxing Gibbous",
+  moon_illumination: 72,
+};
+
 const upstreamFixture = {
   location: {
     name: "London",
     region: "City of London, Greater London",
     country: "United Kingdom",
     localtime: "2026-04-07 14:32",
+    lat: 51.52,
+    lon: -0.11,
   },
   current: {
     temp_c: 12.3456,
@@ -31,16 +42,27 @@ const upstreamFixture = {
     condition: { text: "Partly cloudy", code: 1003 },
     wind_kph: 14.4,
     wind_dir: "WSW",
+    gust_kph: 22,
     humidity: 67,
+    pressure_mb: 1015,
+    vis_km: 10,
+    uv: 4,
+    cloud: 40,
+    dewpoint_c: 6.2,
+    precip_mm: 0,
   },
   forecast: {
     forecastday: [
       {
+        date: "2026-04-07",
         day: {
           mintemp_c: 8.0,
           maxtemp_c: 15.5,
+          avgtemp_c: 11.7,
           daily_chance_of_rain: 20,
+          condition: { text: "Partly cloudy", code: 1003 },
         },
+        astro: upstreamAstro,
       },
     ],
   },

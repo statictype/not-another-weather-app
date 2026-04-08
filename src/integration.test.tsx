@@ -19,7 +19,14 @@ import { server } from "@/test/msw-server";
  */
 
 const londonFixture: WeatherResponse = {
-  location: { name: "London", region: "Greater London", country: "United Kingdom", localTime: "" },
+  location: {
+    name: "London",
+    region: "Greater London",
+    country: "United Kingdom",
+    localTime: "",
+    lat: 51.52,
+    lon: -0.11,
+  },
   current: {
     tempC: 12.3,
     feelsLikeC: 11.1,
@@ -28,14 +35,37 @@ const londonFixture: WeatherResponse = {
     timeOfDay: "day",
     windKph: 14,
     windDir: "WSW",
+    gustKph: 22,
     humidity: 67,
+    pressureMb: 1015,
+    visibilityKm: 10,
+    uv: 4,
+    cloud: 40,
+    dewpointC: 6.2,
+    precipMm: 0,
   },
   today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+  forecast: [],
+  astro: {
+    sunrise: "06:32 AM",
+    sunset: "07:48 PM",
+    moonrise: "10:00 PM",
+    moonset: "08:14 AM",
+    moonPhase: "Waxing Gibbous",
+    moonIllumination: 72,
+  },
 };
 
 const parisFixture: WeatherResponse = {
   ...londonFixture,
-  location: { name: "Paris", region: "Île-de-France", country: "France", localTime: "" },
+  location: {
+    name: "Paris",
+    region: "Île-de-France",
+    country: "France",
+    localTime: "",
+    lat: 48.85,
+    lon: 2.35,
+  },
   current: { ...londonFixture.current, tempC: 18.0, conditionText: "Sunny", conditionCode: 1000 },
 };
 
