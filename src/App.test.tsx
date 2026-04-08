@@ -17,8 +17,10 @@ function renderApp() {
 describe("App (smoke)", () => {
   it("renders the header and the inviting empty state", () => {
     renderApp();
-    expect(screen.getByRole("heading", { name: /oasis/i, level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /where to/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /not another weather app/i, level: 1 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
   });
 
   it("renders the search input with a label", () => {

@@ -104,7 +104,7 @@ describe("Oasis (integration)", () => {
     renderApp();
 
     // Empty state visible.
-    expect(screen.getByRole("heading", { name: /where to/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
 
     const input = screen.getByLabelText(/city/i);
     await user.type(input, "London");
@@ -113,8 +113,9 @@ describe("Oasis (integration)", () => {
     await screen.findByText(/partly cloudy/i);
     expect(screen.getByText("12")).toBeInTheDocument();
 
-    // History chip for London appears once we commit (blur is enough).
+    // History entry for London appears in the dropdown once committed.
     await user.tab();
+    await user.click(input);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();
     });
@@ -153,7 +154,8 @@ describe("Oasis (integration)", () => {
     await screen.findByText(/partly cloudy/i);
     await user.tab();
 
-    // Wait for the success effect to commit London to history.
+    // Re-focus input to open the recent dropdown.
+    await user.click(input);
     await screen.findByRole("button", { name: /load weather for london/i });
 
     const removeBtn = await screen.findByRole("button", {
@@ -170,7 +172,8 @@ describe("Oasis (integration)", () => {
     const undoBtn = await screen.findByRole("button", { name: /^undo$/i });
     await user.click(undoBtn);
 
-    // History entry restored.
+    // Re-open the dropdown to verify the entry is back.
+    await user.click(input);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();
     });
