@@ -103,50 +103,56 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
           </>
         )}
 
-        {/* Decorative condition icon, behind the text */}
-        <ConditionIcon
-          className={cn(
-            "pointer-events-none absolute right-[30%] top-1/2 hidden size-48 -translate-y-1/2 sm:block",
-            isDay ? "text-white" : "text-[oklch(0.52_0.02_250)]",
-          )}
-          strokeWidth={1}
-          aria-hidden="true"
-        />
+        <div className="relative flex h-full flex-col gap-1">
+          {/* Location label — always full width */}
+          <p className="font-display font-medium text-xs uppercase tracking-[0.22em] text-white/80">
+            {[location.region, location.country].filter(Boolean).join(" · ") || "Now"}
+          </p>
 
-        <div className="relative grid h-full grid-cols-1 gap-6 sm:grid-cols-[minmax(0,55%)_auto] sm:items-center">
-          {/* Left: city + temp + feels like */}
-          <div className="flex min-w-0 flex-col">
-            <p className="font-display font-medium text-xs uppercase tracking-[0.22em] text-white/80">
-              {[location.region, location.country].filter(Boolean).join(" · ") || "Now"}
-            </p>
-            <h2 className="font-display font-light mt-2 text-balance text-3xl leading-[0.95] tracking-tight sm:text-4xl md:text-5xl">
-              {location.name}
-            </h2>
-            <div className="mt-6 flex items-start">
-              <span className="font-display text-[5.5rem] leading-[0.78] tracking-[-0.06em] sm:text-[7rem]">
-                {Math.round(current.tempC)}
-              </span>
-              <span className="font-display font-light mt-3 ml-2 text-3xl text-white/70">
-                °C
-              </span>
+          {/* Mobile: 2-col [left content | icon], condition details full-width below.
+              sm+:    3-col [left | icon | right] */}
+          <div className="grid flex-1 grid-cols-[1fr_auto] items-start gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-1">
+            {/* Left: city + temp + feels like */}
+            <div className="flex min-w-0 flex-col">
+              <h2 className="font-display font-light text-balance text-3xl leading-[0.95] tracking-tight sm:text-4xl 2xl:text-5xl">
+                {location.name}
+              </h2>
+              <div className="mt-4 flex items-start sm:mt-6">
+                <span className="font-display text-[4rem] leading-[0.78] tracking-[-0.06em] sm:text-[5.5rem] lg:text-[7rem]">
+                  {Math.round(current.tempC)}
+                </span>
+                <span className="font-display font-light mt-3 ml-2 text-3xl text-white/70">°C</span>
+              </div>
+              <p className="font-display font-medium mt-2 text-xs uppercase tracking-[0.2em] text-white/85">
+                Feels like {Math.round(current.feelsLikeC)}°
+              </p>
             </div>
-            <p className="font-display font-medium mt-2 text-xs uppercase tracking-[0.2em] text-white/85">
-              Feels like {Math.round(current.feelsLikeC)}°
-            </p>
-          </div>
 
-          {/* Right: condition details */}
-          <div className="flex flex-col gap-3 text-right">
-            <p className="font-display font-normal text-2xl sm:text-3xl">
-              {current.conditionText}
-            </p>
-            <p className="font-display font-normal text-sm text-white/90">
-              {today.chanceOfRain}% chance of rain
-            </p>
-            <p className="font-display font-normal text-white/90">
-              <span className="text-xl">{Math.round(today.maxC)}°</span>
-              <span className="text-sm"> / {Math.round(today.minC)}°</span>
-            </p>
+            {/* Mobile: top-right icon. sm+: center column */}
+            <div className="flex items-start justify-center pt-3 sm:items-center sm:px-3 sm:pt-0">
+              <ConditionIcon
+                className={cn(
+                  "size-20 sm:size-28 md:size-36 lg:size-40 xl:size-52",
+                  isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
+                )}
+                strokeWidth={1}
+                aria-hidden="true"
+              />
+            </div>
+
+            {/* Mobile: full-width below. sm+: right column */}
+            <div className="col-span-2 mt-3 flex flex-col gap-1.5 text-right sm:col-span-1 sm:mt-0 sm:gap-3">
+              <p className="font-display font-normal text-xl sm:text-2xl 2xl:text-3xl">
+                {current.conditionText}
+              </p>
+              <p className="font-display font-normal text-sm text-white/90">
+                {today.chanceOfRain}% chance of rain
+              </p>
+              <p className="font-display font-normal text-white/90">
+                <span className="text-xl">{Math.round(today.maxC)}°</span>
+                <span className="text-sm"> / {Math.round(today.minC)}°</span>
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -154,16 +160,8 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       {/* ATMOSPHERE ─── 4 col × 2 rows */}
       <section className="swap-in swap-d-2 bento-tile flex flex-col p-7 sm:col-span-6 sm:row-span-2 lg:col-span-4 lg:row-span-1">
         <ul className="flex flex-1 flex-col divide-y divide-foreground/10">
-        <AtmosphereRow
-            icon={DropletsIcon}
-            label="Humidity"
-            value={`${current.humidity}%`}
-          />
-          <AtmosphereRow
-            icon={CloudIcon}
-            label="Cloud cover"
-            value={`${current.cloud ?? 0}%`}
-          />
+          <AtmosphereRow icon={DropletsIcon} label="Humidity" value={`${current.humidity}%`} />
+          <AtmosphereRow icon={CloudIcon} label="Cloud cover" value={`${current.cloud ?? 0}%`} />
           <AtmosphereRow
             icon={GaugeIcon}
             label="Pressure"
@@ -184,19 +182,16 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       </section>
 
       {/* LOCAL TIME */}
-      <section className="swap-in swap-d-3 tile-sun bento-tile relative overflow-hidden p-7 sm:col-span-6 lg:col-span-2">
+      <section className="swap-in swap-d-3 tile-sun flex items-center bento-tile relative overflow-hidden p-7 sm:col-span-6 lg:col-span-2">
         {isDay && (
           <div className="absolute -right-16 -top-16 size-56 rounded-full bg-rose-300/40 blur-3xl" />
         )}
         <div className="relative">
-          <p className="font-display font-normal text-foreground/55 text-xs uppercase tracking-[0.2em]">
+          <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.2em] 2xl:text-xs">
             Local time
           </p>
-          <p className="font-display font-light mt-2 text-5xl leading-none tracking-tight">
-            {localTime.replace(/\s?(am|pm)$/, "")}
-            <span className="font-display font-normal text-foreground/50 ml-1.5 align-baseline text-xl">
-              {localTime.match(/(am|pm)$/)?.[0] ?? ""}
-            </span>
+          <p className="font-display font-light mt-2 text-4xl leading-none tracking-tight lg:text-2xl xl:text-4xl 2xl:text-5xl">
+            {localTime}
           </p>
         </div>
       </section>
@@ -252,11 +247,9 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
           <span className="font-display text-5xl leading-[0.85] tracking-tight">
             {Math.round(current.windKph)}
           </span>
-          <span className="font-display font-light text-foreground/55 text-base">
-            km/h
-          </span>
+          <span className="font-display font-light text-foreground/55 text-base">km/h</span>
         </div>
-        <p className="font-display font-normal text-foreground/55 mt-1.5 text-xs uppercase tracking-[0.18em]">
+        <p className="font-display font-normal text-foreground/55 mt-1.5 text-[10px] uppercase tracking-[0.18em] 2xl:text-xs">
           {beaufort(current.windKph)}
         </p>
         <div className="relative mt-3 grid grid-cols-3 gap-3 border-t border-foreground/10 pt-3">
@@ -265,16 +258,8 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
             value={current.windDir}
             sub={compassDegrees(current.windDir)}
           />
-          <WindStat
-            label="Gusts"
-            value={`${Math.round(current.gustKph ?? 0)}`}
-            sub="km/h"
-          />
-          <WindStat
-            label="In mph"
-            value={`${Math.round(current.windKph * 0.621371)}`}
-            sub="mph"
-          />
+          <WindStat label="Gusts" value={`${Math.round(current.gustKph ?? 0)}`} sub="km/h" />
+          <WindStat label="In mph" value={`${Math.round(current.windKph * 0.621371)}`} sub="mph" />
         </div>
       </section>
 
@@ -332,15 +317,9 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
 
 /* ─────────────── helpers ─────────────── */
 
-function TileLabel({
-  children,
-  icon,
-}: {
-  children: React.ReactNode;
-  icon?: React.ReactNode;
-}) {
+function TileLabel({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <p className="font-display font-normal text-foreground/55 flex items-center gap-2 text-xs uppercase tracking-[0.2em]">
+    <p className="font-display font-normal text-foreground/55 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] 2xl:text-xs">
       {icon}
       {children}
     </p>
@@ -367,9 +346,7 @@ function AtmosphereRow({
             {label}
           </span>
           {sub && (
-            <span className="font-display font-light text-foreground/45 text-[11px]">
-              {sub}
-            </span>
+            <span className="font-display font-light text-foreground/45 text-[11px]">{sub}</span>
           )}
         </div>
       </div>
@@ -378,15 +355,7 @@ function AtmosphereRow({
   );
 }
 
-function SkyRow({
-  icon,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-}) {
+function SkyRow({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
     <div className="flex items-center gap-3 py-2 first:pt-0 last:pb-0 lg:py-3">
       <div className="bg-foreground/10 shrink-0 rounded-xl p-2 backdrop-blur">{icon}</div>
@@ -404,11 +373,7 @@ function ForecastRow({ day, label }: { day: ForecastDay; label: string }) {
   const Icon = conditionIcon(day.conditionText, day.isDay);
   return (
     <div className="flex items-center gap-3">
-      <Icon
-        className="text-foreground/60 size-10 shrink-0"
-        strokeWidth={1.5}
-        aria-hidden="true"
-      />
+      <Icon className="text-foreground/60 size-10 shrink-0" strokeWidth={1.5} aria-hidden="true" />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.18em]">
           {label}
@@ -461,10 +426,22 @@ function beaufort(kph: number): string {
 
 function compassDegrees(dir: string): string {
   const map: Record<string, number> = {
-    N: 0, NNE: 22.5, NE: 45, ENE: 67.5,
-    E: 90, ESE: 112.5, SE: 135, SSE: 157.5,
-    S: 180, SSW: 202.5, SW: 225, WSW: 247.5,
-    W: 270, WNW: 292.5, NW: 315, NNW: 337.5,
+    N: 0,
+    NNE: 22.5,
+    NE: 45,
+    ENE: 67.5,
+    E: 90,
+    ESE: 112.5,
+    SE: 135,
+    SSE: 157.5,
+    S: 180,
+    SSW: 202.5,
+    SW: 225,
+    WSW: 247.5,
+    W: 270,
+    WNW: 292.5,
+    NW: 315,
+    NNW: 337.5,
   };
   const deg = map[dir.toUpperCase()];
   return deg !== undefined ? `${deg}°` : "";
