@@ -54,28 +54,28 @@ export function HistoryList({ items, onSelect, onRemove, onClearAll }: HistoryLi
   }
 
   return (
-    <section aria-labelledby={headingId} className="space-y-3">
-      <div className="flex items-center justify-between">
+    <section aria-labelledby={headingId}>
+      <div className="mb-3 flex items-center justify-between px-1">
         <h2
           id={headingId}
-          className="text-muted-foreground flex items-center gap-2 text-xs uppercase tracking-wider"
+          className="font-display font-normal text-foreground/60 flex items-center gap-2 text-xs uppercase tracking-[0.2em]"
         >
-          <ClockIcon className="size-3.5" aria-hidden="true" />
+          <ClockIcon className="size-5" strokeWidth={1.75} aria-hidden="true" />
           Recent
         </h2>
         <ClearAllButton onConfirm={onClearAll} />
       </div>
-      <ul ref={listRef} className="flex flex-wrap gap-2">
+      <ul ref={listRef} className="flex flex-wrap gap-2.5">
         {items.map((item, index) => (
           <li
             key={item.id}
-            className="bg-secondary/40 hover:bg-secondary group inline-flex items-center rounded-full transition-colors"
+            className="group relative inline-flex items-stretch overflow-hidden rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_10px_24px_-12px_rgba(56,140,255,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:from-sky-500 hover:to-blue-600 hover:shadow-[0_18px_32px_-12px_rgba(56,140,255,0.7)]"
           >
             <button
               type="button"
               data-history-primary="true"
               onClick={() => onSelect(item)}
-              className="rounded-l-full py-1.5 pl-4 pr-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="font-display font-normal flex items-center gap-2 py-2.5 pl-4 pr-3 text-base tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
               aria-label={`Load weather for ${item.displayName}`}
             >
               {item.displayName}
@@ -83,10 +83,10 @@ export function HistoryList({ items, onSelect, onRemove, onClearAll }: HistoryLi
             <button
               type="button"
               onClick={() => handleRemove(item, index)}
-              className="text-muted-foreground hover:text-foreground rounded-r-full py-1.5 pl-1 pr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex items-center justify-center pr-3 pl-1 text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
               aria-label={`Remove ${item.displayName} from history`}
             >
-              <XIcon className="size-3.5" aria-hidden="true" />
+              <XIcon className="size-4" strokeWidth={3} aria-hidden="true" />
             </button>
           </li>
         ))}
@@ -102,7 +102,7 @@ function ClearAllButton({ onConfirm }: { onConfirm: () => void }) {
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-destructive h-7 px-2 text-xs"
+          className="text-foreground/60 hover:text-destructive h-7 px-2 text-xs uppercase tracking-wider"
         >
           <Trash2Icon className="size-3.5" aria-hidden="true" />
           Clear

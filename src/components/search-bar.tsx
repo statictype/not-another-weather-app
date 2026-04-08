@@ -68,13 +68,18 @@ export function SearchBar({
 
   return (
     <search>
-      <form onSubmit={handleSubmit} className="space-y-1.5">
-        <label htmlFor={inputId} className="text-sm font-medium tracking-wide">
-          City
+      <form onSubmit={handleSubmit}>
+        <label htmlFor={inputId} className="sr-only">
+          Search city
         </label>
-        <div className="relative">
+        <div
+          className={`card-surface flex items-center gap-4 rounded-3xl px-6 py-5 transition-all ${
+            hasFocus ? "ring-4 ring-sky-300/40" : ""
+          }`}
+        >
           <SearchIcon
-            className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2"
+            className="size-8 shrink-0 text-sky-500"
+            strokeWidth={2}
             aria-hidden="true"
           />
           <Input
@@ -83,18 +88,21 @@ export function SearchBar({
             inputMode="search"
             autoComplete="off"
             spellCheck={false}
-            placeholder="Try London, Tokyo, or São Paulo…"
+            placeholder="Search a city…"
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
             onFocus={() => setHasFocus(true)}
             onBlur={handleBlur}
             aria-invalid={showError ? true : undefined}
             aria-describedby={showError ? errorId : undefined}
-            className="pl-9 h-12 text-base"
+            className="font-display font-light h-auto flex-1 border-0 bg-transparent p-0 text-2xl tracking-tight shadow-none placeholder:font-light placeholder:text-foreground/35 focus-visible:ring-0 sm:text-3xl"
           />
+          <kbd className="text-foreground/60 hidden rounded-lg bg-white/80 px-2.5 py-1.5 font-mono text-xs sm:inline-block">
+            ↵
+          </kbd>
         </div>
         {showError && (
-          <p id={errorId} role="alert" className="text-destructive text-sm">
+          <p id={errorId} role="alert" className="text-destructive mt-2 pl-6 text-sm">
             {inlineError}
           </p>
         )}

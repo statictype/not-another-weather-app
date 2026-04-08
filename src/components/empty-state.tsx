@@ -10,19 +10,16 @@ import { CloudSunIcon } from "lucide-react";
  */
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-      <div className="rounded-full bg-secondary p-6">
-        <CloudSunIcon
-          className="size-12 text-secondary-foreground"
-          aria-hidden="true"
-          strokeWidth={1.5}
-        />
+    <div className="card-surface flex flex-col items-center justify-center gap-6 rounded-[2rem] px-6 py-24 text-center">
+      <div className="rounded-3xl bg-gradient-to-br from-sky-300 to-blue-500 p-8 text-white shadow-[0_20px_40px_-15px_rgba(56,140,255,0.6)]">
+        <CloudSunIcon className="size-16" aria-hidden="true" strokeWidth={2} />
       </div>
-      <div className="space-y-1">
-        <h2 className="font-serif text-2xl tracking-tight">Where to?</h2>
-        <p className="text-muted-foreground max-w-sm text-balance">
-          Type a city name above to see today's forecast. Recent searches will appear below for
-          one-click recall.
+      <div className="space-y-2">
+        <h2 className="font-display font-light text-3xl tracking-tight">
+          Pick a city to begin
+        </h2>
+        <p className="text-foreground/60 mx-auto max-w-md text-balance">
+          Search above or tap a recent destination.
         </p>
       </div>
     </div>
