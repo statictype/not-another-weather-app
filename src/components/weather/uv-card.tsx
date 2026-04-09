@@ -11,22 +11,30 @@ export function UvCard({ uv, isDay }: UvCardProps) {
     <section
       className={cn(
         "swap-in swap-d-5 bento-tile relative overflow-hidden p-7 sm:col-span-4 xl:col-span-2",
-        !isDay && "tile-uv-off opacity-55",
+        !isDay && "tile-uv-off",
       )}
       style={{ background: isDay ? uvTint(uv) : undefined }}
     >
       <ActivityIcon
-        className="text-foreground/30 absolute -right-6 -top-6 size-44"
+        className={cn(
+          "absolute -right-6 -top-6 size-44",
+          isDay ? "text-foreground/30" : "text-white/8",
+        )}
         strokeWidth={0.9}
         aria-hidden="true"
       />
-      <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.2em] 2xl:text-xs">
+      <p
+        className={cn(
+          "font-display font-normal text-[10px] uppercase tracking-[0.2em] 2xl:text-xs",
+          isDay ? "text-foreground/55" : "text-white/20",
+        )}
+      >
         UV index
       </p>
       <p
         className={cn(
           "font-display mt-4 text-5xl leading-none tracking-tight",
-          !isDay && "text-white/25",
+          !isDay && "text-white/15",
         )}
       >
         {isDay ? Math.round(uv) : "—"}

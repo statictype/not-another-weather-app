@@ -283,18 +283,11 @@ html, body { background: oklch(0.97 0.02 230); }
 .bento-tile {
   background:
     linear-gradient(160deg, oklch(1 0 0 / 0.9), oklch(0.97 0.03 230 / 0.5));
-  border: 1px solid oklch(1 0 0 / 0.9);
+  border: 1px solid transparent;
   box-shadow:
     0 1px 0 0 oklch(1 0 0 / 0.7) inset,
     0 12px 30px -18px oklch(0.4 0.15 240 / 0.25);
   border-radius: 1.75rem;
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s;
-}
-.bento-tile:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.8) inset,
-    0 20px 40px -18px oklch(0.4 0.15 240 / 0.35);
 }
 
 .tile-sun   { background: linear-gradient(160deg, oklch(0.97 0.09 350 / 0.95), oklch(0.93 0.16 335 / 0.7)); }
@@ -339,12 +332,6 @@ html, body { background: oklch(0.97 0.02 230); }
     0 1px 0 0 oklch(1 0 0 / 0.04) inset,
     0 12px 30px -18px oklch(0 0 0 / 0.6);
 }
-.night .bento-tile:hover {
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.06) inset,
-    0 20px 40px -18px oklch(0 0 0 / 0.7);
-}
-
 /* Sky tile: dark lavender */
 .night .tile-sun {
   background:
