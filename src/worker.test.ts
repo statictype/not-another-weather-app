@@ -180,6 +180,23 @@ describe("Worker /api/weather (current)", () => {
     expect(((await res.json()) as { error: { kind: string } }).error.kind).toBe("quota_exceeded");
   });
 
+  it("maps a structurally-broken upstream body to upstream / 502 without leaking field names", async () => {
+    const broken = structuredClone(upstreamCurrentFixture) as unknown as {
+      current: { temp_c: unknown };
+    };
+    broken.current.temp_c = "hot";
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/current.json") })
+      .reply(200, broken);
+
+    const res = await SELF.fetch("https://example.com/api/weather?q=CurrentSchemaReject");
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: { kind: string; message: string } };
+    expect(body.error.kind).toBe("upstream");
+    expect(body.error.message.toLowerCase()).not.toContain("temp");
+  });
+
   it("collapses unknown upstream errors to the generic upstream kind without leaking vendor detail", async () => {
     fetchMock
       .get("https://api.weatherapi.com")
@@ -272,6 +289,24 @@ describe("Worker /api/weather/forecast", () => {
     const res = await SELF.fetch("https://example.com/api/weather/forecast?q=");
     expect(res.status).toBe(400);
   });
+
+  it("maps a structurally-broken upstream body to upstream / 502 without leaking field names", async () => {
+    const broken = structuredClone(upstreamForecastFixture) as unknown as {
+      forecast: { forecastday: Array<{ day: { mintemp_c: unknown } }> };
+    };
+    // biome-ignore lint/style/noNonNullAssertion: fixture has three days
+    broken.forecast.forecastday[0]!.day.mintemp_c = null;
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, broken);
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastSchemaReject");
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: { kind: string; message: string } };
+    expect(body.error.kind).toBe("upstream");
+    expect(body.error.message.toLowerCase()).not.toContain("mintemp");
+  });
 });
 
 // ─── /api/weather/yesterday ─────────────────────────────────────────────
@@ -320,5 +355,21 @@ describe("Worker /api/weather/yesterday", () => {
   it("rejects empty queries with invalid_query", async () => {
     const res = await SELF.fetch("https://example.com/api/weather/yesterday?q=");
     expect(res.status).toBe(400);
+  });
+
+  it("keeps schema-rejected upstream non-fatal — 200 with { yesterday: null }", async () => {
+    // Missing `forecastday` — UpstreamForecastResponseSchema will throw,
+    // but the yesterday path swallows errors and returns null so the
+    // rest of the page still renders.
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/history.json") })
+      .reply(200, { location: upstreamLocation, forecast: {} });
+
+    const res = await SELF.fetch(
+      "https://example.com/api/weather/yesterday?q=YesterdaySchemaReject",
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ yesterday: null });
   });
 });

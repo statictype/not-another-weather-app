@@ -3,11 +3,11 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
-import type { WeatherCurrent } from "@/api/types";
+import type { WeatherCurrent, WeatherForecast, WeatherYesterday } from "@/api/types";
 import { server } from "@/test/msw-server";
-import { useWeather } from "./use-weather";
+import { useWeather, useWeatherForecast, useWeatherYesterday } from "./use-weather";
 
-const fixture: WeatherCurrent = {
+const currentFixture: WeatherCurrent = {
   location: {
     name: "London",
     region: "",
@@ -36,12 +36,40 @@ const fixture: WeatherCurrent = {
   },
 };
 
-function makeWrapper() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+const forecastFixture: WeatherForecast = {
+  today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+  forecast: [
+    {
+      date: "2026-04-07",
+      minC: 8,
+      maxC: 15.5,
+      avgC: 11.7,
+      chanceOfRain: 20,
+      conditionText: "Partly cloudy",
+      conditionCode: 1003,
+      isDay: true,
+    },
+  ],
+  astro: {
+    sunrise: "06:32 AM",
+    sunset: "07:48 PM",
+    moonrise: "10:00 PM",
+    moonset: "08:14 AM",
+    moonPhase: "Waxing Gibbous",
+    moonIllumination: 72,
+  },
+};
+
+const yesterdayFixture: WeatherYesterday = { yesterday: null };
+
+function makeWrapper(client?: QueryClient) {
+  const c =
+    client ??
+    new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
   return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    <QueryClientProvider client={c}>{children}</QueryClientProvider>
   );
 }
 
@@ -62,14 +90,14 @@ describe("useWeather", () => {
   });
 
   it("fetches and returns the DTO on success", async () => {
-    server.use(http.get("/api/weather", () => HttpResponse.json(fixture)));
+    server.use(http.get("/api/weather", () => HttpResponse.json(currentFixture)));
 
     const { result } = renderHook(() => useWeather({ query: "London" }), {
       wrapper: makeWrapper(),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual(fixture);
+    expect(result.current.data).toEqual(currentFixture);
   });
 
   it("surfaces typed errors with the correct kind", async () => {
@@ -88,5 +116,98 @@ describe("useWeather", () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.kind).toBe("not_found");
+  });
+
+  it("collapses whitespace so equivalent queries share one cache entry", async () => {
+    let calls = 0;
+    server.use(
+      http.get("/api/weather", () => {
+        calls += 1;
+        return HttpResponse.json(currentFixture);
+      }),
+    );
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = makeWrapper(client);
+
+    const first = renderHook(() => useWeather({ query: "New  York" }), { wrapper });
+    await waitFor(() => expect(first.result.current.isSuccess).toBe(true));
+
+    const second = renderHook(() => useWeather({ query: "New York" }), { wrapper });
+    await waitFor(() => expect(second.result.current.isSuccess).toBe(true));
+
+    // Protects the RFC 003 whitespace fix — the second mount hits the cache.
+    expect(calls).toBe(1);
+  });
+});
+
+describe("useWeatherForecast", () => {
+  it("is disabled when the query is too short", () => {
+    const { result } = renderHook(() => useWeatherForecast("Lo"), {
+      wrapper: makeWrapper(),
+    });
+    expect(result.current.fetchStatus).toBe("idle");
+  });
+
+  it("returns the shaped DTO on success", async () => {
+    server.use(http.get("/api/weather/forecast", () => HttpResponse.json(forecastFixture)));
+
+    const { result } = renderHook(() => useWeatherForecast("London"), {
+      wrapper: makeWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(forecastFixture);
+  });
+
+  it("surfaces typed errors with the correct kind", async () => {
+    server.use(
+      http.get("/api/weather/forecast", () =>
+        HttpResponse.json(
+          { error: { kind: "not_found", message: "No matching location found." } },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const { result } = renderHook(() => useWeatherForecast("Xyznotacity"), {
+      wrapper: makeWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.kind).toBe("not_found");
+  });
+});
+
+describe("useWeatherYesterday", () => {
+  it("returns { yesterday: null } on happy path", async () => {
+    server.use(http.get("/api/weather/yesterday", () => HttpResponse.json(yesterdayFixture)));
+
+    const { result } = renderHook(() => useWeatherYesterday("London"), {
+      wrapper: makeWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(yesterdayFixture);
+  });
+
+  it("does not retry on failure — protects `retry: 0`", async () => {
+    let calls = 0;
+    server.use(
+      http.get("/api/weather/yesterday", () => {
+        calls += 1;
+        return HttpResponse.json({ error: { kind: "upstream", message: "boom" } }, { status: 502 });
+      }),
+    );
+
+    // NOTE: no `retry: false` in the default options here — we want to
+    // prove the hook's own `retry: 0` wins regardless of client defaults.
+    const client = new QueryClient();
+    const { result } = renderHook(() => useWeatherYesterday("London"), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(calls).toBe(1);
   });
 });

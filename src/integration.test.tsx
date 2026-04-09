@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
+import { delay, HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "@/App";
 import type {
@@ -82,6 +82,19 @@ const londonForecast: WeatherForecast = {
 };
 
 const londonYesterday: WeatherYesterday = { yesterday: null };
+
+const londonYesterdayDay: WeatherYesterday = {
+  yesterday: {
+    date: "2026-04-06",
+    minC: 6,
+    maxC: 13,
+    avgC: 9.5,
+    chanceOfRain: 10,
+    conditionText: "Cloudy",
+    conditionCode: 1006,
+    isDay: true,
+  },
+};
 
 const londonSuggestion: SuggestionItem = {
   id: 1,
@@ -188,6 +201,40 @@ describe("Oasis (integration)", () => {
 
     // No weather card loaded — empty state heading still present.
     expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
+  });
+
+  it("paints the hero before forecast before yesterday", async () => {
+    // Staggered delays expose the three-tier paint order. If the hero
+    // ever secretly starts blocking on forecast or yesterday (the bug
+    // RFC 001 was meant to fix) this test will hang on the first
+    // assertion.
+    server.use(
+      http.get("/api/weather", () => HttpResponse.json(londonCurrent)),
+      http.get("/api/weather/forecast", async () => {
+        await delay(30);
+        return HttpResponse.json(londonForecast);
+      }),
+      http.get("/api/weather/yesterday", async () => {
+        await delay(60);
+        return HttpResponse.json(londonYesterdayDay);
+      }),
+    );
+
+    renderAppAt("/?city=London");
+
+    // t≈0: hero paints. "Feels like 11°" is unique to HeroCard (see
+    // the gotcha in RFC 006 — `/partly cloudy/i` double-matches once
+    // forecast lands).
+    await screen.findByText(/feels like 11/i);
+
+    // Hero stats row is still shimmering — forecast hasn't landed yet.
+    expect(document.querySelector("[aria-hidden='true'].animate-pulse")).toBeInTheDocument();
+
+    // t≈30ms: forecast lands → "Today" label appears.
+    await screen.findByText(/^today$/i);
+
+    // t≈60ms: yesterday lands → "Yesterday" label appears.
+    await screen.findByText(/^yesterday$/i);
   });
 
   it("removes a history item, shows undo toast, and restores it", async () => {
