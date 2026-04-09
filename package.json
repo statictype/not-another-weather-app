@@ -13,12 +13,13 @@
     "preview": "vite preview",
     "deploy": "pnpm build && wrangler deploy",
     "typecheck": "tsc -b --noEmit",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "format": "biome format --write .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
-    "ci": "biome ci . && pnpm typecheck && pnpm test:run && pnpm build"
+    "ci": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:run && pnpm build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
@@ -33,10 +34,10 @@
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.0",
     "@cloudflare/vite-plugin": "^1.0.0",
     "@cloudflare/vitest-pool-workers": "^0.8.0",
     "@cloudflare/workers-types": "^4.20250101.0",
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.0.0",
     "@tanstack/react-query-devtools": "^5.62.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -46,10 +47,17 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "eslint": "^10.2.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
     "jsdom": "^25.0.1",
     "msw": "^2.7.0",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
+    "typescript-eslint": "^8.58.1",
     "vite": "^6.0.0",
     "vitest": "^3.0.0",
     "wrangler": "^4.80.0"

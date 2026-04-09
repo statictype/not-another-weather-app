@@ -22,9 +22,7 @@ export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
         <WifiOffIcon className="size-12" aria-hidden="true" strokeWidth={2} />
       </div>
       <div className="space-y-2">
-        <h2 className="font-display font-light text-3xl tracking-tight">
-          {title}
-        </h2>
+        <h2 className="font-display font-light text-3xl tracking-tight">{title}</h2>
         <p className="text-foreground/60 mx-auto max-w-md text-balance">{description}</p>
       </div>
       {onRetry && (

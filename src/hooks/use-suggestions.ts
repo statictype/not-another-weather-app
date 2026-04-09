@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { SuggestionItem } from "@/api/types";
-import { fetchSearch, WeatherClientError } from "@/api/weather";
+import type { WeatherClientError } from "@/api/weather";
+import { fetchSearch } from "@/api/weather";
 import { useDebouncedValue } from "./use-debounced-value";
 
 const DEBOUNCE_MS = 300;

@@ -81,7 +81,7 @@ A few of the more interesting design choices:
 
 - **Single Cloudflare Worker hosts both surfaces.** The same `wrangler deploy` ships the SPA bundle (via the static-asset binding) and the `/api/weather` proxy. The upstream API key lives only on the server side and never reaches the browser, while the proxy and the frontend share an origin so there's no CORS to wire up.
 - **Shaped DTO at the proxy boundary.** The frontend never sees the upstream vendor's schema. Swapping weather providers means changing one file in the Worker. The DTO is intentionally minimal — only fields the UI actually renders.
-- **Edge cache with query normalization.** The Worker caches successful responses for 10 minutes, keyed on a normalized query (trimmed, lowercased, whitespace collapsed). `London`, `london`, ` LONDON `, and `London ` all share one cache entry. This is what keeps the demo within the free tier under reasonable load.
+- **Edge cache with query normalization.** The Worker caches successful responses for 10 minutes, keyed on a normalized query (trimmed, lowercased, whitespace collapsed). `London`, `london`, `LONDON`, and `London ` all share one cache entry. This is what keeps the demo within the free tier under reasonable load.
 - **Closed error union end-to-end.** Both the Worker and the frontend client model errors as a discriminated union (`not_found | quota_exceeded | invalid_query | upstream | network`), and the renderer is one exhaustive switch. Adding a new error kind is a single-spot change that TypeScript enforces.
 - **Search-as-you-type with debounce + cancellation.** No submit button. After 500ms of idle typing the query fires; if the user keeps typing, the in-flight request is cancelled via `AbortSignal`. TanStack Query dedupes identical queries and keeps the previous successful result visible while a new (or failing) one runs.
 - **Asymmetric error policy.** Input errors (`not_found`) annotate the search input as inline validation and leave the previous weather card on screen. System errors (`quota_exceeded`, `network`, `upstream`) take over the result area. The user is never punished for typos.
@@ -120,18 +120,18 @@ What's covered:
 
 ## Scripts
 
-| Command            | Purpose                                          |
-| ------------------ | ------------------------------------------------ |
-| `pnpm dev`         | Vite dev server with the Worker integrated      |
-| `pnpm build`       | Type-check + production build                    |
-| `pnpm preview`     | Preview the built bundle                         |
-| `pnpm deploy`      | Build and deploy to Cloudflare Workers           |
-| `pnpm typecheck`   | Type-check across all three project references   |
-| `pnpm lint`        | Biome lint + format check                        |
-| `pnpm lint:fix`    | Biome auto-fix                                   |
-| `pnpm test`        | Vitest watch mode (both projects)                |
-| `pnpm test:run`    | Vitest single run                                |
-| `pnpm ci`          | Lint + typecheck + test + build (full CI gate)   |
+| Command          | Purpose                                        |
+| ---------------- | ---------------------------------------------- |
+| `pnpm dev`       | Vite dev server with the Worker integrated     |
+| `pnpm build`     | Type-check + production build                  |
+| `pnpm preview`   | Preview the built bundle                       |
+| `pnpm deploy`    | Build and deploy to Cloudflare Workers         |
+| `pnpm typecheck` | Type-check across all three project references |
+| `pnpm lint`      | Biome lint + format check                      |
+| `pnpm lint:fix`  | Biome auto-fix                                 |
+| `pnpm test`      | Vitest watch mode (both projects)              |
+| `pnpm test:run`  | Vitest single run                              |
+| `pnpm ci`        | Lint + typecheck + test + build (full CI gate) |
 
 ## Deployment
 

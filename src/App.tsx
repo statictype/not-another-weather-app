@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { SuggestionItem, WeatherResponse } from "@/api/types";
+import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
 import { Toaster } from "@/components/ui/sonner";
 import { WeatherResult } from "@/components/weather-result";
-import { type HistoryItem, useHistory } from "@/hooks/use-history";
+import { getHistorySnapshot, type HistoryItem, useHistory } from "@/hooks/use-history";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { useUndo } from "@/hooks/use-undo";
 import { useWeather, type WeatherSource } from "@/hooks/use-weather";
@@ -12,8 +12,14 @@ import { useWeather, type WeatherSource } from "@/hooks/use-weather";
 export function App() {
   // ─── Search state ────────────────────────────────────────────────────
   const [inputValue, setInputValue] = useState("");
-  const [activeQuery, setActiveQuery] = useState<string | null>(null);
-  const [source, setSource] = useState<WeatherSource>("user");
+  // Auto-load the most-recent item on first mount by seeding state lazily
+  // from the history store — avoids a setState-in-effect dance.
+  const [activeQuery, setActiveQuery] = useState<string | null>(
+    () => getHistorySnapshot()[0]?.query ?? null,
+  );
+  const [source, setSource] = useState<WeatherSource>(() =>
+    getHistorySnapshot()[0] ? "auto" : "user",
+  );
 
   // ─── History + undo ──────────────────────────────────────────────────
   const {
@@ -28,30 +34,11 @@ export function App() {
   // ─── City suggestions (debounced, 3+ chars) ──────────────────────────
   const suggestions = useSuggestions(inputValue);
 
-  // ─── Auto-load most-recent on first mount ────────────────────────────
-  const didAutoLoad = useRef(false);
-  useEffect(() => {
-    if (didAutoLoad.current) return;
-    didAutoLoad.current = true;
-
-    const mostRecent = history[0];
-    if (mostRecent) {
-      setInputValue("");
-      setActiveQuery(mostRecent.query);
-      setSource("auto");
-    }
-  }, [history]);
-
   // ─── Fetch ───────────────────────────────────────────────────────────
+  // `placeholderData: keepPreviousData` keeps the last successful payload
+  // on `query.data` during refetches, so there's no need for a separate
+  // "last result" cache in this component.
   const query = useWeather({ query: activeQuery, source });
-
-  // ─── Last successful result (kept visible across query transitions) ──
-  const [lastResult, setLastResult] = useState<WeatherResponse | null>(null);
-  useEffect(() => {
-    if (query.isSuccess && query.data) {
-      setLastResult(query.data);
-    }
-  }, [query.isSuccess, query.data]);
 
   // ─── Add successful user-initiated fetches to history ────────────────
   const lastCommittedQuery = useRef<string | null>(null);
@@ -69,46 +56,43 @@ export function App() {
   }, [query.isSuccess, query.data, source, activeQuery, addHistory]);
 
   // ─── SearchBar callbacks ─────────────────────────────────────────────
-  const handleValueChange = useCallback((next: string) => {
+  const handleValueChange = (next: string) => {
     setInputValue(next);
     setSource("user");
-  }, []);
+  };
 
   // ─── Suggestion / history selection (the only things that trigger a fetch) ──
-  const handleSuggestionSelect = useCallback((item: SuggestionItem) => {
+  const handleSuggestionSelect = (item: SuggestionItem) => {
     const q = item.region
       ? `${item.name}, ${item.region}, ${item.country}`
       : `${item.name}, ${item.country}`;
     setInputValue("");
     setActiveQuery(q);
     setSource("user");
-  }, []);
+  };
 
-  const handleHistorySelect = useCallback((item: HistoryItem) => {
+  const handleHistorySelect = (item: HistoryItem) => {
     setInputValue("");
     setActiveQuery(item.query);
     setSource("user");
-  }, []);
+  };
 
   // ─── History management ──────────────────────────────────────────────
-  const handleHistoryRemove = useCallback(
-    (item: HistoryItem) => {
-      removeHistory(item.id);
-      undo.stage({ items: [item], label: `Removed ${item.displayName}` });
-      toast(`Removed ${item.displayName}`, {
-        action: {
-          label: "Undo",
-          onClick: () => {
-            const restored = undo.undo();
-            if (restored) restore(restored.items);
-          },
+  const handleHistoryRemove = (item: HistoryItem) => {
+    removeHistory(item.id);
+    undo.stage({ items: [item], label: `Removed ${item.displayName}` });
+    toast(`Removed ${item.displayName}`, {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          const restored = undo.undo();
+          if (restored) restore(restored.items);
         },
-      });
-    },
-    [removeHistory, undo, restore],
-  );
+      },
+    });
+  };
 
-  const handleClearAll = useCallback(() => {
+  const handleClearAll = () => {
     if (history.length === 0) return;
     const snapshot = [...history];
     clearHistory();
@@ -122,20 +106,20 @@ export function App() {
         },
       },
     });
-  }, [history, clearHistory, undo, restore]);
+  };
 
-  const handleRetry = useCallback(() => {
+  const handleRetry = () => {
     void query.refetch();
-  }, [query]);
+  };
 
   return (
     <div
       className={`text-foreground relative min-h-screen overflow-x-hidden${
-        (query.data ?? lastResult)?.current.timeOfDay === "night" ? " night" : ""
+        query.data?.current.timeOfDay === "night" ? " night" : ""
       }`}
     >
       <div
-        className={`sky${(query.data ?? lastResult)?.current.timeOfDay === "night" ? " night" : ""}`}
+        className={`sky${query.data?.current.timeOfDay === "night" ? " night" : ""}`}
         aria-hidden="true"
       />
 
@@ -159,12 +143,8 @@ export function App() {
           </div>
         </header>
 
-        <div
-          className="rise rise-3 flex-1"
-          aria-live="polite"
-          aria-busy={query.isFetching}
-        >
-          <WeatherResult query={query} fallbackData={lastResult} onRetry={handleRetry} />
+        <div className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>
+          <WeatherResult query={query} onRetry={handleRetry} />
         </div>
       </div>
 

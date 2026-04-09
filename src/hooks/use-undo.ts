@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Pending-removal state with a time-bounded undo window.
@@ -36,44 +36,41 @@ export function useUndo<T>(timeoutMs: number = DEFAULT_TIMEOUT_MS): UseUndoRetur
   const pendingRef = useRef<PendingRemoval<T> | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clearTimer = useCallback(() => {
+  const clearTimer = () => {
     if (timerRef.current !== null) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  }, []);
+  };
 
-  const setBoth = useCallback((next: PendingRemoval<T> | null) => {
+  const setBoth = (next: PendingRemoval<T> | null) => {
     pendingRef.current = next;
     setPending(next);
-  }, []);
+  };
 
-  const commit = useCallback(() => {
+  const commit = () => {
     clearTimer();
     setBoth(null);
-  }, [clearTimer, setBoth]);
+  };
 
-  const stage = useCallback(
-    (removal: PendingRemoval<T>) => {
-      // Staging a new removal commits any prior one immediately.
-      clearTimer();
-      setBoth(removal);
-      timerRef.current = setTimeout(() => {
-        timerRef.current = null;
-        setBoth(null);
-      }, timeoutMs);
-    },
-    [clearTimer, setBoth, timeoutMs],
-  );
+  const stage = (removal: PendingRemoval<T>) => {
+    // Staging a new removal commits any prior one immediately.
+    clearTimer();
+    setBoth(removal);
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      setBoth(null);
+    }, timeoutMs);
+  };
 
-  const undo = useCallback((): PendingRemoval<T> | null => {
+  const undo = (): PendingRemoval<T> | null => {
     clearTimer();
     const restored = pendingRef.current;
     setBoth(null);
     return restored;
-  }, [clearTimer, setBoth]);
+  };
 
-  useEffect(() => clearTimer, [clearTimer]);
+  useEffect(() => clearTimer, []);
 
   return { pending, stage, undo, commit };
 }

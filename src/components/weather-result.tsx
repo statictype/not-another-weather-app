@@ -1,4 +1,3 @@
-import type { WeatherResponse } from "@/api/types";
 import { WeatherClientError } from "@/api/weather";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
@@ -9,8 +8,6 @@ import type { UseWeatherResult } from "@/hooks/use-weather";
 
 interface WeatherResultProps {
   query: UseWeatherResult;
-  /** Last successful result, kept visible when the current query is empty. */
-  fallbackData: WeatherResponse | null;
   onRetry: () => void;
 }
 
@@ -28,11 +25,12 @@ interface WeatherResultProps {
  *    failures we silently fall back to the empty state to avoid
  *    starting a returning user's session with an error.
  */
-export function WeatherResult({ query, fallbackData, onRetry }: WeatherResultProps) {
-  const { data, error, isLoading, isFetching, source } = query;
-  // The "current best" view of weather: prefer fresh data, fall back to
-  // the last successful result when the current query has nothing.
-  const visibleData = data ?? fallbackData;
+export function WeatherResult({ query, onRetry }: WeatherResultProps) {
+  // `placeholderData: keepPreviousData` in useWeather means `data` already
+  // holds the last successful payload while a new query is loading, so we
+  // don't need a separate fallback cache — `isPlaceholderData` tells us
+  // the displayed result is stale.
+  const { data, error, isLoading, isFetching, isPlaceholderData, source } = query;
 
   // Quota always wins.
   if (error instanceof WeatherClientError && error.kind === "quota_exceeded") {
@@ -43,7 +41,7 @@ export function WeatherResult({ query, fallbackData, onRetry }: WeatherResultPro
   if (
     error instanceof WeatherClientError &&
     (error.kind === "network" || error.kind === "upstream") &&
-    !visibleData
+    !data
   ) {
     if (source === "auto") {
       return <EmptyState />;
@@ -58,13 +56,13 @@ export function WeatherResult({ query, fallbackData, onRetry }: WeatherResultPro
   }
 
   // Initial loading with no prior data.
-  if (isLoading && !fallbackData) {
+  if (isLoading) {
     return <WeatherSkeleton />;
   }
 
   // Success — or stale fallback while a new query loads / fails.
-  if (visibleData) {
-    return <WeatherCard data={visibleData} isStale={isFetching} />;
+  if (data) {
+    return <WeatherCard data={data} isStale={isFetching || isPlaceholderData} />;
   }
 
   // Idle: no query active, no data, no error worth taking over for.

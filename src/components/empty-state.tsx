@@ -15,9 +15,7 @@ export function EmptyState() {
         <CloudSunIcon className="size-16" aria-hidden="true" strokeWidth={2} />
       </div>
       <div className="space-y-2">
-        <h2 className="font-display font-light text-3xl tracking-tight">
-          Pick a city to begin
-        </h2>
+        <h2 className="font-display font-light text-3xl tracking-tight">Pick a city to begin</h2>
         <p className="text-foreground/60 mx-auto max-w-md text-balance">
           Search above or tap a recent destination.
         </p>

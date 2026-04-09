@@ -1,4 +1,4 @@
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { WeatherResponse } from "@/api/types";
 import { fetchWeather, type WeatherClientError } from "@/api/weather";
 
@@ -41,6 +41,9 @@ export function useWeather(options: UseWeatherOptions): UseWeatherResult {
     queryKey: ["weather", trimmed.toLowerCase()],
     queryFn: ({ signal }) => fetchWeather(trimmed, signal),
     enabled,
+    // Keep the last successful payload on screen while a new query is
+    // loading — avoids flicker and lets us drop a manual `lastResult` cache.
+    placeholderData: keepPreviousData,
     meta: { source },
   });
 

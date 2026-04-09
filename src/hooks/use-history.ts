@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 /**
  * Search history hook backed by localStorage.
@@ -99,6 +99,14 @@ function getSnapshot(): HistoryItem[] {
   return cachedSnapshot;
 }
 
+/**
+ * Synchronous accessor for callers that need the current history outside
+ * of a React render (e.g. lazy `useState` initializers on mount).
+ */
+export function getHistorySnapshot(): HistoryItem[] {
+  return cachedSnapshot;
+}
+
 function getServerSnapshot(): HistoryItem[] {
   return [];
 }
@@ -148,24 +156,24 @@ export interface UseHistoryReturn {
 export function useHistory(): UseHistoryReturn {
   const history = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  const add = useCallback((item: Omit<HistoryItem, "id" | "addedAt">) => {
+  const add = (item: Omit<HistoryItem, "id" | "addedAt">) => {
     writeToStorage(addHistoryItem(cachedSnapshot, item));
-  }, []);
+  };
 
-  const remove = useCallback((id: string) => {
+  const remove = (id: string) => {
     writeToStorage(cachedSnapshot.filter((item) => item.id !== id));
-  }, []);
+  };
 
-  const clear = useCallback(() => {
+  const clear = () => {
     writeToStorage([]);
-  }, []);
+  };
 
-  const restore = useCallback((items: HistoryItem[]) => {
+  const restore = (items: HistoryItem[]) => {
     // Prepend restored items, dedupe by id, cap.
     const existingIds = new Set(cachedSnapshot.map((i) => i.id));
     const fresh = items.filter((i) => !existingIds.has(i.id));
     writeToStorage([...fresh, ...cachedSnapshot].slice(0, MAX_HISTORY));
-  }, []);
+  };
 
   return { history, add, remove, clear, restore };
 }

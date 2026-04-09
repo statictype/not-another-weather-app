@@ -23,19 +23,20 @@ import {
   SunsetIcon,
   WindIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ComponentProps, createElement, useEffect, useState } from "react";
 import type { ForecastDay, WeatherResponse } from "@/api/types";
 import { cn } from "@/lib/utils";
 
 /** Ticks every second and returns the current time string in the given tz. */
 function useLocalTime(tz: string): string {
-  const [now, setNow] = useState(() => formatLocalTime(tz));
+  // Re-render on a 1s timer; the actual time string is derived during render
+  // from `tz`, so changing `tz` picks up immediately with no effect-driven state.
+  const [, setTick] = useState(0);
   useEffect(() => {
-    setNow(formatLocalTime(tz));
-    const id = setInterval(() => setNow(formatLocalTime(tz)), 1000);
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
-  }, [tz]);
-  return now;
+  }, []);
+  return formatLocalTime(tz);
 }
 
 function formatLocalTime(tz: string): string {
@@ -74,7 +75,6 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
     moonIllumination: 0,
   };
   const isDay = current.timeOfDay === "day";
-  const ConditionIcon = conditionIcon(current.conditionText, isDay);
   const localTime = useLocalTime(location.tz);
   const swapKey = `${location.name}-${location.country}`;
 
@@ -90,7 +90,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       {/* HERO ─── 8 col × 2 rows */}
       <section
         className={cn(
-          "swap-in swap-d-1 relative col-span-1 overflow-hidden rounded-[2rem] p-8 text-white sm:col-span-12 sm:p-10 lg:col-span-8",
+          "swap-in swap-d-1 relative col-span-1 overflow-hidden rounded-[2rem] p-8 text-white sm:col-span-12 sm:p-10 xl:col-span-8",
           isDay
             ? "bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 shadow-[0_30px_60px_-25px_rgba(56,140,255,0.55)]"
             : "hero-night shadow-[0_30px_60px_-25px_rgba(8,8,24,0.85)]",
@@ -111,17 +111,19 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
 
           {/* Mobile: 2-col [left content | icon], condition details full-width below.
               sm+:    3-col [left | icon | right] */}
-          <div className="grid flex-1 grid-cols-[1fr_auto] items-start gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-1">
+          <div className="grid flex-1 grid-cols-[1fr_auto] items-start gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-1 lg:grid-cols-[60%_1fr_2fr]">
             {/* Left: city + temp + feels like */}
             <div className="flex min-w-0 flex-col">
-              <h2 className="font-display font-light text-balance text-3xl leading-[0.95] tracking-tight sm:text-4xl 2xl:text-5xl">
+              <h2 className="font-display font-light text-balance text-3xl leading-[0.95] 2xl:tracking-tight sm:text-4xl lg:text-5xl 2xl:text-6xl">
                 {location.name}
               </h2>
               <div className="mt-4 flex items-start sm:mt-6">
-                <span className="font-display text-[4rem] leading-[0.78] tracking-[-0.06em] sm:text-[5.5rem] lg:text-[7rem]">
+                <span className="font-display text-[4rem] leading-[0.78] tracking-[-0.06em] sm:text-[5.5rem] lg:text-[8rem]">
                   {Math.round(current.tempC)}
                 </span>
-                <span className="font-display font-light mt-3 ml-2 text-3xl text-white/70">°C</span>
+                <span className="font-display font-light mt-3 ml-2 text-3xl text-white/70 lg:text-4xl">
+                  °C
+                </span>
               </div>
               <p className="font-display font-medium mt-2 text-xs uppercase tracking-[0.2em] text-white/85">
                 Feels like {Math.round(current.feelsLikeC)}°
@@ -131,6 +133,8 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
             {/* Mobile: top-right icon. sm+: center column */}
             <div className="flex items-start justify-center pt-3 sm:items-center sm:px-3 sm:pt-0">
               <ConditionIcon
+                text={current.conditionText}
+                isDay={isDay}
                 className={cn(
                   "size-20 sm:size-28 md:size-36 lg:size-40 xl:size-52",
                   isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
@@ -142,7 +146,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
 
             {/* Mobile: full-width below. sm+: right column */}
             <div className="col-span-2 mt-3 flex flex-col gap-1.5 text-right sm:col-span-1 sm:mt-0 sm:gap-3">
-              <p className="font-display font-normal text-xl sm:text-2xl 2xl:text-3xl">
+              <p className="font-display font-normal text-xl sm:text-2xl lg:text-lg 2xl:text-xl">
                 {current.conditionText}
               </p>
               <p className="font-display font-normal text-sm text-white/90">
@@ -158,7 +162,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       </section>
 
       {/* ATMOSPHERE ─── 4 col × 2 rows */}
-      <section className="swap-in swap-d-2 bento-tile flex flex-col p-7 sm:col-span-6 sm:row-span-2 lg:col-span-4 lg:row-span-1">
+      <section className="swap-in swap-d-2 bento-tile flex flex-col p-7 sm:col-span-6 sm:row-span-2 xl:col-span-4 xl:row-span-1">
         <ul className="flex flex-1 flex-col divide-y divide-foreground/10">
           <AtmosphereRow icon={DropletsIcon} label="Humidity" value={`${current.humidity}%`} />
           <AtmosphereRow icon={CloudIcon} label="Cloud cover" value={`${current.cloud ?? 0}%`} />
@@ -182,7 +186,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       </section>
 
       {/* LOCAL TIME */}
-      <section className="swap-in swap-d-3 tile-sun flex items-center bento-tile relative overflow-hidden p-7 sm:col-span-6 lg:col-span-2">
+      <section className="swap-in swap-d-3 tile-sun flex items-center bento-tile relative overflow-hidden p-7 sm:col-span-6 xl:col-span-2">
         {isDay && (
           <div className="absolute -right-16 -top-16 size-56 rounded-full bg-rose-300/40 blur-3xl" />
         )}
@@ -190,15 +194,15 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
           <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.2em] 2xl:text-xs">
             Local time
           </p>
-          <p className="font-display font-light mt-2 text-4xl leading-none tracking-tight lg:text-2xl xl:text-4xl 2xl:text-5xl">
+          <p className="font-display font-light mt-2 text-4xl leading-none tracking-tight xl:text-2xl 2xl:text-4xl">
             {localTime}
           </p>
         </div>
       </section>
 
       {/* ASTRO (sunrise/sunset/moon) */}
-      <section className="swap-in swap-d-3b bento-tile relative overflow-hidden p-7 sm:col-span-6 lg:col-span-4">
-        <div className="flex flex-col lg:divide-y lg:divide-foreground/10">
+      <section className="swap-in swap-d-3b bento-tile relative overflow-hidden p-7 sm:col-span-6 xl:col-span-4">
+        <div className="flex flex-col xl:divide-y xl:divide-foreground/10">
           <SkyRow
             icon={
               <SunriseIcon
@@ -236,7 +240,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       </section>
 
       {/* WIND ─── 5 col */}
-      <section className="swap-in swap-d-4 tile-wind bento-tile relative overflow-hidden p-7 sm:col-span-8 lg:col-span-4">
+      <section className="swap-in swap-d-4 tile-wind bento-tile relative overflow-hidden p-7 sm:col-span-8 xl:col-span-4">
         <WindIcon
           className="text-foreground/30 absolute -right-6 -top-6 size-44"
           strokeWidth={0.9}
@@ -266,7 +270,7 @@ export function WeatherCard({ data, isStale = false }: WeatherCardProps) {
       {/* UV INDEX ─── 4 col */}
       <section
         className={cn(
-          "swap-in swap-d-5 bento-tile relative overflow-hidden p-7 sm:col-span-4 lg:col-span-2",
+          "swap-in swap-d-5 bento-tile relative overflow-hidden p-7 sm:col-span-4 xl:col-span-2",
           !isDay && "tile-uv-off opacity-55",
         )}
         style={{ background: isDay ? uvTint(current.uv ?? 0) : undefined }}
@@ -357,7 +361,7 @@ function AtmosphereRow({
 
 function SkyRow({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <div className="flex items-center gap-3 py-2 first:pt-0 last:pb-0 lg:py-3">
+    <div className="flex items-center gap-3 py-2 first:pt-0 last:pb-0 xl:py-3">
       <div className="bg-foreground/10 shrink-0 rounded-xl p-2 backdrop-blur">{icon}</div>
       <div>
         <p className="font-display text-base leading-tight tracking-tight">{value}</p>
@@ -370,10 +374,15 @@ function SkyRow({ icon, value, label }: { icon: React.ReactNode; value: string; 
 }
 
 function ForecastRow({ day, label }: { day: ForecastDay; label: string }) {
-  const Icon = conditionIcon(day.conditionText, day.isDay);
   return (
     <div className="flex items-center gap-3">
-      <Icon className="text-foreground/60 size-10 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+      <ConditionIcon
+        text={day.conditionText}
+        isDay={day.isDay}
+        className="text-foreground/60 size-10 shrink-0"
+        strokeWidth={1.5}
+        aria-hidden="true"
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.18em]">
           {label}
@@ -497,7 +506,7 @@ function forecastLabel(date: string, index: number): string {
   }
 }
 
-function conditionIcon(text: string, isDay: boolean): LucideIcon {
+function pickConditionIcon(text: string, isDay: boolean): LucideIcon {
   const t = text.toLowerCase();
   if (/thunder|lightning/.test(t)) return CloudLightningIcon;
   if (/snow|sleet|blizzard|ice/.test(t)) return CloudSnowIcon;
@@ -517,4 +526,21 @@ function conditionIcon(text: string, isDay: boolean): LucideIcon {
   if (/cloud|overcast/.test(t)) return CloudIcon;
   if (/clear|sun/.test(t)) return isDay ? SunIcon : MoonStarIcon;
   return isDay ? SunIcon : MoonStarIcon;
+}
+
+type ConditionIconProps = ComponentProps<LucideIcon> & {
+  text: string;
+  isDay: boolean;
+};
+
+/**
+ * Module-level component that picks one of the pre-existing lucide icon
+ * components for the given weather condition and forwards icon props.
+ * Declared here (not inside render) so the chosen component is stable.
+ */
+function ConditionIcon({ text, isDay, ...iconProps }: ConditionIconProps) {
+  // `createElement` (rather than a PascalCase JSX local) keeps the
+  // react-hooks/static-components rule happy — the icon picked here is
+  // always one of the module-level lucide component references.
+  return createElement(pickConditionIcon(text, isDay), iconProps);
 }

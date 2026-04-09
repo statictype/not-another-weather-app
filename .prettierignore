@@ -1,0 +1,7 @@
+dist
+.wrangler
+coverage
+node_modules
+src/components/ui
+src/index.css
+pnpm-lock.yaml
