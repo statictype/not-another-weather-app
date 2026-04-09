@@ -46,6 +46,31 @@ src/
 - **Auto-load is silent.** On mount, the most recent history item is fetched with `source: "auto"`. If that fetch fails, the failure is silent (the empty state appears) — a returning user shouldn't open the app to an error message they didn't ask for. Errors from auto-loads only become visible when they explain a global degradation (quota exceeded).
 - **History via `useSyncExternalStore`.** localStorage is React's textbook "external store." Every `useHistory()` consumer subscribes to the same in-module pub/sub, so deletions in one component re-render the others without prop drilling or Context. Cross-tab updates are wired through the native `storage` event.
 
+## Gotchas
+
+### `keepPreviousData` + any "commit on success" side effect
+
+`useWeather` uses `placeholderData: keepPreviousData` so the previous weather
+card stays on screen while a new fetch is in flight. The side effect is that
+the tuple `(isSuccess, data, activeQuery)` becomes briefly inconsistent:
+
+- `activeQuery` has already flipped to the new city (URL changed)
+- `query.isSuccess` stays `true`
+- `query.data` still points at the **previous** city's payload
+- `query.isPlaceholderData` is `true` until the new fetch resolves
+
+Any code that commits a derived value from `query.data` keyed by `activeQuery`
+during this window will write stale data under a fresh key. The history-commit
+effect in `App.tsx` was bitten by exactly this: it wrote `activeQuery` ("Berlin,
+Germany") alongside `formatDisplayName(previousData)` ("Santa Cruz Xoxocotlán,
+Mexico") and then locked itself out via its own ref guard, so the real Berlin
+payload never made it into history.
+
+**Rule:** if you gate a `useEffect` on `query.isSuccess`, also gate on
+`!query.isPlaceholderData` whenever the effect correlates `query.data` with the
+current query key. Or wait for `isFetching === false`. Just `isSuccess` is not
+enough with `keepPreviousData`.
+
 ## Stack
 
 - **React 19** + **TypeScript** (strict, including `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`)

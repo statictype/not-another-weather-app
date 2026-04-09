@@ -42,9 +42,14 @@ export function App() {
   const query = useWeather({ query: activeQuery });
 
   // ─── Add successful fetches to history ───────────────────────────────
+  // `useWeather` uses `keepPreviousData`, so on a city switch `query.data`
+  // briefly points at the *previous* city's payload while the new fetch
+  // is in flight. Committing during that window writes the old
+  // `displayName` under the new query key. Gate on `isPlaceholderData` so
+  // we only commit once the real payload for `activeQuery` has landed.
   const lastCommittedQuery = useRef<string | null>(null);
   useEffect(() => {
-    if (!query.isSuccess || !query.data) return;
+    if (!query.isSuccess || !query.data || query.isPlaceholderData) return;
     if (!activeQuery) return;
     if (lastCommittedQuery.current === activeQuery.toLowerCase()) return;
 
@@ -53,7 +58,7 @@ export function App() {
       query: activeQuery,
       displayName: formatDisplayName(query.data),
     });
-  }, [query.isSuccess, query.data, activeQuery, addHistory]);
+  }, [query.isSuccess, query.data, query.isPlaceholderData, activeQuery, addHistory]);
 
   // ─── SearchBar callbacks ─────────────────────────────────────────────
   const handleValueChange = (next: string) => {
