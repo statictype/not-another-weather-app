@@ -1,0 +1,42 @@
+# Deployment
+
+The repo deploys to a single Cloudflare Worker via GitHub Actions on every push to `main`. The Worker hosts the built SPA from `dist/client` and the `/api/weather` proxy in one bundle.
+
+## Manual deploy
+
+```bash
+pnpm wrangler login
+pnpm wrangler secret put WEATHER_API_KEY  # production secret
+pnpm deploy
+```
+
+## CI
+
+Set these GitHub repo secrets:
+
+- `CLOUDFLARE_API_TOKEN` — scoped to "Edit Cloudflare Workers"
+- `CLOUDFLARE_ACCOUNT_ID`
+
+## Local API key
+
+The repo ships with `.dev.vars.example`. Copy it and add a free key from [WeatherAPI.com](https://www.weatherapi.com/signup.aspx) to run locally without depending on the deployed proxy:
+
+```bash
+cp .dev.vars.example .dev.vars
+# edit .dev.vars and paste your key
+```
+
+## Scripts
+
+| Command          | Purpose                                        |
+| ---------------- | ---------------------------------------------- |
+| `pnpm dev`       | Vite dev server with the Worker integrated     |
+| `pnpm build`     | Type-check + production build                  |
+| `pnpm preview`   | Preview the built bundle                       |
+| `pnpm deploy`    | Build and deploy to Cloudflare Workers         |
+| `pnpm typecheck` | Type-check across all three project references |
+| `pnpm lint`      | Biome lint + format check                      |
+| `pnpm lint:fix`  | Biome auto-fix                                 |
+| `pnpm test`      | Vitest watch mode (both projects)              |
+| `pnpm test:run`  | Vitest single run                              |
+| `pnpm ci`        | Lint + typecheck + test + build (full CI gate) |

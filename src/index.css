@@ -226,7 +226,7 @@ body,
 }
 
 /* ---break--- sky atmosphere */
-html, body { background: oklch(0.13 0.008 250); }
+html, body { background: oklch(0.97 0.02 230); }
 
 .sky {
   position: fixed;

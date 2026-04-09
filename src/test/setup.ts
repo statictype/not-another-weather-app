@@ -3,8 +3,7 @@ import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "./msw-server";
 
-// jsdom doesn't implement matchMedia; next-themes (used by sonner)
-// reads it on mount. Stub it once for the whole suite.
+// jsdom doesn't implement matchMedia; sonner reads it on mount. Stub once.
 if (typeof window !== "undefined" && !window.matchMedia) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,

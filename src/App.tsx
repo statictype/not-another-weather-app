@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
-import { Toaster } from "@/components/ui/sonner";
+
+// Toaster renders nothing until a toast fires, so deferring it is
+// invisible to the user and keeps sonner out of the first-paint chunk.
+const Toaster = lazy(() =>
+  import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })),
+);
 import { WeatherResult } from "@/components/weather-result";
 import { type HistoryItem, useHistory } from "@/hooks/use-history";
 import { setSearchParam, useSearchParam } from "@/hooks/use-search-param";
@@ -135,12 +140,14 @@ export function App() {
           </div>
         </header>
 
-        <div className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>
+        <main className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>
           <WeatherResult query={query} activeQuery={activeQuery} onRetry={handleRetry} />
-        </div>
+        </main>
       </div>
 
-      <Toaster />
+      <Suspense fallback={null}>
+        <Toaster />
+      </Suspense>
     </div>
   );
 }
