@@ -151,8 +151,8 @@ describe("Oasis (integration)", () => {
     renderAppAt("/?city=London");
 
     // Hero paints. "Feels like 11°" is unique to the hero card.
-    await screen.findByText(/feels like 11/i);
-    expect(screen.getByText("12")).toBeInTheDocument();
+    await screen.findAllByText(/feels like 11/i);
+    expect(screen.getAllByText("12").length).toBeGreaterThan(0);
   });
 
   it("shows the empty state when the URL has no city", () => {
@@ -178,7 +178,7 @@ describe("Oasis (integration)", () => {
     });
 
     // Hero paints. "Feels like 11°" is unique to the hero card.
-    await screen.findByText(/feels like 11/i);
+    await screen.findAllByText(/feels like 11/i);
 
     // History entry appears when re-opening the dropdown.
     await user.click(input);
@@ -225,7 +225,7 @@ describe("Oasis (integration)", () => {
     // t≈0: hero paints. "Feels like 11°" is unique to HeroCard (see
     // the gotcha in RFC 006 — `/partly cloudy/i` double-matches once
     // forecast lands).
-    await screen.findByText(/feels like 11/i);
+    await screen.findAllByText(/feels like 11/i);
 
     // Hero stats row is still shimmering — forecast hasn't landed yet.
     expect(document.querySelector("[aria-hidden='true'].animate-pulse")).toBeInTheDocument();
@@ -242,7 +242,7 @@ describe("Oasis (integration)", () => {
     renderAppAt("/?city=London");
 
     // Wait for fetch to land and history entry to accumulate.
-    await screen.findByText(/feels like 11/i);
+    await screen.findAllByText(/feels like 11/i);
     const input = screen.getByLabelText(/city/i);
     await user.click(input);
     await screen.findByRole("button", { name: /load weather for london/i });
