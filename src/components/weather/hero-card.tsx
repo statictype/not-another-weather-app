@@ -33,7 +33,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
           {[location.region, location.country].filter(Boolean).join(" · ") || "Now"}
         </p>
 
-        <div className="grid flex-1 grid-cols-[1fr_auto] items-start gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-1 lg:grid-cols-[60%_1fr_2fr]">
+        <div className="grid flex-1 grid-cols-[1fr_auto] items-start gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(12rem,max-content)] sm:items-center sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(14rem,max-content)]">
           {/* Left: city + temp + feels like */}
           <div className="flex min-w-0 flex-col">
             <h2 className="font-display font-light text-balance text-3xl leading-[0.95] 2xl:tracking-tight sm:text-4xl lg:text-5xl 2xl:text-6xl">
