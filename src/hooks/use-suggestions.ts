@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { SuggestionItem } from "@/api/types";
 import type { WeatherClientError } from "@/api/weather";
 import { fetchSearch } from "@/api/weather";
+import { normalizeQuery } from "@/lib/query";
 import { useDebouncedValue } from "./use-debounced-value";
 
 const DEBOUNCE_MS = 300;
@@ -14,12 +15,12 @@ export interface UseSuggestionsResult {
 
 export function useSuggestions(input: string): UseSuggestionsResult {
   const debounced = useDebouncedValue(input, DEBOUNCE_MS);
-  const trimmed = debounced.trim();
-  const enabled = trimmed.length >= MIN_LENGTH;
+  const normalized = normalizeQuery(debounced) ?? "";
+  const enabled = normalized.length >= MIN_LENGTH;
 
   const result = useQuery<SuggestionItem[], WeatherClientError>({
-    queryKey: ["search", trimmed.toLowerCase()],
-    queryFn: ({ signal }) => fetchSearch(trimmed, signal),
+    queryKey: ["search", normalized],
+    queryFn: ({ signal }) => fetchSearch(normalized, signal),
     enabled,
     staleTime: 60_000,
   });

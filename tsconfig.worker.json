@@ -25,5 +25,11 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/worker.ts", "src/worker.test.ts", "src/worker/**/*.ts", "src/lib/errors.ts"]
+  "include": [
+    "src/worker.ts",
+    "src/worker.test.ts",
+    "src/worker/**/*.ts",
+    "src/lib/errors.ts",
+    "src/lib/query.ts"
+  ]
 }

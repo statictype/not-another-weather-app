@@ -1,33 +1,19 @@
 /**
  * Edge cache helpers for the /api/weather proxy.
  *
- * Two responsibilities:
- *  1. Normalize the user's query so cache hits are aggressive but correct.
- *     "London", " london ", "LONDON", "London  " all collapse to one entry.
- *  2. Wrap the Cache API behind a tiny domain function so the handler stays
- *     readable.
+ * Wraps the Cache API behind a tiny domain function so the handler stays
+ * readable. Query normalization lives in `@/lib/query` so the frontend
+ * and the worker share the same rules.
  *
  * Cache TTL is 10 minutes — weather data is stable on that horizon and the
  * savings against WeatherAPI's free tier are dramatic.
  */
 
+export { normalizeQuery } from "@/lib/query";
+
 export const CACHE_TTL_SECONDS = 600;
 
 const CACHE_KEY_HOST = "https://oasis-cache.local";
-
-/**
- * Normalize a raw user query.
- *  - Trim leading/trailing whitespace
- *  - Collapse internal whitespace runs to a single space
- *  - Lowercase
- *
- * Returns `null` if the result is empty (which the handler maps to a 400).
- */
-export function normalizeQuery(raw: string | null): string | null {
-  if (!raw) return null;
-  const collapsed = raw.trim().toLowerCase().replace(/\s+/g, " ");
-  return collapsed.length > 0 ? collapsed : null;
-}
 
 /**
  * Build a synthetic Request to use as the Cache API key. The host is fake

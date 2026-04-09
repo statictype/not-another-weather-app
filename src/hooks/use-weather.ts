@@ -1,6 +1,7 @@
 import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { WeatherResponse } from "@/api/types";
 import { fetchWeather, type WeatherClientError } from "@/api/weather";
+import { normalizeQuery } from "@/lib/query";
 
 /**
  * The fetch source matters for error rendering: errors from auto-loads
@@ -34,12 +35,12 @@ export type UseWeatherResult = UseQueryResult<WeatherResponse, WeatherClientErro
  */
 export function useWeather(options: UseWeatherOptions): UseWeatherResult {
   const { query, source, minLength = 3 } = options;
-  const trimmed = query?.trim() ?? "";
-  const enabled = trimmed.length >= minLength;
+  const normalized = normalizeQuery(query) ?? "";
+  const enabled = normalized.length >= minLength;
 
   const result = useQuery<WeatherResponse, WeatherClientError>({
-    queryKey: ["weather", trimmed.toLowerCase()],
-    queryFn: ({ signal }) => fetchWeather(trimmed, signal),
+    queryKey: ["weather", normalized],
+    queryFn: ({ signal }) => fetchWeather(normalized, signal),
     enabled,
     // Keep the last successful payload on screen while a new query is
     // loading — avoids flicker and lets us drop a manual `lastResult` cache.
