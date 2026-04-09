@@ -42,6 +42,7 @@ export function SearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const [hasFocus, setHasFocus] = useState(false);
   const [showSelectPrompt, setShowSelectPrompt] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
   const trimmed = value.trim();
   const len = trimmed.length;
@@ -54,7 +55,7 @@ export function SearchBar({
           item.displayName.toLowerCase().includes(trimmed.toLowerCase()),
         );
 
-  const showDropdown = hasFocus && (recentItems.length > 0 || len > 0);
+  const showDropdown = clearDialogOpen || (hasFocus && (recentItems.length > 0 || len > 0));
 
   function handleChange(next: string) {
     onValueChange(next);
@@ -93,7 +94,7 @@ export function SearchBar({
             }`}
           >
             <SearchIcon
-              className="size-7 shrink-0 text-sky-500"
+              className="size-7 shrink-0 text-sky-500 [.night_&]:text-foreground/45"
               strokeWidth={2}
               aria-hidden="true"
             />
@@ -109,11 +110,8 @@ export function SearchBar({
               onChange={(e) => handleChange(e.target.value)}
               onFocus={() => setHasFocus(true)}
               onBlur={() => setHasFocus(false)}
-              className="font-display font-light h-auto flex-1 border-0 bg-transparent p-0 text-xl tracking-tight shadow-none placeholder:font-light placeholder:text-foreground/35 focus-visible:ring-0 sm:text-2xl"
+              className="font-display font-light h-auto flex-1 border-0 bg-transparent p-0 text-2xl tracking-tight shadow-none placeholder:font-light placeholder:text-foreground/35 focus-visible:ring-0 sm:text-3xl"
             />
-            <kbd className="text-foreground/60 hidden rounded-lg bg-white/80 px-2.5 py-1.5 font-mono text-xs sm:inline-block">
-              ↵
-            </kbd>
           </div>
 
           {showDropdown && (
@@ -127,6 +125,8 @@ export function SearchBar({
               onRecentSelect={handleRecentSelect}
               onRecentRemove={onRecentRemove}
               onRecentClearAll={onRecentClearAll}
+              clearDialogOpen={clearDialogOpen}
+              onClearDialogOpenChange={setClearDialogOpen}
               onSuggestionSelect={handleSuggestionSelect}
             />
           )}

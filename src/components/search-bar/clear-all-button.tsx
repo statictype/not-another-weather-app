@@ -12,9 +12,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-export function ClearAllButton({ onConfirm }: { onConfirm: () => void }) {
+interface ClearAllButtonProps {
+  onConfirm: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ClearAllButton({ onConfirm, open, onOpenChange }: ClearAllButtonProps) {
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogTrigger asChild>
         <Button
           type="button"

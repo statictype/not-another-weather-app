@@ -13,22 +13,35 @@ interface RecentSectionProps {
   onSelect: (item: HistoryItem) => void;
   onRemove: (item: HistoryItem) => void;
   onClearAll: () => void;
+  clearDialogOpen: boolean;
+  onClearDialogOpenChange: (open: boolean) => void;
 }
 
-export function RecentSection({ items, onSelect, onRemove, onClearAll }: RecentSectionProps) {
+export function RecentSection({
+  items,
+  onSelect,
+  onRemove,
+  onClearAll,
+  clearDialogOpen,
+  onClearDialogOpenChange,
+}: RecentSectionProps) {
   return (
     <div>
       <div className="flex items-center justify-between px-3 pb-2 pt-1">
         <SectionHeader label="Recent" />
         <Suspense fallback={null}>
-          <ClearAllButton onConfirm={onClearAll} />
+          <ClearAllButton
+            onConfirm={onClearAll}
+            open={clearDialogOpen}
+            onOpenChange={onClearDialogOpenChange}
+          />
         </Suspense>
       </div>
       <ul className="flex flex-col">
         {items.map((item) => (
           <li
             key={item.id}
-            className="group hover:bg-muted flex items-center gap-3 rounded-2xl px-3 py-2.5"
+            className="group hover:bg-muted flex items-center gap-2.5 rounded-2xl px-2.5 py-2.5"
           >
             <button
               type="button"
@@ -39,8 +52,8 @@ export function RecentSection({ items, onSelect, onRemove, onClearAll }: RecentS
               className="flex flex-1 items-center gap-3 text-left focus-visible:outline-none"
               aria-label={`Load weather for ${item.displayName}`}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-foreground/15 text-foreground/60">
-                <FileTextIcon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-foreground/15 text-foreground/60">
+                <FileTextIcon className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
               </span>
               <span className="font-display font-normal text-base text-foreground tracking-tight">
                 {item.displayName}

@@ -14,6 +14,8 @@ interface SearchDropdownProps {
   onRecentSelect: (item: HistoryItem) => void;
   onRecentRemove: (item: HistoryItem) => void;
   onRecentClearAll: () => void;
+  clearDialogOpen: boolean;
+  onClearDialogOpenChange: (open: boolean) => void;
   onSuggestionSelect: (item: SuggestionItem) => void;
 }
 
@@ -27,6 +29,8 @@ export function SearchDropdown({
   onRecentSelect,
   onRecentRemove,
   onRecentClearAll,
+  clearDialogOpen,
+  onClearDialogOpenChange,
   onSuggestionSelect,
 }: SearchDropdownProps) {
   const len = trimmed.length;
@@ -40,6 +44,8 @@ export function SearchDropdown({
           onSelect={onRecentSelect}
           onRemove={onRecentRemove}
           onClearAll={onRecentClearAll}
+          clearDialogOpen={clearDialogOpen}
+          onClearDialogOpenChange={onClearDialogOpenChange}
         />
       )}
 
@@ -52,6 +58,8 @@ export function SearchDropdown({
               onSelect={onRecentSelect}
               onRemove={onRecentRemove}
               onClearAll={onRecentClearAll}
+              clearDialogOpen={clearDialogOpen}
+              onClearDialogOpenChange={onClearDialogOpenChange}
             />
           )}
           <p className="px-3 py-3 text-sm text-foreground/50">
@@ -69,6 +77,8 @@ export function SearchDropdown({
               onSelect={onRecentSelect}
               onRemove={onRecentRemove}
               onClearAll={onRecentClearAll}
+              clearDialogOpen={clearDialogOpen}
+              onClearDialogOpenChange={onClearDialogOpenChange}
             />
           )}
 
