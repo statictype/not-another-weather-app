@@ -4,22 +4,21 @@ import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
 import { Toaster } from "@/components/ui/sonner";
 import { WeatherResult } from "@/components/weather-result";
-import { getHistorySnapshot, type HistoryItem, useHistory } from "@/hooks/use-history";
+import { type HistoryItem, useHistory } from "@/hooks/use-history";
+import { setSearchParam, useSearchParam } from "@/hooks/use-search-param";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { useUndo } from "@/hooks/use-undo";
-import { useWeather, type WeatherSource } from "@/hooks/use-weather";
+import { useWeather } from "@/hooks/use-weather";
 
 export function App() {
   // ─── Search state ────────────────────────────────────────────────────
   const [inputValue, setInputValue] = useState("");
-  // Auto-load the most-recent item on first mount by seeding state lazily
-  // from the history store — avoids a setState-in-effect dance.
-  const [activeQuery, setActiveQuery] = useState<string | null>(
-    () => getHistorySnapshot()[0]?.query ?? null,
-  );
-  const [source, setSource] = useState<WeatherSource>(() =>
-    getHistorySnapshot()[0] ? "auto" : "user",
-  );
+  // The URL's `?city=` param is the single source of truth for the
+  // active city. The one-time bootstrap in main.tsx seeds it from
+  // history on cold load, so returning users still see their last city
+  // — but the URL now accurately reflects what's on screen from the
+  // first paint. See docs/rfcs/007-url-driven-city.md.
+  const activeQuery = useSearchParam("city");
 
   // ─── History + undo ──────────────────────────────────────────────────
   const {
@@ -35,16 +34,12 @@ export function App() {
   const suggestions = useSuggestions(inputValue);
 
   // ─── Fetch ───────────────────────────────────────────────────────────
-  // `placeholderData: keepPreviousData` keeps the last successful payload
-  // on `query.data` during refetches, so there's no need for a separate
-  // "last result" cache in this component.
-  const query = useWeather({ query: activeQuery, source });
+  const query = useWeather({ query: activeQuery });
 
-  // ─── Add successful user-initiated fetches to history ────────────────
+  // ─── Add successful fetches to history ───────────────────────────────
   const lastCommittedQuery = useRef<string | null>(null);
   useEffect(() => {
     if (!query.isSuccess || !query.data) return;
-    if (source !== "user") return;
     if (!activeQuery) return;
     if (lastCommittedQuery.current === activeQuery.toLowerCase()) return;
 
@@ -53,12 +48,11 @@ export function App() {
       query: activeQuery,
       displayName: formatDisplayName(query.data),
     });
-  }, [query.isSuccess, query.data, source, activeQuery, addHistory]);
+  }, [query.isSuccess, query.data, activeQuery, addHistory]);
 
   // ─── SearchBar callbacks ─────────────────────────────────────────────
   const handleValueChange = (next: string) => {
     setInputValue(next);
-    setSource("user");
   };
 
   // ─── Suggestion / history selection (the only things that trigger a fetch) ──
@@ -67,14 +61,12 @@ export function App() {
       ? `${item.name}, ${item.region}, ${item.country}`
       : `${item.name}, ${item.country}`;
     setInputValue("");
-    setActiveQuery(q);
-    setSource("user");
+    setSearchParam("city", q);
   };
 
   const handleHistorySelect = (item: HistoryItem) => {
     setInputValue("");
-    setActiveQuery(item.query);
-    setSource("user");
+    setSearchParam("city", item.query);
   };
 
   // ─── History management ──────────────────────────────────────────────

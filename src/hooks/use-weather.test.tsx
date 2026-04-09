@@ -47,7 +47,7 @@ function makeWrapper() {
 
 describe("useWeather", () => {
   it("is disabled when the query is shorter than minLength", async () => {
-    const { result } = renderHook(() => useWeather({ query: "Lo", source: "user" }), {
+    const { result } = renderHook(() => useWeather({ query: "Lo" }), {
       wrapper: makeWrapper(),
     });
     expect(result.current.fetchStatus).toBe("idle");
@@ -55,7 +55,7 @@ describe("useWeather", () => {
   });
 
   it("is disabled when the query is null", async () => {
-    const { result } = renderHook(() => useWeather({ query: null, source: "auto" }), {
+    const { result } = renderHook(() => useWeather({ query: null }), {
       wrapper: makeWrapper(),
     });
     expect(result.current.fetchStatus).toBe("idle");
@@ -64,7 +64,7 @@ describe("useWeather", () => {
   it("fetches and returns the DTO on success", async () => {
     server.use(http.get("/api/weather", () => HttpResponse.json(fixture)));
 
-    const { result } = renderHook(() => useWeather({ query: "London", source: "user" }), {
+    const { result } = renderHook(() => useWeather({ query: "London" }), {
       wrapper: makeWrapper(),
     });
 
@@ -82,22 +82,11 @@ describe("useWeather", () => {
       ),
     );
 
-    const { result } = renderHook(() => useWeather({ query: "Xyznotacity", source: "user" }), {
+    const { result } = renderHook(() => useWeather({ query: "Xyznotacity" }), {
       wrapper: makeWrapper(),
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.kind).toBe("not_found");
-  });
-
-  it("carries the source through to the result", async () => {
-    server.use(http.get("/api/weather", () => HttpResponse.json(fixture)));
-
-    const { result } = renderHook(() => useWeather({ query: "London", source: "auto" }), {
-      wrapper: makeWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.source).toBe("auto");
   });
 });

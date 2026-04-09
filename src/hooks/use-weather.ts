@@ -20,41 +20,36 @@ import { normalizeQuery } from "@/lib/query";
  * independently — each card subscribes only to the query it needs.
  */
 
-export type WeatherSource = "user" | "auto";
-
 export interface UseWeatherOptions {
-  /** The committed/debounced query to fetch. `null` means "do nothing". */
+  /** The committed query to fetch. `null` means "do nothing". */
   query: string | null;
-  source: WeatherSource;
   /** Minimum length before the query is considered active. */
   minLength?: number;
 }
 
-export type UseWeatherResult = UseQueryResult<WeatherCurrent, WeatherClientError> & {
-  source: WeatherSource;
-};
+export type UseWeatherResult = UseQueryResult<WeatherCurrent, WeatherClientError>;
 
 /**
  * Fast path: fetches `/api/weather` (current + location). Drives the
- * top-level state machine in `WeatherResult` and the source-aware error
- * policy. The other two tiers fire inside the grid once this lands.
+ * top-level state machine in `WeatherResult`. The other two tiers fire
+ * inside the grid once this lands.
+ *
+ * The active query comes from the URL (`?city=`) via `useSearchParam`
+ * in `App.tsx`. See docs/rfcs/007-url-driven-city.md.
  */
 export function useWeather(options: UseWeatherOptions): UseWeatherResult {
-  const { query, source, minLength = 3 } = options;
+  const { query, minLength = 3 } = options;
   const normalized = normalizeQuery(query) ?? "";
   const enabled = normalized.length >= minLength;
 
-  const result = useQuery<WeatherCurrent, WeatherClientError>({
+  return useQuery<WeatherCurrent, WeatherClientError>({
     queryKey: ["weather", "current", normalized],
     queryFn: ({ signal }) => fetchCurrent(normalized, signal),
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 120_000, // 2 min — matches the 10 min edge TTL / 5
     gcTime: 600_000, // 10 min
-    meta: { source },
   });
-
-  return Object.assign(result, { source });
 }
 
 /**

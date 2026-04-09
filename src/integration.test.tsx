@@ -14,13 +14,18 @@ import { __resetHistoryStoreForTests } from "@/hooks/use-history";
 import { server } from "@/test/msw-server";
 
 /**
- * One end-to-end-ish test for the full app, run via MSW so the real
- * API client, the real TanStack Query wiring, the real hooks, and the
- * real UI all participate. This test is the project's safety net for
- * "did anything in the search → fetch → render → history flow break".
+ * End-to-end-ish tests for the full app, run via MSW so the real API
+ * client, TanStack Query wiring, hooks, URL state, and UI all
+ * participate. This file is the safety net for "did anything in the
+ * URL → fetch → render → history flow break".
  *
- * Per-component tests would duplicate effort here without adding signal,
- * so they're intentionally not written.
+ * Most weather-render assertions navigate via the URL (`?city=London`)
+ * rather than clicking through the suggestion flow. URL-driven tests
+ * are closer to how users actually arrive at a city (link sharing,
+ * bookmarks) and don't couple every test to the search-bar UI. The
+ * suggestion-click path still gets one dedicated test.
+ *
+ * Per docs/rfcs/007-url-driven-city.md.
  */
 
 const londonCurrent: WeatherCurrent = {
@@ -78,20 +83,6 @@ const londonForecast: WeatherForecast = {
 
 const londonYesterday: WeatherYesterday = { yesterday: null };
 
-const parisCurrent: WeatherCurrent = {
-  ...londonCurrent,
-  location: {
-    name: "Paris",
-    region: "Île-de-France",
-    country: "France",
-    localTime: "",
-    tz: "Europe/London",
-    lat: 48.85,
-    lon: 2.35,
-  },
-  current: { ...londonCurrent.current, tempC: 18.0, conditionText: "Sunny", conditionCode: 1000 },
-};
-
 const londonSuggestion: SuggestionItem = {
   id: 1,
   name: "London",
@@ -102,8 +93,9 @@ const londonSuggestion: SuggestionItem = {
   url: "london-greater-london-united-kingdom",
 };
 
-function renderApp() {
+function renderAppAt(url: string) {
   __resetHistoryStoreForTests();
+  window.history.replaceState(null, "", url);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(
     <QueryClientProvider client={client}>
@@ -114,11 +106,11 @@ function renderApp() {
 
 beforeEach(() => {
   __resetHistoryStoreForTests();
+  window.history.replaceState(null, "", "/");
   server.use(
     http.get("/api/weather", ({ request }) => {
       const q = new URL(request.url).searchParams.get("q")?.toLowerCase() ?? "";
       if (q.includes("london")) return HttpResponse.json(londonCurrent);
-      if (q.includes("paris")) return HttpResponse.json(parisCurrent);
       return HttpResponse.json(
         { error: { kind: "not_found", message: "No matching location found." } },
         { status: 404 },
@@ -126,7 +118,7 @@ beforeEach(() => {
     }),
     http.get("/api/weather/forecast", ({ request }) => {
       const q = new URL(request.url).searchParams.get("q")?.toLowerCase() ?? "";
-      if (q.includes("london") || q.includes("paris")) return HttpResponse.json(londonForecast);
+      if (q.includes("london")) return HttpResponse.json(londonForecast);
       return HttpResponse.json(
         { error: { kind: "not_found", message: "No matching location found." } },
         { status: 404 },
@@ -142,25 +134,40 @@ beforeEach(() => {
 });
 
 describe("Oasis (integration)", () => {
-  it("selecting a city suggestion fetches weather, renders the card, and adds to history", async () => {
-    const user = userEvent.setup();
-    renderApp();
+  it("renders the weather for the city in the URL (no click-through)", async () => {
+    renderAppAt("/?city=London");
 
-    // Empty state visible.
+    // Hero paints. "Feels like 11°" is unique to the hero card.
+    await screen.findByText(/feels like 11/i);
+    expect(screen.getByText("12")).toBeInTheDocument();
+  });
+
+  it("shows the empty state when the URL has no city", () => {
+    renderAppAt("/");
     expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
+  });
+
+  it("selecting a city suggestion updates the URL, fetches, and adds to history", async () => {
+    const user = userEvent.setup();
+    renderAppAt("/");
 
     const input = screen.getByLabelText(/city/i);
     await user.type(input, "London");
 
-    // Suggestion appears in the dropdown.
     const suggestion = await screen.findByRole("button", { name: /search weather for london/i });
     await user.click(suggestion);
 
-    // Hero paints with the condition and rounded temperature.
-    await screen.findByText(/partly cloudy/i);
-    expect(screen.getByText("12")).toBeInTheDocument();
+    // URL now carries the city.
+    await waitFor(() => {
+      expect(new URL(window.location.href).searchParams.get("city")?.toLowerCase()).toContain(
+        "london",
+      );
+    });
 
-    // History entry for London appears when re-opening the dropdown.
+    // Hero paints. "Feels like 11°" is unique to the hero card.
+    await screen.findByText(/feels like 11/i);
+
+    // History entry appears when re-opening the dropdown.
     await user.click(input);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();
@@ -169,13 +176,12 @@ describe("Oasis (integration)", () => {
 
   it("pressing Enter without selecting shows a validation error and does not fetch", async () => {
     const user = userEvent.setup();
-    renderApp();
+    renderAppAt("/");
 
     const input = screen.getByLabelText(/city/i);
     await user.type(input, "London");
     await user.keyboard("{Enter}");
 
-    // Select-prompt error shown inside the dropdown.
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent(/select a city from the list/i);
     });
@@ -186,34 +192,24 @@ describe("Oasis (integration)", () => {
 
   it("removes a history item, shows undo toast, and restores it", async () => {
     const user = userEvent.setup();
-    renderApp();
+    renderAppAt("/?city=London");
 
+    // Wait for fetch to land and history entry to accumulate.
+    await screen.findByText(/feels like 11/i);
     const input = screen.getByLabelText(/city/i);
-    await user.type(input, "London");
-
-    const suggestion = await screen.findByRole("button", { name: /search weather for london/i });
-    await user.click(suggestion);
-    await screen.findByText(/partly cloudy/i);
-
-    // Re-focus input to open the recent dropdown.
     await user.click(input);
     await screen.findByRole("button", { name: /load weather for london/i });
 
-    const removeBtn = await screen.findByRole("button", {
-      name: /remove london/i,
-    });
+    const removeBtn = await screen.findByRole("button", { name: /remove london/i });
     await user.click(removeBtn);
 
-    // History entry gone.
     expect(
       screen.queryByRole("button", { name: /load weather for london/i }),
     ).not.toBeInTheDocument();
 
-    // Toast undo button appears.
     const undoBtn = await screen.findByRole("button", { name: /^undo$/i });
     await user.click(undoBtn);
 
-    // Re-open the dropdown to verify the entry is back.
     await user.click(input);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();

@@ -18,19 +18,19 @@ interface WeatherResultProps {
  * Drives off the fast `current` query only. The forecast and yesterday
  * tiers fire inside `WeatherGrid` and stream in independently.
  *
- * The asymmetric error policy lives here:
+ * Error policy:
  *  - `not_found` and `invalid_query` are *input* errors. The SearchBar
  *    surfaces them under the input. This component keeps showing the
  *    previous successful result (if any) or the empty state.
  *  - `quota_exceeded` is a global degradation that supersedes whatever
  *    was on screen — full takeover.
- *  - `network` / `upstream` also take over, but only when there's no
- *    prior successful data and the source is "user". For auto-load
- *    failures we silently fall back to the empty state to avoid
- *    starting a returning user's session with an error.
+ *  - `network` / `upstream` take over with a retry CTA whenever there
+ *    is no prior successful data to fall back to. The URL is the
+ *    source of truth for the active query, so every failed fetch is
+ *    legitimately the user's intent — no silent fallback.
  */
 export function WeatherResult({ query, activeQuery, onRetry }: WeatherResultProps) {
-  const { data, error, isLoading, isFetching, isPlaceholderData, source } = query;
+  const { data, error, isLoading, isFetching, isPlaceholderData } = query;
 
   if (error instanceof WeatherClientError && error.kind === "quota_exceeded") {
     return <QuotaExceededState />;
@@ -41,9 +41,6 @@ export function WeatherResult({ query, activeQuery, onRetry }: WeatherResultProp
     (error.kind === "network" || error.kind === "upstream") &&
     !data
   ) {
-    if (source === "auto") {
-      return <EmptyState />;
-    }
     return (
       <ErrorState
         title="Couldn't reach the weather service"
