@@ -1,4 +1,6 @@
-import type { WeatherErrorKind } from "./types";
+import type { WeatherErrorKind } from "@/lib/errors";
+
+export { statusForKind } from "@/lib/errors";
 
 /**
  * Internal error type thrown by the upstream client and caught by the
@@ -15,21 +17,5 @@ export class WeatherApiError extends Error {
   ) {
     super(message);
     this.name = "WeatherApiError";
-  }
-}
-
-/** Map an error kind to its HTTP status. */
-export function statusForKind(kind: WeatherErrorKind): number {
-  switch (kind) {
-    case "not_found":
-      return 404;
-    case "invalid_query":
-      return 400;
-    case "quota_exceeded":
-      return 429;
-    case "upstream":
-      return 502;
-    case "network":
-      return 504;
   }
 }

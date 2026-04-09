@@ -18,12 +18,7 @@ export interface SuggestionItem {
   url: string;
 }
 
-export type WeatherErrorKind =
-  | "not_found"
-  | "quota_exceeded"
-  | "invalid_query"
-  | "upstream"
-  | "network";
+export type { WeatherErrorKind } from "@/lib/errors";
 
 export interface ForecastDay {
   date: string;

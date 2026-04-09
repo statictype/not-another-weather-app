@@ -12,13 +12,8 @@ export interface Env {
   WEATHER_API_KEY: string;
 }
 
-/** All errors the proxy can return, as a closed discriminated union. */
-export type WeatherErrorKind =
-  | "not_found"
-  | "quota_exceeded"
-  | "invalid_query"
-  | "upstream"
-  | "network";
+import type { WeatherErrorKind } from "@/lib/errors";
+export type { WeatherErrorKind };
 
 export interface ErrorResponse {
   error: {

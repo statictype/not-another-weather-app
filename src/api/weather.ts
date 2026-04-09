@@ -1,4 +1,5 @@
-import type { SuggestionItem, WeatherErrorKind, WeatherResponse } from "./types";
+import { defaultMessage, kindForStatus, type WeatherErrorKind } from "@/lib/errors";
+import type { SuggestionItem, WeatherResponse } from "./types";
 
 /**
  * Typed client for the Oasis proxy at `/api/weather`.
@@ -46,27 +47,12 @@ export async function fetchWeather(query: string, signal?: AbortSignal): Promise
     } catch {
       // Body wasn't JSON — fall through with empty body and use status-based fallback.
     }
-    const kind = body.error?.kind ?? statusToKind(res.status);
+    const kind = body.error?.kind ?? kindForStatus(res.status);
     const message = body.error?.message ?? defaultMessage(kind);
     throw new WeatherClientError(kind, message);
   }
 
   return (await res.json()) as WeatherResponse;
-}
-
-function statusToKind(status: number): WeatherErrorKind {
-  switch (status) {
-    case 400:
-      return "invalid_query";
-    case 404:
-      return "not_found";
-    case 429:
-      return "quota_exceeded";
-    case 504:
-      return "network";
-    default:
-      return "upstream";
-  }
 }
 
 export async function fetchSearch(query: string, signal?: AbortSignal): Promise<SuggestionItem[]> {
@@ -89,25 +75,10 @@ export async function fetchSearch(query: string, signal?: AbortSignal): Promise<
     } catch {
       // ignore
     }
-    const kind = body.error?.kind ?? statusToKind(res.status);
+    const kind = body.error?.kind ?? kindForStatus(res.status);
     const message = body.error?.message ?? defaultMessage(kind);
     throw new WeatherClientError(kind, message);
   }
 
   return (await res.json()) as SuggestionItem[];
-}
-
-function defaultMessage(kind: WeatherErrorKind): string {
-  switch (kind) {
-    case "not_found":
-      return "City not found.";
-    case "quota_exceeded":
-      return "Weather service quota exceeded.";
-    case "invalid_query":
-      return "Invalid query.";
-    case "network":
-      return "Could not reach the weather service.";
-    case "upstream":
-      return "Weather service is unavailable.";
-  }
 }
