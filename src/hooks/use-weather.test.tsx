@@ -3,11 +3,11 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
-import type { WeatherResponse } from "@/api/types";
+import type { WeatherCurrent } from "@/api/types";
 import { server } from "@/test/msw-server";
 import { useWeather } from "./use-weather";
 
-const fixture: WeatherResponse = {
+const fixture: WeatherCurrent = {
   location: {
     name: "London",
     region: "",
@@ -33,17 +33,6 @@ const fixture: WeatherResponse = {
     cloud: 40,
     dewpointC: 6.2,
     precipMm: 0,
-  },
-  today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
-  forecast: [],
-  yesterday: null,
-  astro: {
-    sunrise: "06:32 AM",
-    sunset: "07:48 PM",
-    moonrise: "10:00 PM",
-    moonset: "08:14 AM",
-    moonPhase: "Waxing Gibbous",
-    moonIllumination: 72,
   },
 };
 

@@ -2,17 +2,21 @@ import { WeatherClientError } from "@/api/weather";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { QuotaExceededState } from "@/components/quota-exceeded-state";
-import { WeatherCard } from "@/components/weather-card";
+import { WeatherGrid } from "@/components/weather/grid";
 import { WeatherSkeleton } from "@/components/weather-skeleton";
 import type { UseWeatherResult } from "@/hooks/use-weather";
 
 interface WeatherResultProps {
   query: UseWeatherResult;
+  activeQuery: string | null;
   onRetry: () => void;
 }
 
 /**
  * State-machine container for the result area.
+ *
+ * Drives off the fast `current` query only. The forecast and yesterday
+ * tiers fire inside `WeatherGrid` and stream in independently.
  *
  * The asymmetric error policy lives here:
  *  - `not_found` and `invalid_query` are *input* errors. The SearchBar
@@ -25,19 +29,13 @@ interface WeatherResultProps {
  *    failures we silently fall back to the empty state to avoid
  *    starting a returning user's session with an error.
  */
-export function WeatherResult({ query, onRetry }: WeatherResultProps) {
-  // `placeholderData: keepPreviousData` in useWeather means `data` already
-  // holds the last successful payload while a new query is loading, so we
-  // don't need a separate fallback cache — `isPlaceholderData` tells us
-  // the displayed result is stale.
+export function WeatherResult({ query, activeQuery, onRetry }: WeatherResultProps) {
   const { data, error, isLoading, isFetching, isPlaceholderData, source } = query;
 
-  // Quota always wins.
   if (error instanceof WeatherClientError && error.kind === "quota_exceeded") {
     return <QuotaExceededState />;
   }
 
-  // Hard system errors take over only when there's nothing else to show.
   if (
     error instanceof WeatherClientError &&
     (error.kind === "network" || error.kind === "upstream") &&
@@ -55,16 +53,15 @@ export function WeatherResult({ query, onRetry }: WeatherResultProps) {
     );
   }
 
-  // Initial loading with no prior data.
   if (isLoading) {
     return <WeatherSkeleton />;
   }
 
-  // Success — or stale fallback while a new query loads / fails.
   if (data) {
-    return <WeatherCard data={data} isStale={isFetching || isPlaceholderData} />;
+    return (
+      <WeatherGrid query={activeQuery} current={data} isStale={isFetching || isPlaceholderData} />
+    );
   }
 
-  // Idle: no query active, no data, no error worth taking over for.
   return <EmptyState />;
 }

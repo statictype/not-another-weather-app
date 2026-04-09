@@ -1,11 +1,15 @@
 /**
  * Wire types for the Oasis frontend.
  *
- * These mirror the proxy DTO at `src/worker/types.ts`. They live in their
+ * These mirror the proxy DTOs at `src/worker/types.ts`. They live in their
  * own file (rather than being imported from the worker) so the frontend
  * stays cleanly buildable without pulling worker types into the app
  * tsconfig. If you change one shape, change the other — they're tiny on
  * purpose so duplication is cheap and explicit.
+ *
+ * The weather pipeline is split into three independently-cacheable
+ * endpoints so the hero can paint as soon as `current` lands without
+ * waiting on forecast or historical data. See `docs/rfcs/001-*.md`.
  */
 
 export interface SuggestionItem {
@@ -19,6 +23,34 @@ export interface SuggestionItem {
 }
 
 export type { WeatherErrorKind } from "@/lib/errors";
+
+export interface WeatherLocation {
+  name: string;
+  region: string;
+  country: string;
+  localTime: string;
+  tz: string;
+  lat: number;
+  lon: number;
+}
+
+export interface CurrentConditions {
+  tempC: number;
+  feelsLikeC: number;
+  conditionText: string;
+  conditionCode: number;
+  timeOfDay: "day" | "night";
+  windKph: number;
+  windDir: string;
+  gustKph: number;
+  humidity: number;
+  pressureMb: number;
+  visibilityKm: number;
+  uv: number;
+  cloud: number;
+  dewpointC: number;
+  precipMm: number;
+}
 
 export interface ForecastDay {
   date: string;
@@ -40,39 +72,24 @@ export interface Astro {
   moonIllumination: number;
 }
 
-export interface WeatherResponse {
-  location: {
-    name: string;
-    region: string;
-    country: string;
-    localTime: string;
-    tz: string;
-    lat: number;
-    lon: number;
-  };
-  current: {
-    tempC: number;
-    feelsLikeC: number;
-    conditionText: string;
-    conditionCode: number;
-    timeOfDay: "day" | "night";
-    windKph: number;
-    windDir: string;
-    gustKph: number;
-    humidity: number;
-    pressureMb: number;
-    visibilityKm: number;
-    uv: number;
-    cloud: number;
-    dewpointC: number;
-    precipMm: number;
-  };
+/** Response shape for `GET /api/weather` — fast path, LCP-critical. */
+export interface WeatherCurrent {
+  location: WeatherLocation;
+  current: CurrentConditions;
+}
+
+/** Response shape for `GET /api/weather/forecast`. */
+export interface WeatherForecast {
   today: {
     minC: number;
     maxC: number;
     chanceOfRain: number;
   };
   forecast: ForecastDay[];
-  yesterday: ForecastDay | null;
   astro: Astro;
+}
+
+/** Response shape for `GET /api/weather/yesterday`. */
+export interface WeatherYesterday {
+  yesterday: ForecastDay | null;
 }

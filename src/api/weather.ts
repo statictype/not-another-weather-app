@@ -1,16 +1,20 @@
 import { defaultMessage, kindForStatus, type WeatherErrorKind } from "@/lib/errors";
-import type { SuggestionItem, WeatherResponse } from "./types";
+import type { SuggestionItem, WeatherCurrent, WeatherForecast, WeatherYesterday } from "./types";
 
 /**
- * Typed client for the Oasis proxy at `/api/weather`.
+ * Typed client for the Oasis proxy.
  *
- * Single responsibility: take a query string, return a `WeatherResponse`,
- * throw a `WeatherClientError` on any failure. Components consume this
- * via TanStack Query and never touch `fetch` directly.
+ * The weather pipeline is split into three independently-cacheable
+ * endpoints so the hero can paint on `current` without waiting for
+ * forecast or historical data:
  *
- * Network errors (proxy unreachable, DNS, etc.) are normalized into the
- * same typed error shape as upstream errors so the rendering layer has
- * one switch statement and no special cases.
+ *   GET /api/weather            → WeatherCurrent
+ *   GET /api/weather/forecast   → WeatherForecast
+ *   GET /api/weather/yesterday  → WeatherYesterday
+ *
+ * All three failure modes (proxy unreachable, HTTP status, typed body)
+ * are normalized to a single `WeatherClientError` so the rendering
+ * layer has one switch statement and no special cases.
  */
 
 export class WeatherClientError extends Error {
@@ -27,9 +31,7 @@ interface ErrorBody {
   error?: { kind?: WeatherErrorKind; message?: string };
 }
 
-export async function fetchWeather(query: string, signal?: AbortSignal): Promise<WeatherResponse> {
-  const url = `/api/weather?q=${encodeURIComponent(query)}`;
-
+async function request<T>(url: string, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, signal ? { signal } : undefined);
@@ -52,33 +54,21 @@ export async function fetchWeather(query: string, signal?: AbortSignal): Promise
     throw new WeatherClientError(kind, message);
   }
 
-  return (await res.json()) as WeatherResponse;
+  return (await res.json()) as T;
 }
 
-export async function fetchSearch(query: string, signal?: AbortSignal): Promise<SuggestionItem[]> {
-  const url = `/api/search?q=${encodeURIComponent(query)}`;
+export function fetchCurrent(query: string, signal?: AbortSignal): Promise<WeatherCurrent> {
+  return request<WeatherCurrent>(`/api/weather?q=${encodeURIComponent(query)}`, signal);
+}
 
-  let res: Response;
-  try {
-    res = await fetch(url, signal ? { signal } : undefined);
-  } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") {
-      throw err;
-    }
-    throw new WeatherClientError("network", "Could not reach the weather service.");
-  }
+export function fetchForecast(query: string, signal?: AbortSignal): Promise<WeatherForecast> {
+  return request<WeatherForecast>(`/api/weather/forecast?q=${encodeURIComponent(query)}`, signal);
+}
 
-  if (!res.ok) {
-    let body: ErrorBody = {};
-    try {
-      body = (await res.json()) as ErrorBody;
-    } catch {
-      // ignore
-    }
-    const kind = body.error?.kind ?? kindForStatus(res.status);
-    const message = body.error?.message ?? defaultMessage(kind);
-    throw new WeatherClientError(kind, message);
-  }
+export function fetchYesterday(query: string, signal?: AbortSignal): Promise<WeatherYesterday> {
+  return request<WeatherYesterday>(`/api/weather/yesterday?q=${encodeURIComponent(query)}`, signal);
+}
 
-  return (await res.json()) as SuggestionItem[];
+export function fetchSearch(query: string, signal?: AbortSignal): Promise<SuggestionItem[]> {
+  return request<SuggestionItem[]>(`/api/search?q=${encodeURIComponent(query)}`, signal);
 }

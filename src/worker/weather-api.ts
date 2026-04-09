@@ -1,15 +1,26 @@
 import { WeatherApiError } from "./errors";
-import type { ForecastDay, WeatherResponse } from "./types";
+import type {
+  Astro,
+  CurrentConditions,
+  ForecastDay,
+  WeatherCurrent,
+  WeatherForecast,
+  WeatherLocation,
+  WeatherYesterday,
+} from "./types";
 
 /**
  * Upstream client for WeatherAPI.com.
  *
- * Single responsibility: take a normalized query, return a shaped DTO,
- * throw a typed `WeatherApiError` for anything that goes wrong. The
- * caller never sees the upstream's schema or HTTP status codes.
+ * The pipeline is split into three independently-cacheable calls so the
+ * hero can paint on `current` without waiting for forecast or history.
+ * Each function takes a normalized query, returns a shaped DTO, and
+ * throws a typed `WeatherApiError` for anything that goes wrong. Callers
+ * never see the upstream's schema or HTTP status codes.
  */
 
-const UPSTREAM_BASE = "https://api.weatherapi.com/v1/forecast.json";
+const UPSTREAM_CURRENT = "https://api.weatherapi.com/v1/current.json";
+const UPSTREAM_FORECAST = "https://api.weatherapi.com/v1/forecast.json";
 const UPSTREAM_HISTORY = "https://api.weatherapi.com/v1/history.json";
 const UPSTREAM_SEARCH = "https://api.weatherapi.com/v1/search.json";
 
@@ -23,56 +34,62 @@ export interface SearchResult {
   url: string;
 }
 
-/**
- * Subset of the WeatherAPI response we actually use. Anything not listed
- * here is intentionally dropped at the boundary.
- */
-interface UpstreamForecast {
-  location: {
-    name: string;
-    region: string;
-    country: string;
-    localtime: string;
-    tz_id: string;
-    lat: number;
-    lon: number;
-  };
-  current: {
-    temp_c: number;
-    feelslike_c: number;
-    is_day: 0 | 1;
+/** Subset of WeatherAPI's `location` block we actually use. */
+interface UpstreamLocation {
+  name: string;
+  region: string;
+  country: string;
+  localtime: string;
+  tz_id: string;
+  lat: number;
+  lon: number;
+}
+
+/** Subset of WeatherAPI's `current` block we actually use. */
+interface UpstreamCurrent {
+  temp_c: number;
+  feelslike_c: number;
+  is_day: 0 | 1;
+  condition: { text: string; code: number };
+  wind_kph: number;
+  wind_dir: string;
+  gust_kph: number;
+  humidity: number;
+  pressure_mb: number;
+  vis_km: number;
+  uv: number;
+  cloud: number;
+  dewpoint_c: number;
+  precip_mm: number;
+}
+
+interface UpstreamCurrentResponse {
+  location: UpstreamLocation;
+  current: UpstreamCurrent;
+}
+
+interface UpstreamForecastDay {
+  date: string;
+  day: {
+    mintemp_c: number;
+    maxtemp_c: number;
+    avgtemp_c: number;
+    daily_chance_of_rain: number;
     condition: { text: string; code: number };
-    wind_kph: number;
-    wind_dir: string;
-    gust_kph: number;
-    humidity: number;
-    pressure_mb: number;
-    vis_km: number;
-    uv: number;
-    cloud: number;
-    dewpoint_c: number;
-    precip_mm: number;
   };
-  forecast: {
-    forecastday: Array<{
-      date: string;
-      day: {
-        mintemp_c: number;
-        maxtemp_c: number;
-        avgtemp_c: number;
-        daily_chance_of_rain: number;
-        condition: { text: string; code: number };
-      };
-      astro: {
-        sunrise: string;
-        sunset: string;
-        moonrise: string;
-        moonset: string;
-        moon_phase: string;
-        moon_illumination: number | string;
-      };
-    }>;
+  astro: {
+    sunrise: string;
+    sunset: string;
+    moonrise: string;
+    moonset: string;
+    moon_phase: string;
+    moon_illumination: number | string;
   };
+}
+
+interface UpstreamForecastResponse {
+  location: UpstreamLocation;
+  forecast: { forecastday: UpstreamForecastDay[] };
 }
 
 interface UpstreamError {
@@ -104,29 +121,7 @@ function mapUpstreamErrorCode(code: number): WeatherApiError {
   }
 }
 
-export async function fetchForecast(
-  query: string,
-  apiKey: string,
-  signal?: AbortSignal,
-): Promise<WeatherResponse> {
-  const url = new URL(UPSTREAM_BASE);
-  url.searchParams.set("key", apiKey);
-  url.searchParams.set("q", query);
-  url.searchParams.set("days", "3");
-  url.searchParams.set("aqi", "no");
-  url.searchParams.set("alerts", "no");
-
-  // Run forecast + yesterday in parallel. Yesterday failures don't fail the
-  // whole request — we just return null and the UI omits the column.
-  const [forecast, yesterday] = await Promise.all([
-    fetchUpstream(url, signal),
-    fetchYesterday(query, apiKey, signal),
-  ]);
-
-  return { ...shape(forecast), yesterday };
-}
-
-async function fetchUpstream(url: URL, signal?: AbortSignal): Promise<UpstreamForecast> {
+async function fetchUpstream<T>(url: URL, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url.toString(), {
@@ -156,111 +151,133 @@ async function fetchUpstream(url: URL, signal?: AbortSignal): Promise<UpstreamFo
     throw new WeatherApiError("upstream", "Weather service is unavailable.");
   }
 
-  return body as UpstreamForecast;
+  return body as T;
 }
 
-async function fetchYesterday(
+export async function fetchCurrent(
   query: string,
   apiKey: string,
   signal?: AbortSignal,
-): Promise<ForecastDay | null> {
-  // UTC-based "yesterday". Good enough for the free tier; the upstream
-  // resolves the date against the queried location anyway.
-  const d = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const dt = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+): Promise<WeatherCurrent> {
+  const url = new URL(UPSTREAM_CURRENT);
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("q", query);
+  url.searchParams.set("aqi", "no");
 
+  const raw = await fetchUpstream<UpstreamCurrentResponse>(url, signal);
+  return {
+    location: shapeLocation(raw.location),
+    current: shapeCurrent(raw.current),
+  };
+}
+
+export async function fetchForecast3(
+  query: string,
+  apiKey: string,
+  signal?: AbortSignal,
+): Promise<WeatherForecast> {
+  const url = new URL(UPSTREAM_FORECAST);
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("q", query);
+  url.searchParams.set("days", "3");
+  url.searchParams.set("aqi", "no");
+  url.searchParams.set("alerts", "no");
+
+  const raw = await fetchUpstream<UpstreamForecastResponse>(url, signal);
+  const today = raw.forecast.forecastday[0];
+  if (!today) {
+    throw new WeatherApiError("upstream", "Weather service returned an incomplete response.");
+  }
+  return {
+    today: {
+      minC: round1(today.day.mintemp_c),
+      maxC: round1(today.day.maxtemp_c),
+      chanceOfRain: today.day.daily_chance_of_rain,
+    },
+    forecast: raw.forecast.forecastday.map(shapeForecastDay),
+    astro: shapeAstro(today.astro),
+  };
+}
+
+export async function fetchYesterday(
+  query: string,
+  apiKey: string,
+  dt: string,
+  signal?: AbortSignal,
+): Promise<WeatherYesterday> {
   const url = new URL(UPSTREAM_HISTORY);
   url.searchParams.set("key", apiKey);
   url.searchParams.set("q", query);
   url.searchParams.set("dt", dt);
 
   try {
-    const res = await fetch(url.toString(), {
-      ...(signal ? { signal } : {}),
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return null;
-    const body = (await res.json()) as UpstreamForecast;
-    const day = body.forecast?.forecastday?.[0];
-    if (!day) return null;
-    return {
-      date: day.date,
-      minC: round1(day.day.mintemp_c),
-      maxC: round1(day.day.maxtemp_c),
-      avgC: round1(day.day.avgtemp_c),
-      chanceOfRain: day.day.daily_chance_of_rain,
-      conditionText: day.day.condition.text,
-      conditionCode: day.day.condition.code,
-      isDay: true,
-    };
+    const raw = await fetchUpstream<UpstreamForecastResponse>(url, signal);
+    const day = raw.forecast?.forecastday?.[0];
+    if (!day) return { yesterday: null };
+    return { yesterday: shapeForecastDay(day) };
   } catch (err) {
+    // History failures are non-fatal — the UI just omits the column.
     console.warn("[oasis] yesterday fetch failed (non-fatal)", err);
-    return null;
+    return { yesterday: null };
   }
 }
 
-function shape(raw: UpstreamForecast): WeatherResponse {
-  const today = raw.forecast.forecastday[0];
-  if (!today) {
-    // Defensive: WeatherAPI always returns at least one forecastday for /forecast.json,
-    // but `noUncheckedIndexedAccess` makes us prove it.
-    throw new WeatherApiError("upstream", "Weather service returned an incomplete response.");
-  }
-
+function shapeLocation(raw: UpstreamLocation): WeatherLocation {
   return {
-    location: {
-      name: raw.location.name,
-      region: raw.location.region,
-      country: raw.location.country,
-      localTime: raw.location.localtime,
-      tz: raw.location.tz_id,
-      lat: raw.location.lat,
-      lon: raw.location.lon,
-    },
-    current: {
-      tempC: round1(raw.current.temp_c),
-      feelsLikeC: round1(raw.current.feelslike_c),
-      conditionText: raw.current.condition.text,
-      conditionCode: raw.current.condition.code,
-      timeOfDay: raw.current.is_day === 1 ? "day" : "night",
-      windKph: round1(raw.current.wind_kph),
-      windDir: raw.current.wind_dir,
-      gustKph: round1(raw.current.gust_kph ?? 0),
-      humidity: raw.current.humidity,
-      pressureMb: round1(raw.current.pressure_mb ?? 0),
-      visibilityKm: round1(raw.current.vis_km ?? 0),
-      uv: raw.current.uv ?? 0,
-      cloud: raw.current.cloud ?? 0,
-      dewpointC: round1(raw.current.dewpoint_c ?? 0),
-      precipMm: round1(raw.current.precip_mm ?? 0),
-    },
-    today: {
-      minC: round1(today.day.mintemp_c),
-      maxC: round1(today.day.maxtemp_c),
-      chanceOfRain: today.day.daily_chance_of_rain,
-    },
-    yesterday: null,
-    forecast: raw.forecast.forecastday.map((d) => ({
-      date: d.date,
-      minC: round1(d.day.mintemp_c),
-      maxC: round1(d.day.maxtemp_c),
-      avgC: round1(d.day.avgtemp_c),
-      chanceOfRain: d.day.daily_chance_of_rain,
-      conditionText: d.day.condition.text,
-      conditionCode: d.day.condition.code,
-      isDay: true,
-    })),
-    astro: {
-      sunrise: today.astro.sunrise,
-      sunset: today.astro.sunset,
-      moonrise: today.astro.moonrise,
-      moonset: today.astro.moonset,
-      moonPhase: today.astro.moon_phase,
-      moonIllumination:
-        typeof today.astro.moon_illumination === "string"
-          ? Number.parseInt(today.astro.moon_illumination, 10) || 0
-          : today.astro.moon_illumination,
-    },
+    name: raw.name,
+    region: raw.region,
+    country: raw.country,
+    localTime: raw.localtime,
+    tz: raw.tz_id,
+    lat: raw.lat,
+    lon: raw.lon,
+  };
+}
+
+function shapeCurrent(raw: UpstreamCurrent): CurrentConditions {
+  return {
+    tempC: round1(raw.temp_c),
+    feelsLikeC: round1(raw.feelslike_c),
+    conditionText: raw.condition.text,
+    conditionCode: raw.condition.code,
+    timeOfDay: raw.is_day === 1 ? "day" : "night",
+    windKph: round1(raw.wind_kph),
+    windDir: raw.wind_dir,
+    gustKph: round1(raw.gust_kph ?? 0),
+    humidity: raw.humidity,
+    pressureMb: round1(raw.pressure_mb ?? 0),
+    visibilityKm: round1(raw.vis_km ?? 0),
+    uv: raw.uv ?? 0,
+    cloud: raw.cloud ?? 0,
+    dewpointC: round1(raw.dewpoint_c ?? 0),
+    precipMm: round1(raw.precip_mm ?? 0),
+  };
+}
+
+function shapeForecastDay(d: UpstreamForecastDay): ForecastDay {
+  return {
+    date: d.date,
+    minC: round1(d.day.mintemp_c),
+    maxC: round1(d.day.maxtemp_c),
+    avgC: round1(d.day.avgtemp_c),
+    chanceOfRain: d.day.daily_chance_of_rain,
+    conditionText: d.day.condition.text,
+    conditionCode: d.day.condition.code,
+    isDay: true,
+  };
+}
+
+function shapeAstro(raw: UpstreamForecastDay["astro"]): Astro {
+  return {
+    sunrise: raw.sunrise,
+    sunset: raw.sunset,
+    moonrise: raw.moonrise,
+    moonset: raw.moonset,
+    moonPhase: raw.moon_phase,
+    moonIllumination:
+      typeof raw.moon_illumination === "string"
+        ? Number.parseInt(raw.moon_illumination, 10) || 0
+        : raw.moon_illumination,
   };
 }
 

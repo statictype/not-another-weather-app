@@ -144,7 +144,7 @@ export function App() {
         </header>
 
         <div className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>
-          <WeatherResult query={query} onRetry={handleRetry} />
+          <WeatherResult query={query} activeQuery={activeQuery} onRetry={handleRetry} />
         </div>
       </div>
 
