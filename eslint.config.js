@@ -26,4 +26,24 @@ export default tseslint.config(
       "@typescript-eslint/consistent-type-imports": "error",
     },
   },
+  {
+    // Zod must not enter the frontend bundle. Shared DTO types come from
+    // `@/lib/schemas` via type-only imports; the runtime schemas + zod
+    // itself are reserved for the worker. See RFC 008.
+    files: ["src/api/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "zod",
+              message:
+                "zod must not be imported from frontend code — use type-only imports from @/lib/schemas",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

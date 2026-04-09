@@ -1,4 +1,4 @@
-import { WeatherApiError } from "./errors";
+import { z, ZodError } from "zod";
 import type {
   Astro,
   CurrentConditions,
@@ -8,6 +8,78 @@ import type {
   WeatherLocation,
   WeatherYesterday,
 } from "./types";
+import { WeatherApiError } from "./errors";
+
+/* ───── Upstream schemas (private to this file) ──────────────────────
+ *
+ * These describe the subset of WeatherAPI.com's response shapes we
+ * actually consume. They are intentionally kept separate from the
+ * exported DTO schemas in `@/lib/schemas` — the upstream shapes are
+ * an implementation detail of this file and get replaced wholesale
+ * if we ever swap providers.
+ */
+
+const UpstreamLocationSchema = z.object({
+  name: z.string(),
+  region: z.string(),
+  country: z.string(),
+  localtime: z.string(),
+  tz_id: z.string(),
+  lat: z.number(),
+  lon: z.number(),
+});
+
+const UpstreamCurrentBlockSchema = z.object({
+  temp_c: z.number(),
+  feelslike_c: z.number(),
+  is_day: z.union([z.literal(0), z.literal(1)]),
+  condition: z.object({ text: z.string(), code: z.number() }),
+  wind_kph: z.number(),
+  wind_dir: z.string(),
+  gust_kph: z.number().nullish(),
+  humidity: z.number(),
+  pressure_mb: z.number().nullish(),
+  vis_km: z.number().nullish(),
+  uv: z.number().nullish(),
+  cloud: z.number().nullish(),
+  dewpoint_c: z.number().nullish(),
+  precip_mm: z.number().nullish(),
+});
+
+const UpstreamCurrentResponseSchema = z.object({
+  location: UpstreamLocationSchema,
+  current: UpstreamCurrentBlockSchema,
+});
+
+const UpstreamForecastDaySchema = z.object({
+  date: z.string(),
+  day: z.object({
+    mintemp_c: z.number(),
+    maxtemp_c: z.number(),
+    avgtemp_c: z.number(),
+    daily_chance_of_rain: z.number(),
+    condition: z.object({ text: z.string(), code: z.number() }),
+  }),
+  astro: z.object({
+    sunrise: z.string(),
+    sunset: z.string(),
+    moonrise: z.string(),
+    moonset: z.string(),
+    moon_phase: z.string(),
+    moon_illumination: z.union([z.number(), z.string()]),
+  }),
+});
+
+const UpstreamForecastResponseSchema = z.object({
+  location: UpstreamLocationSchema,
+  forecast: z.object({
+    forecastday: z.array(UpstreamForecastDaySchema),
+  }),
+});
+
+type UpstreamLocation = z.infer<typeof UpstreamLocationSchema>;
+type UpstreamCurrent = z.infer<typeof UpstreamCurrentBlockSchema>;
+type UpstreamForecastDay = z.infer<typeof UpstreamForecastDaySchema>;
 
 /**
  * Upstream client for WeatherAPI.com.
@@ -32,64 +104,6 @@ export interface SearchResult {
   lat: number;
   lon: number;
   url: string;
-}
-
-/** Subset of WeatherAPI's `location` block we actually use. */
-interface UpstreamLocation {
-  name: string;
-  region: string;
-  country: string;
-  localtime: string;
-  tz_id: string;
-  lat: number;
-  lon: number;
-}
-
-/** Subset of WeatherAPI's `current` block we actually use. */
-interface UpstreamCurrent {
-  temp_c: number;
-  feelslike_c: number;
-  is_day: 0 | 1;
-  condition: { text: string; code: number };
-  wind_kph: number;
-  wind_dir: string;
-  gust_kph: number;
-  humidity: number;
-  pressure_mb: number;
-  vis_km: number;
-  uv: number;
-  cloud: number;
-  dewpoint_c: number;
-  precip_mm: number;
-}
-
-interface UpstreamCurrentResponse {
-  location: UpstreamLocation;
-  current: UpstreamCurrent;
-}
-
-interface UpstreamForecastDay {
-  date: string;
-  day: {
-    mintemp_c: number;
-    maxtemp_c: number;
-    avgtemp_c: number;
-    daily_chance_of_rain: number;
-    condition: { text: string; code: number };
-  };
-  astro: {
-    sunrise: string;
-    sunset: string;
-    moonrise: string;
-    moonset: string;
-    moon_phase: string;
-    moon_illumination: number | string;
-  };
-}
-
-interface UpstreamForecastResponse {
-  location: UpstreamLocation;
-  forecast: { forecastday: UpstreamForecastDay[] };
 }
 
 interface UpstreamError {
@@ -121,7 +135,17 @@ function mapUpstreamErrorCode(code: number): WeatherApiError {
   }
 }
 
-async function fetchUpstream<T>(url: URL, signal?: AbortSignal): Promise<T> {
+/**
+ * Fetch an upstream endpoint and validate the response body against
+ * `schema`. Parse failures are mapped to `WeatherApiError("upstream", …)`
+ * with the structured `ZodError` logged to worker console so operators
+ * can see the exact field mismatch without it leaking to clients.
+ */
+async function fetchUpstream<S extends z.ZodType>(
+  url: URL,
+  schema: S,
+  signal?: AbortSignal,
+): Promise<z.infer<S>> {
   let res: Response;
   try {
     res = await fetch(url.toString(), {
@@ -151,7 +175,16 @@ async function fetchUpstream<T>(url: URL, signal?: AbortSignal): Promise<T> {
     throw new WeatherApiError("upstream", "Weather service is unavailable.");
   }
 
-  return body as T;
+  try {
+    return schema.parse(body);
+  } catch (err) {
+    if (err instanceof ZodError) {
+      console.error("[oasis] upstream response failed schema validation", err.issues);
+    } else {
+      console.error("[oasis] unexpected schema parse error", err);
+    }
+    throw new WeatherApiError("upstream", "Weather service returned an unexpected response.");
+  }
 }
 
 export async function fetchCurrent(
@@ -164,7 +197,7 @@ export async function fetchCurrent(
   url.searchParams.set("q", query);
   url.searchParams.set("aqi", "no");
 
-  const raw = await fetchUpstream<UpstreamCurrentResponse>(url, signal);
+  const raw = await fetchUpstream(url, UpstreamCurrentResponseSchema, signal);
   return {
     location: shapeLocation(raw.location),
     current: shapeCurrent(raw.current),
@@ -183,7 +216,7 @@ export async function fetchForecast3(
   url.searchParams.set("aqi", "no");
   url.searchParams.set("alerts", "no");
 
-  const raw = await fetchUpstream<UpstreamForecastResponse>(url, signal);
+  const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
   const today = raw.forecast.forecastday[0];
   if (!today) {
     throw new WeatherApiError("upstream", "Weather service returned an incomplete response.");
@@ -211,7 +244,7 @@ export async function fetchYesterday(
   url.searchParams.set("dt", dt);
 
   try {
-    const raw = await fetchUpstream<UpstreamForecastResponse>(url, signal);
+    const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
     const day = raw.forecast?.forecastday?.[0];
     if (!day) return { yesterday: null };
     return { yesterday: shapeForecastDay(day) };

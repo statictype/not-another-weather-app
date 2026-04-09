@@ -30,6 +30,7 @@
     "src/worker.test.ts",
     "src/worker/**/*.ts",
     "src/lib/errors.ts",
-    "src/lib/query.ts"
+    "src/lib/query.ts",
+    "src/lib/schemas.ts"
   ]
 }

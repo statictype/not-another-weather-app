@@ -1,15 +1,11 @@
 /**
  * Wire types for the Oasis Worker.
  *
- * The DTOs returned to the frontend are intentionally minimal and
- * decoupled from WeatherAPI.com's schema. This is the only place that
- * knows about the upstream vendor; the frontend never sees their field
- * names. Swapping providers means changing the upstream client, not the
- * wire shape.
- *
- * The weather pipeline is split into three endpoints so the hero can
- * paint on `current` without waiting for forecast or historical data.
- * See `docs/rfcs/001-*.md`.
+ * DTOs are defined once in `src/lib/schemas.ts` and re-exported here.
+ * The worker also imports the runtime schemas directly (from
+ * `weather-api.ts`) for upstream validation, but the types consumed
+ * by handler signatures come from here so the frontend and worker
+ * share one source of truth via `z.infer`.
  */
 
 export interface Env {
@@ -20,82 +16,19 @@ export interface Env {
 import type { WeatherErrorKind } from "@/lib/errors";
 export type { WeatherErrorKind };
 
+export type {
+  Astro,
+  CurrentConditions,
+  ForecastDay,
+  WeatherCurrent,
+  WeatherForecast,
+  WeatherLocation,
+  WeatherYesterday,
+} from "@/lib/schemas";
+
 export interface ErrorResponse {
   error: {
     kind: WeatherErrorKind;
     message: string;
   };
-}
-
-export interface WeatherLocation {
-  name: string;
-  region: string;
-  country: string;
-  /** ISO 8601 local time at the queried location. */
-  localTime: string;
-  /** IANA timezone id, e.g. "America/Anchorage". */
-  tz: string;
-  lat: number;
-  lon: number;
-}
-
-export interface CurrentConditions {
-  tempC: number;
-  feelsLikeC: number;
-  conditionText: string;
-  /** WeatherAPI condition code; the frontend maps this to its own icon set. */
-  conditionCode: number;
-  timeOfDay: "day" | "night";
-  windKph: number;
-  windDir: string;
-  gustKph: number;
-  humidity: number;
-  pressureMb: number;
-  visibilityKm: number;
-  uv: number;
-  cloud: number;
-  dewpointC: number;
-  precipMm: number;
-}
-
-export interface ForecastDay {
-  /** ISO date (YYYY-MM-DD) at the queried location. */
-  date: string;
-  minC: number;
-  maxC: number;
-  avgC: number;
-  chanceOfRain: number;
-  conditionText: string;
-  conditionCode: number;
-  /** True for the day's average daylight conditions. */
-  isDay: boolean;
-}
-
-export interface Astro {
-  sunrise: string;
-  sunset: string;
-  moonrise: string;
-  moonset: string;
-  moonPhase: string;
-  /** 0–100 */
-  moonIllumination: number;
-}
-
-export interface WeatherCurrent {
-  location: WeatherLocation;
-  current: CurrentConditions;
-}
-
-export interface WeatherForecast {
-  today: {
-    minC: number;
-    maxC: number;
-    chanceOfRain: number;
-  };
-  forecast: ForecastDay[];
-  astro: Astro;
-}
-
-export interface WeatherYesterday {
-  yesterday: ForecastDay | null;
 }
