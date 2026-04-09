@@ -31,14 +31,14 @@ interface ErrorBody {
   error?: { kind?: WeatherErrorKind; message?: string };
 }
 
-async function request<T>(url: string, signal?: AbortSignal): Promise<T> {
+async function request<T>(path: string): Promise<T> {
+  // Absolute URL so Node's global fetch (undici) accepts it under jsdom —
+  // relative URL resolution shifted between Node 22 and 24.
+  const url = new URL(path, window.location.origin);
   let res: Response;
   try {
-    res = await fetch(url, signal ? { signal } : undefined);
-  } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") {
-      throw err;
-    }
+    res = await fetch(url);
+  } catch {
     throw new WeatherClientError("network", "Could not reach the weather service.");
   }
 
@@ -57,18 +57,18 @@ async function request<T>(url: string, signal?: AbortSignal): Promise<T> {
   return (await res.json()) as T;
 }
 
-export function fetchCurrent(query: string, signal?: AbortSignal): Promise<WeatherCurrent> {
-  return request<WeatherCurrent>(`/api/weather?q=${encodeURIComponent(query)}`, signal);
+export function fetchCurrent(query: string): Promise<WeatherCurrent> {
+  return request<WeatherCurrent>(`/api/weather?q=${encodeURIComponent(query)}`);
 }
 
-export function fetchForecast(query: string, signal?: AbortSignal): Promise<WeatherForecast> {
-  return request<WeatherForecast>(`/api/weather/forecast?q=${encodeURIComponent(query)}`, signal);
+export function fetchForecast(query: string): Promise<WeatherForecast> {
+  return request<WeatherForecast>(`/api/weather/forecast?q=${encodeURIComponent(query)}`);
 }
 
-export function fetchYesterday(query: string, signal?: AbortSignal): Promise<WeatherYesterday> {
-  return request<WeatherYesterday>(`/api/weather/yesterday?q=${encodeURIComponent(query)}`, signal);
+export function fetchYesterday(query: string): Promise<WeatherYesterday> {
+  return request<WeatherYesterday>(`/api/weather/yesterday?q=${encodeURIComponent(query)}`);
 }
 
-export function fetchSearch(query: string, signal?: AbortSignal): Promise<SuggestionItem[]> {
-  return request<SuggestionItem[]>(`/api/search?q=${encodeURIComponent(query)}`, signal);
+export function fetchSearch(query: string): Promise<SuggestionItem[]> {
+  return request<SuggestionItem[]>(`/api/search?q=${encodeURIComponent(query)}`);
 }

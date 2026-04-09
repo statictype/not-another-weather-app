@@ -20,7 +20,7 @@ export function useSuggestions(input: string): UseSuggestionsResult {
 
   const result = useQuery<SuggestionItem[], WeatherClientError>({
     queryKey: ["search", normalized],
-    queryFn: ({ signal }) => fetchSearch(normalized, signal),
+    queryFn: () => fetchSearch(normalized),
     enabled,
     staleTime: 60_000,
   });

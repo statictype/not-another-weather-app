@@ -44,7 +44,7 @@ export function useWeather(options: UseWeatherOptions): UseWeatherResult {
 
   return useQuery<WeatherCurrent, WeatherClientError>({
     queryKey: ["weather", "current", normalized],
-    queryFn: ({ signal }) => fetchCurrent(normalized, signal),
+    queryFn: () => fetchCurrent(normalized),
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 120_000, // 2 min — matches the 10 min edge TTL / 5
@@ -66,7 +66,7 @@ export function useWeatherForecast(
 
   return useQuery<WeatherForecast, WeatherClientError>({
     queryKey: ["weather", "forecast", normalized],
-    queryFn: ({ signal }) => fetchForecast(normalized, signal),
+    queryFn: () => fetchForecast(normalized),
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 30 * 60_000, // 30 min
@@ -89,7 +89,7 @@ export function useWeatherYesterday(
 
   return useQuery<WeatherYesterday, WeatherClientError>({
     queryKey: ["weather", "yesterday", normalized],
-    queryFn: ({ signal }) => fetchYesterday(normalized, signal),
+    queryFn: () => fetchYesterday(normalized),
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 60 * 60_000, // 1 h
