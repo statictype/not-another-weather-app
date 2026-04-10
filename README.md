@@ -2,11 +2,11 @@
 
 A small, fast weather forecast app. Search any city, see today's conditions and forecast.
 
-> **Live demo:** oasis.hi-133.workers.dev/
->
-> The demo runs on a free WeatherAPI tier with edge caching, which keeps it
-> within quota under reasonable load. If the quota is exhausted, the app
-> degrades to a friendly explanatory state instead of an error page.
+**Live demo:** oasis.hi-133.workers.dev/
+
+The demo runs on a free WeatherAPI tier with edge caching, which keeps it
+within quota under reasonable load. If the quota is exhausted, the app
+degrades to a friendly explanatory state instead of an error page.
 
 ![Oasis screenshot](./docs/screenshot.png)
 
