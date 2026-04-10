@@ -368,6 +368,66 @@ html, body { background: oklch(0.97 0.02 230); }
   border-color: oklch(1 0 0 / 0.1) !important;
 }
 
+/* ── Empty-state ambient orbs ────────────────────────────────────── */
+@keyframes orb-drift {
+  0%   { transform: translate(-10%, -15%) scale(1);   }
+  33%  { transform: translate(8%, -5%)   scale(1.12); }
+  66%  { transform: translate(-5%, 10%)  scale(0.95); }
+  100% { transform: translate(-10%, -15%) scale(1);   }
+}
+@keyframes orb-drift-2 {
+  0%   { transform: translate(12%, 10%) scale(1);    }
+  50%  { transform: translate(-8%, -8%) scale(1.08); }
+  100% { transform: translate(12%, 10%) scale(1);    }
+}
+
+.empty-orb {
+  width: 28rem;
+  height: 28rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    oklch(0.82 0.12 220 / 0.35) 0%,
+    oklch(0.78 0.10 250 / 0.15) 45%,
+    transparent 70%
+  );
+  filter: blur(60px);
+  animation: orb-drift 18s ease-in-out infinite;
+}
+.empty-orb-secondary {
+  width: 20rem;
+  height: 20rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    oklch(0.88 0.08 190 / 0.3) 0%,
+    oklch(0.84 0.06 170 / 0.1) 50%,
+    transparent 70%
+  );
+  filter: blur(50px);
+  animation: orb-drift-2 14s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+/* Night: cooler, dimmer orbs */
+.night .empty-orb {
+  background: radial-gradient(
+    circle,
+    oklch(0.35 0.08 260 / 0.4) 0%,
+    oklch(0.25 0.06 270 / 0.15) 45%,
+    transparent 70%
+  );
+}
+.night .empty-orb-secondary {
+  background: radial-gradient(
+    circle,
+    oklch(0.30 0.06 230 / 0.3) 0%,
+    oklch(0.22 0.04 240 / 0.1) 50%,
+    transparent 70%
+  );
+}
+
+/* ── Entrance animations ────────────────────────────────────────── */
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: none; }

@@ -157,7 +157,7 @@ describe("Oasis (integration)", () => {
 
   it("shows the empty state when the URL has no city", () => {
     renderAppAt("/");
-    expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 
   it("selecting a city suggestion updates the URL, fetches, and adds to history", async () => {
@@ -200,7 +200,7 @@ describe("Oasis (integration)", () => {
     });
 
     // No weather card loaded — empty state heading still present.
-    expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 
   it("paints the hero before forecast before yesterday", async () => {

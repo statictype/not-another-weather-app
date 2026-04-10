@@ -20,7 +20,7 @@ describe("App (smoke)", () => {
     expect(
       screen.getByRole("heading", { name: /weather/i, level: 1 }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /pick a city/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 
   it("renders the search input with a label", () => {

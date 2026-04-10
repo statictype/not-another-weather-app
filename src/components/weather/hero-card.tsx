@@ -70,7 +70,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
         </div>
 
         {/* sm+ layout: unchanged grid. */}
-        <div className="hidden flex-1 items-center gap-4 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(12rem,max-content)] lg:grid-cols-[minmax(0,1fr)_auto_minmax(14rem,max-content)]">
+        <div className="hidden flex-1 items-center gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(8rem,12rem)] lg:grid-cols-[minmax(0,1fr)_auto_minmax(8rem,12rem)]">
           {/* Left: city + temp + feels like */}
           <div className="flex min-w-0 flex-col">
             <h2 className="font-display font-light text-balance leading-[0.95] sm:text-4xl lg:text-5xl 2xl:text-6xl 2xl:tracking-tight">
@@ -95,7 +95,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               text={current.conditionText}
               isDay={isDay}
               className={cn(
-                "sm:size-28 md:size-36 lg:size-40 xl:size-52",
+                "sm:size-28 md:size-36 lg:size-40 xl:size-40",
                 isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
               )}
               strokeWidth={1}

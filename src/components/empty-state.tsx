@@ -1,23 +1,32 @@
-import { CloudSunIcon } from "lucide-react";
-
 /**
- * The first thing a user sees when there's nothing to show.
+ * Premium empty state — shown when no city is selected.
  *
- * Shown when no fetch has ever succeeded for this session — either a
- * brand-new visitor with no history, or a returning visitor whose
- * auto-load failed silently. Intentionally inviting rather than
- * apologetic.
+ * Lets the sky gradient breathe through with a soft animated glow orb
+ * drifting behind large, airy typography. No card container — the
+ * atmosphere *is* the container.
  */
 export function EmptyState() {
   return (
-    <div className="card-surface flex flex-col items-center justify-center gap-6 rounded-[2rem] px-6 py-24 text-center">
-      <div className="rounded-3xl bg-gradient-to-br from-sky-300 to-blue-500 p-8 text-white shadow-[0_20px_40px_-15px_rgba(56,140,255,0.6)]">
-        <CloudSunIcon className="size-16" aria-hidden="true" strokeWidth={2} />
-      </div>
-      <div className="space-y-2">
-        <h2 className="font-display font-light text-3xl tracking-tight">Pick a city to begin</h2>
-        <p className="text-foreground/60 mx-auto max-w-md text-balance">
-          Search above or tap a recent destination.
+    <div className="relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden px-6 sm:min-h-[50vh]">
+      {/* Ambient glow orb — slow drift + color shift */}
+      <div
+        className="empty-orb pointer-events-none absolute"
+        aria-hidden="true"
+      />
+
+      {/* Secondary orb for depth */}
+      <div
+        className="empty-orb-secondary pointer-events-none absolute"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 flex flex-col items-center gap-8">
+        <h2 className="font-display text-foreground/85 max-w-lg text-center text-4xl leading-[1.05] font-extralight tracking-tight sm:text-6xl lg:text-7xl">
+          What's the weather like?
+        </h2>
+
+        <p className="font-display text-foreground/40 text-sm font-normal uppercase tracking-[0.25em]">
+          Search a city to find out
         </p>
       </div>
     </div>
