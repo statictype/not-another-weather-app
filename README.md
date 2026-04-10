@@ -10,6 +10,8 @@ A small, fast weather forecast app. Search any city, see today's conditions and 
 
 ![Oasis screenshot](./docs/screenshot.png)
 
+![Oasis screenshot](./docs/screenshot2.png)
+
 ## Quick start
 
 Prerequisites: **Node 22+** (tested on 22 and 24), **pnpm 10**.
