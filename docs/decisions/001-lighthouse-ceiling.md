@@ -13,7 +13,7 @@ Performance 99 · Accessibility 100 · Best Practices 100 · SEO 100
 FCP 0.7 s · LCP 0.7 s · TBT 0 ms · CLS 0.004
 ```
 
-The perf gap is a single point. FCP and LCP both *score* 0.98 despite displaying
+The perf gap is a single point. FCP and LCP both _score_ 0.98 despite displaying
 0.7 s — simulated throttling measures a raw value of ~0.8 s. Weighted:
 `0.1·0.98 + 0.25·0.98 + 0.3 + 0.25 + 0.1 = 0.993` → rounds to 99.
 

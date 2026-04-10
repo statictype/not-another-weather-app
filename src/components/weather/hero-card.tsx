@@ -54,9 +54,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
                 <span className="font-display text-[5rem] leading-[0.78] tracking-[-0.06em]">
                   {Math.round(current.tempC)}
                 </span>
-                <span className="font-display font-light mt-2 ml-1 text-2xl text-white/70">
-                  °C
-                </span>
+                <span className="font-display font-light mt-2 ml-1 text-2xl text-white/70">°C</span>
               </div>
               <p className="font-display font-medium mt-1 text-[0.65rem] uppercase tracking-[0.2em] text-white/85">
                 Feels like {Math.round(current.feelsLikeC)}°
