@@ -46,7 +46,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
       key={swapKey}
       aria-busy={isStale}
       className={cn(
-        "grid w-full auto-rows-[minmax(150px,auto)] grid-cols-1 gap-4 transition-opacity duration-300 sm:grid-cols-12 sm:gap-5",
+        "grid w-full auto-rows-[minmax(150px,auto)] grid-cols-1 gap-5 transition-opacity duration-300 sm:grid-cols-12 sm:gap-6",
         isStale && "opacity-60",
       )}
     >

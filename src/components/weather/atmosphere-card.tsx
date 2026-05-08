@@ -25,7 +25,7 @@ export function AtmosphereCard({
 }: AtmosphereCardProps) {
   return (
     <section className="swap-in swap-d-2 bento-tile flex flex-col p-7 sm:col-span-6 sm:row-span-2 xl:col-span-4 xl:row-span-1">
-      <ul className="flex flex-1 flex-col divide-y divide-foreground/10">
+      <ul className="flex flex-1 flex-col divide-y divide-foreground/6">
         <Row icon={DropletsIcon} label="Humidity" value={`${humidity}%`} />
         <Row icon={CloudIcon} label="Cloud cover" value={`${cloud}%`} />
         <Row icon={GaugeIcon} label="Pressure" value={`${Math.round(pressureMb)} mb`} />

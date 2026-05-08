@@ -17,10 +17,10 @@ export function UvCard({ uv, isDay }: UvCardProps) {
     >
       <ActivityIcon
         className={cn(
-          "absolute -right-6 -top-6 size-44",
-          isDay ? "text-foreground/30" : "text-white/8",
+          "absolute -right-10 -top-10 size-36",
+          isDay ? "text-foreground/15" : "text-white/5",
         )}
-        strokeWidth={0.9}
+        strokeWidth={0.8}
         aria-hidden="true"
       />
       <p
@@ -33,14 +33,14 @@ export function UvCard({ uv, isDay }: UvCardProps) {
       </p>
       <p
         className={cn(
-          "font-display mt-4 text-5xl leading-none tracking-tight",
+          "font-display mt-3 text-5xl leading-none tracking-tight",
           !isDay && "text-white/15",
         )}
       >
         {isDay ? Math.round(uv) : "—"}
       </p>
       {isDay && (
-        <p className="font-display font-normal text-foreground/65 mt-3 text-sm uppercase tracking-[0.16em]">
+        <p className="font-display font-normal text-foreground/65 mt-2 text-sm uppercase tracking-[0.16em]">
           {uvLabel(uv)}
         </p>
       )}

@@ -9,7 +9,7 @@ interface AstroCardProps {
 export function AstroCard({ astro }: AstroCardProps) {
   return (
     <section className="swap-in swap-d-3b bento-tile relative overflow-hidden p-7 sm:col-span-6 xl:col-span-4">
-      <div className="flex flex-col xl:divide-y xl:divide-foreground/10">
+      <div className="flex flex-col xl:divide-y xl:divide-foreground/6">
         <Row
           icon={
             <SunriseIcon
@@ -54,8 +54,8 @@ function Row({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-3 py-2 first:pt-0 last:pb-0 xl:py-3">
-      <div className="bg-foreground/10 shrink-0 rounded-xl p-2 backdrop-blur">{icon}</div>
+    <div className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 xl:py-4">
+      <div className="shrink-0">{icon}</div>
       <div className="flex min-w-0 flex-1 flex-col">
         {value ? (
           <p className="font-display text-base leading-tight tracking-tight">{value}</p>

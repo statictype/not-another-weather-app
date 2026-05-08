@@ -28,7 +28,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
         </>
       )}
 
-      <div className="relative flex h-full flex-col gap-1">
+      <div className="relative flex h-full flex-col gap-2">
         <p className="font-display font-medium text-xs uppercase tracking-[0.22em] text-white/80">
           {[location.region, location.country].filter(Boolean).join(" · ") || "Now"}
         </p>

@@ -10,12 +10,12 @@ export function WindCard({ windKph, windDir, gustKph }: WindCardProps) {
   return (
     <section className="swap-in swap-d-4 tile-wind bento-tile relative overflow-hidden p-7 sm:col-span-8 xl:col-span-4">
       <WindIcon
-        className="text-foreground/30 absolute -right-6 -top-6 size-44"
-        strokeWidth={0.9}
+        className="text-foreground/15 absolute -right-10 -top-10 size-36"
+        strokeWidth={0.8}
         aria-hidden="true"
       />
       <TileLabel>Wind</TileLabel>
-      <div className="relative mt-2 flex items-baseline gap-2">
+      <div className="relative mt-3 flex items-baseline gap-2">
         <span className="font-display text-5xl leading-[0.85] tracking-tight">
           {Math.round(windKph)}
         </span>
@@ -24,7 +24,7 @@ export function WindCard({ windKph, windDir, gustKph }: WindCardProps) {
       <p className="font-display font-normal text-foreground/55 mt-1.5 text-[10px] uppercase tracking-[0.18em] 2xl:text-xs">
         {beaufort(windKph)}
       </p>
-      <div className="relative mt-3 grid grid-cols-3 gap-3 border-t border-foreground/10 pt-3">
+      <div className="relative mt-5 grid grid-cols-3 gap-3 border-t border-foreground/6 pt-4">
         <Stat label="Direction" value={windDir} sub={compassDegrees(windDir)} />
         <Stat label="Gusts" value={`${Math.round(gustKph)}`} sub="km/h" />
         <Stat label="In mph" value={`${Math.round(windKph * 0.621371)}`} sub="mph" />

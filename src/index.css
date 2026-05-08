@@ -363,9 +363,9 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 /* Tighter dividers and borders in dark tiles */
-.night .divide-foreground\/10 > :not([hidden]) ~ :not([hidden]),
-.night .border-foreground\/10 {
-  border-color: oklch(1 0 0 / 0.1) !important;
+.night .divide-foreground\/6 > :not([hidden]) ~ :not([hidden]),
+.night .border-foreground\/6 {
+  border-color: oklch(1 0 0 / 0.06) !important;
 }
 
 /* ── Empty-state ambient orbs ────────────────────────────────────── */
@@ -426,6 +426,43 @@ html, body { background: oklch(0.97 0.02 230); }
     transparent 70%
   );
 }
+
+/* ── Search dropdown ────────────────────────────────────────────── */
+.search-dropdown {
+  background: oklch(0.99 0.005 230);
+  border: 1px solid oklch(0.92 0.01 240);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.5) inset,
+    0 40px 80px -20px oklch(0.3 0.12 240 / 0.22),
+    0 16px 32px -8px oklch(0.3 0.12 240 / 0.12);
+}
+.night .search-dropdown {
+  background: oklch(0.18 0.015 255);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.04) inset,
+    0 40px 80px -20px oklch(0 0 0 / 0.6),
+    0 16px 32px -8px oklch(0 0 0 / 0.35);
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+.dropdown-enter {
+  animation: dropdown-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes item-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+.item-stagger { animation: item-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.item-d-0 { animation-delay: 0.03s; }
+.item-d-1 { animation-delay: 0.06s; }
+.item-d-2 { animation-delay: 0.09s; }
+.item-d-3 { animation-delay: 0.12s; }
+.item-d-4 { animation-delay: 0.15s; }
 
 /* ── Entrance animations ────────────────────────────────────────── */
 @keyframes rise {
