@@ -17,7 +17,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
       className={cn(
         "swap-in swap-d-1 relative col-span-1 overflow-hidden rounded-[2rem] p-8 text-white sm:col-span-12 sm:p-10 xl:col-span-8",
         isDay
-          ? "bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_30px_60px_-25px_rgba(56,140,255,0.55)]"
+          ? "bg-linear-to-tr from-blue-500 via-sky-500 to-sky-500 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_30px_60px_-25px_rgba(32,53,213,0.55)]"
           : "hero-night shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_30px_60px_-25px_rgba(8,8,24,0.85)]",
       )}
     >
@@ -53,7 +53,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
             />
           </div>
 
-          <div className="row-span-2 mt-6 flex flex-col items-end justify-end gap-1.5">
+          <div className="row-span-2 mt-6 flex flex-col items-end justify-end gap-1.5 pl-6">
             {today ? (
               <p className="font-display font-normal text-sm text-white/60">
                 ↑ {Math.round(today.maxC)}°
@@ -63,7 +63,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               <div className="h-4 w-16 animate-pulse rounded bg-white/20" aria-hidden="true" />
             )}
             <div className="flex items-end">
-              <span className="font-display text-[3.5rem] leading-[0.78] tracking-[-0.06em]">
+              <span className="font-display text-6xl leading-[0.78] tracking-[-0.06em]">
                 {Math.round(current.tempC)}
               </span>
               <span className="font-display font-light mb-0.5 ml-0.5 text-base text-white/80">
@@ -75,11 +75,11 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-col justify-end gap-0.5 pt-4">
-            <p className="font-display font-normal text-2xl">{current.conditionText}</p>
+          <div className="flex min-w-0 flex-col justify-end gap-1.5 pt-4">
+            <p className="font-display font-normal text-sm">{current.conditionText}</p>
             {today && (
-              <p className="font-display text-sm text-white/80">
-                chance of rain {today.chanceOfRain}%
+              <p className="font-display font-normal text-sm text-white/60">
+                {today.chanceOfRain}% chance of rain 
               </p>
             )}
           </div>
