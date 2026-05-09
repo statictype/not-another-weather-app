@@ -1,5 +1,6 @@
 import type { CurrentConditions, WeatherForecast, WeatherLocation } from "@/api/types";
 import { cn } from "@/lib/utils";
+import { CircleIcon } from "lucide-react";
 import { ConditionIcon } from "./condition-icon";
 
 interface HeroCardProps {
@@ -30,23 +31,20 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
 
       <div className="relative flex h-full flex-col gap-2">
         <p className="font-display font-normal text-xs uppercase tracking-[0.15em] text-white/60 flex flex-wrap gap-0.5">
-        <span>{location.region}</span> <span className="">·</span>  <span className="shrink-0">{location.country}</span>
-          {/* {[location.region, location.country].filter(Boolean).join(" · ") || "Now"} */}
+        <span>{location.region}</span> <span>·</span> <span className="shrink-0">{location.country}</span>
         </p>
 
-        {/* Mobile layout: 2-col grid — city top, icon|temp middle, condition|feels bottom */}
-        <div className="grid grid-cols-[1fr_auto] sm:hidden">
-          <h2 className="col-span-2 font-display font-light text-balance text-4xl leading-[0.95]">
+        <div className="grid grid-cols-[1fr_auto] md:flex-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(8rem,12rem)] md:items-center md:gap-x-2">
+          <h2 className="col-span-2 font-display font-light text-balance text-4xl leading-[0.95] md:col-span-1 lg:text-5xl 2xl:text-6xl 2xl:tracking-tight">
             {location.name}
           </h2>
 
-          <div className="mt-6 flex items-center justify-start">
+          <div className="col-start-1 row-start-2 mt-6 flex items-center justify-start md:col-start-2 md:row-start-1 md:row-end-3 md:mt-0 md:justify-center md:px-3">
             <ConditionIcon
               text={current.conditionText}
               isDay={isDay}
-              size={60}
               className={cn(
-                "shrink-0",
+                "shrink-0 size-20 md:size-36 lg:size-40 xl:size-40",
                 isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
               )}
               strokeWidth={1}
@@ -54,88 +52,45 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
             />
           </div>
 
-          <div className="row-span-2 mt-6 flex flex-col items-end justify-end gap-1.5 pl-6">
+          <div className="col-start-2 row-start-2 row-end-4 mt-6 flex flex-col items-end justify-end gap-1.5 pl-6 md:col-start-1 md:row-end-3 md:flex-row md:flex-wrap md:items-baseline md:justify-start md:gap-x-4 md:gap-y-2 md:pl-0">
             {today ? (
-              <p className="font-display font-normal text-sm text-white/60">
+              <p className="order-1 font-display font-normal text-base min-h-3.5 text-white/60 md:order-3">
                 ↑ {Math.round(today.maxC)}°
-                <span className="ml-1">↓{Math.round(today.minC)}°</span>
+                <span className="ml-1">↓ {Math.round(today.minC)}°</span>
               </p>
             ) : (
-              <div className="h-4 w-16 animate-pulse rounded bg-white/20" aria-hidden="true" />
+              <div className="order-1 h-4 w-16 animate-pulse rounded bg-white/20 md:order-3" aria-hidden="true" />
             )}
-            <div className="flex items-end">
-              <span className="font-display text-6xl leading-[0.78] tracking-[-0.06em]">
+
+            <div className="order-2 flex items-end md:order-1 md:basis-full">
+              <span className="font-display text-6xl leading-[0.78] tracking-[-0.06em] md:text-[5.5rem] lg:text-[8rem]">
                 {Math.round(current.tempC)}
               </span>
-              <span className="font-display font-light mb-0.5 ml-0.5 text-base text-white/80">
-                °c
+              <span className="ml-0.5 flex flex-col items-start self-stretch font-display font-light text-white/80 md:ml-1 md:text-white/60 lg:ml-2">
+                <CircleIcon className="mt-[-0.05em] size-2.5 md:size-3 lg:size-3.5" strokeWidth={2.5} />
+                <span className="mt-auto text-base md:text-lg lg:text-xl">C</span>
               </span>
             </div>
-            <p className="font-display font-normal text-base text-white/60">
+
+            <p className="order-3 font-display font-normal text-base min-h-3.5 text-white/60 md:order-2">
               feels like {Math.round(current.feelsLikeC)}°
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-col justify-end gap-1.5 pt-4">
-            <p className="font-display font-normal text-base">{current.conditionText}</p>
-            {today && (
-              <p className="font-display font-normal text-base text-white/60">
-                {today.chanceOfRain}% chance of rain 
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* sm+ layout: unchanged grid. */}
-        <div className="hidden flex-1 items-center gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(8rem,12rem)] lg:grid-cols-[minmax(0,1fr)_auto_minmax(8rem,12rem)]">
-          {/* Left: city + temp + feels like */}
-          <div className="flex min-w-0 flex-col">
-            <h2 className="font-display font-light text-balance leading-[0.95] sm:text-4xl lg:text-5xl 2xl:text-6xl 2xl:tracking-tight">
-              {location.name}
-            </h2>
-            <div className="mt-6 flex items-end">
-              <span className="font-display leading-[0.78] tracking-[-0.06em] sm:text-[5.5rem] lg:text-[8rem]">
-                {Math.round(current.tempC)}
-              </span>
-              <span className="font-display font-light mb-1 ml-1 text-lg text-white/60 lg:mb-2 lg:ml-2 lg:text-xl">
-                °C
-              </span>
-            </div>
-            <div className="mt-2 flex items-baseline gap-4">
-              <p className="font-display font-normal text-base text-white/60">
-                feels like {Math.round(current.feelsLikeC)}°
-              </p>
-              {today ? (
-                <p className="font-display font-normal text-sm text-white/60">
-                  ↑ {Math.round(today.maxC)}°
-                  <span className="ml-1">↓{Math.round(today.minC)}°</span>
-                </p>
-              ) : (
-                <div className="h-4 w-16 animate-pulse rounded bg-white/20" aria-hidden="true" />
-              )}
-            </div>
-          </div>
-
-          {/* Condition icon */}
-          <div className="flex items-center justify-center px-3">
-            <ConditionIcon
-              text={current.conditionText}
-              isDay={isDay}
-              className={cn(
-                "sm:size-60 md:size-36 lg:size-40 xl:size-40",
-                isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
-              )}
-              strokeWidth={1}
-              aria-hidden="true"
-            />
-          </div>
-
-          {/* Stats column — shimmers until the forecast tier lands */}
-          <div className="flex flex-col gap-2 text-right">
-            <p className="font-display font-normal sm:text-2xl lg:text-lg 2xl:text-xl">
+          <div className="col-start-1 row-start-3 flex min-w-0 flex-col justify-end gap-0.5 pt-4 md:col-start-3 md:row-start-1 md:row-end-3 md:gap-2 md:pt-0 md:text-right">
+            <p className="font-display font-normal text-base md:text-2xl lg:text-lg 2xl:text-xl">
               {current.conditionText}
             </p>
-            <HeroStatsRow today={today} />
+            {today ? (
+              <p className="font-display font-normal text-base text-white/60">
+                {today.chanceOfRain}% chance of rain
+              </p>
+            ) : (
+              <p
+                aria-hidden="true"
+                className="h-[1.25rem] w-32 animate-pulse rounded bg-white/20 md:self-end"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -143,22 +98,3 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
   );
 }
 
-/**
- * Reserves exact space for the max/min/rain row via a shimmer bar until
- * the forecast tier arrives. Matching heights keep CLS at zero.
- */
-function HeroStatsRow({ today }: { today: WeatherForecast["today"] | undefined }) {
-  if (!today) {
-    return (
-      <p
-        aria-hidden="true"
-        className="h-[1.25rem] w-32 animate-pulse self-end rounded bg-white/20"
-      />
-    );
-  }
-  return (
-    <p className="font-display font-normal text-base text-white/60">
-      {today.chanceOfRain}% chance of rain
-    </p>
-  );
-}
