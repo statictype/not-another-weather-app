@@ -29,8 +29,9 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
       )}
 
       <div className="relative flex h-full flex-col gap-2">
-        <p className="font-display font-normal text-xs uppercase tracking-[0.22em] text-white/60">
-          {[location.region, location.country].filter(Boolean).join(" · ") || "Now"}
+        <p className="font-display font-normal text-xs uppercase tracking-[0.15em] text-white/60 flex flex-wrap gap-0.5">
+        <span>{location.region}</span> <span className="">·</span>  <span className="shrink-0">{location.country}</span>
+          {/* {[location.region, location.country].filter(Boolean).join(" · ") || "Now"} */}
         </p>
 
         {/* Mobile layout: 2-col grid — city top, icon|temp middle, condition|feels bottom */}
@@ -70,15 +71,15 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
                 °c
               </span>
             </div>
-            <p className="font-display font-normal text-sm text-white/60">
+            <p className="font-display font-normal text-base text-white/60">
               feels like {Math.round(current.feelsLikeC)}°
             </p>
           </div>
 
           <div className="flex min-w-0 flex-col justify-end gap-1.5 pt-4">
-            <p className="font-display font-normal text-sm">{current.conditionText}</p>
+            <p className="font-display font-normal text-base">{current.conditionText}</p>
             {today && (
-              <p className="font-display font-normal text-sm text-white/60">
+              <p className="font-display font-normal text-base text-white/60">
                 {today.chanceOfRain}% chance of rain 
               </p>
             )}
@@ -101,11 +102,11 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               </span>
             </div>
             <div className="mt-2 flex items-baseline gap-4">
-              <p className="font-display font-light text-sm text-white/60">
+              <p className="font-display font-normal text-base text-white/60">
                 feels like {Math.round(current.feelsLikeC)}°
               </p>
               {today ? (
-                <p className="font-display font-light text-sm text-white/60">
+                <p className="font-display font-normal text-sm text-white/60">
                   ↑ {Math.round(today.maxC)}°
                   <span className="ml-1">↓{Math.round(today.minC)}°</span>
                 </p>
@@ -156,7 +157,7 @@ function HeroStatsRow({ today }: { today: WeatherForecast["today"] | undefined }
     );
   }
   return (
-    <p className="font-display font-light text-sm text-white/60">
+    <p className="font-display font-normal text-base text-white/60">
       {today.chanceOfRain}% chance of rain
     </p>
   );
