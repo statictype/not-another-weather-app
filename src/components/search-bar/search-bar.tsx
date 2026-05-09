@@ -16,6 +16,8 @@ interface SearchBarProps {
   onRecentSelect: (item: HistoryItem) => void;
   onRecentRemove: (item: HistoryItem) => void;
   onRecentClearAll: () => void;
+  onLocationRequest: () => void;
+  onRandomSelect: () => void;
 }
 
 /**
@@ -37,6 +39,8 @@ export function SearchBar({
   onRecentSelect,
   onRecentRemove,
   onRecentClearAll,
+  onLocationRequest,
+  onRandomSelect,
 }: SearchBarProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,7 +59,7 @@ export function SearchBar({
           item.displayName.toLowerCase().includes(trimmed.toLowerCase()),
         );
 
-  const showDropdown = clearDialogOpen || (hasFocus && (recentItems.length > 0 || len > 0));
+  const showDropdown = clearDialogOpen || hasFocus;
 
   function handleChange(next: string) {
     onValueChange(next);
@@ -81,6 +85,18 @@ export function SearchBar({
     onSuggestionSelect(item);
   }
 
+  function handleLocationRequest() {
+    setShowSelectPrompt(false);
+    inputRef.current?.blur();
+    onLocationRequest();
+  }
+
+  function handleRandomSelect() {
+    setShowSelectPrompt(false);
+    inputRef.current?.blur();
+    onRandomSelect();
+  }
+
   return (
     <search>
       <form onSubmit={handleSubmit}>
@@ -89,8 +105,8 @@ export function SearchBar({
         </label>
         <div className="relative">
           <div
-            className={`card-surface flex items-center gap-4 rounded-3xl px-6 py-4 transition-all ${
-              hasFocus ? "ring-4 ring-sky-300/40" : ""
+            className={`card-surface flex items-center gap-4 rounded-3xl px-6 py-4 transition-all duration-300 ${
+              hasFocus ? "ring-[3px] ring-sky-400/25 [.night_&]:ring-sky-300/15" : ""
             }`}
           >
             <SearchIcon
@@ -128,6 +144,8 @@ export function SearchBar({
               clearDialogOpen={clearDialogOpen}
               onClearDialogOpenChange={setClearDialogOpen}
               onSuggestionSelect={handleSuggestionSelect}
+              onLocationRequest={handleLocationRequest}
+              onRandomSelect={handleRandomSelect}
             />
           )}
         </div>

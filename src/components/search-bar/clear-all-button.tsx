@@ -27,7 +27,7 @@ export function ClearAllButton({ onConfirm, open, onOpenChange }: ClearAllButton
           variant="ghost"
           size="sm"
           onMouseDown={(e) => e.preventDefault()}
-          className="text-foreground/55 hover:text-destructive h-7 px-2 text-xs uppercase tracking-wider"
+          className="h-7 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/30 transition-colors hover:text-destructive/70"
         >
           <Trash2Icon className="size-3.5" aria-hidden="true" />
           Clear

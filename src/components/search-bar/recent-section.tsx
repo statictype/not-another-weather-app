@@ -1,11 +1,8 @@
-import { FileTextIcon, XIcon } from "lucide-react";
+import { ClockIcon, XIcon } from "lucide-react";
 import { lazy, Suspense } from "react";
 import type { HistoryItem } from "@/hooks/use-history";
 import { SectionHeader } from "./section-header";
 
-// The clear-all confirmation dialog pulls in radix alert-dialog and is
-// only reachable after the user opens the search dropdown and clicks
-// Clear. Split it off so it stays out of the first-paint chunk.
 const ClearAllButton = lazy(() => import("./clear-all-button"));
 
 interface RecentSectionProps {
@@ -27,9 +24,9 @@ export function RecentSection({
 }: RecentSectionProps) {
   return (
     <div>
-      <div className="flex items-center justify-between px-3 pb-2 pt-1">
+      <div className="flex items-center justify-between px-3 pb-1.5 pt-2">
         <SectionHeader label="Recent" />
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="h-7 px-2" />}>
           <ClearAllButton
             onConfirm={onClearAll}
             open={clearDialogOpen}
@@ -37,11 +34,11 @@ export function RecentSection({
           />
         </Suspense>
       </div>
-      <ul className="flex flex-col">
-        {items.map((item) => (
+      <ul className="flex flex-col gap-0.5">
+        {items.map((item, i) => (
           <li
             key={item.id}
-            className="group hover:bg-muted flex items-center gap-2.5 rounded-2xl px-2.5 py-2.5"
+            className={`item-stagger item-d-${Math.min(i, 4)} group flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors duration-150 hover:bg-foreground/[0.05]`}
           >
             <button
               type="button"
@@ -52,10 +49,10 @@ export function RecentSection({
               className="flex flex-1 items-center gap-3 text-left focus-visible:outline-none"
               aria-label={`Load weather for ${item.displayName}`}
             >
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-foreground/15 text-foreground/60">
-                <FileTextIcon className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] transition-colors duration-150 group-hover:bg-foreground/[0.08]">
+                <ClockIcon className="size-3.5 text-foreground/40" strokeWidth={2} aria-hidden="true" />
               </span>
-              <span className="font-display font-normal text-base text-foreground tracking-tight">
+              <span className="font-display text-[15px] font-normal tracking-tight text-foreground/80 transition-colors duration-150 group-hover:text-foreground">
                 {item.displayName}
               </span>
             </button>
@@ -65,10 +62,10 @@ export function RecentSection({
                 e.preventDefault();
                 onRemove(item);
               }}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full text-foreground/40 opacity-0 transition hover:bg-foreground/10 hover:text-foreground/80 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
+              className="flex size-7 shrink-0 items-center justify-center rounded-full text-foreground/30 opacity-0 transition-all duration-150 hover:bg-foreground/[0.08] hover:text-foreground/60 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
               aria-label={`Remove ${item.displayName} from history`}
             >
-              <XIcon className="size-4" strokeWidth={2.5} aria-hidden="true" />
+              <XIcon className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
             </button>
           </li>
         ))}

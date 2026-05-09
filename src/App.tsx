@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
@@ -12,6 +12,7 @@ import { setSearchParam, useSearchParam } from "@/hooks/use-search-param";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { useUndo } from "@/hooks/use-undo";
 import { useWeather } from "@/hooks/use-weather";
+import { pickRandomCity } from "@/lib/random-cities";
 
 export function App() {
   // ─── Search state ────────────────────────────────────────────────────
@@ -108,6 +109,28 @@ export function App() {
     });
   };
 
+  const handleLocationRequest = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast("Geolocation is not supported by your browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const q = `${position.coords.latitude},${position.coords.longitude}`;
+        setInputValue("");
+        setSearchParam("city", q);
+      },
+      () => {
+        toast("Could not determine your location");
+      },
+    );
+  }, []);
+
+  const handleRandomSelect = useCallback(() => {
+    setInputValue("");
+    setSearchParam("city", pickRandomCity());
+  }, []);
+
   const handleRetry = () => {
     void query.refetch();
   };
@@ -134,11 +157,13 @@ export function App() {
               onValueChange={handleValueChange}
               recentItems={history}
               suggestions={suggestions.data}
-              isSuggestionsLoading={suggestions.isLoading}
+              isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
               onSuggestionSelect={handleSuggestionSelect}
               onRecentSelect={handleHistorySelect}
               onRecentRemove={handleHistoryRemove}
               onRecentClearAll={handleClearAll}
+              onLocationRequest={handleLocationRequest}
+              onRandomSelect={handleRandomSelect}
             />
           </div>
         </header>

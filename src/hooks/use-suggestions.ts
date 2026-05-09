@@ -11,12 +11,17 @@ const MIN_LENGTH = 3;
 export interface UseSuggestionsResult {
   data: SuggestionItem[];
   isLoading: boolean;
+  isPending: boolean;
 }
 
 export function useSuggestions(input: string): UseSuggestionsResult {
   const debounced = useDebouncedValue(input, DEBOUNCE_MS);
   const normalized = normalizeQuery(debounced) ?? "";
   const enabled = normalized.length >= MIN_LENGTH;
+
+  const rawNormalized = normalizeQuery(input) ?? "";
+  const isPending =
+    rawNormalized.length >= MIN_LENGTH && rawNormalized !== normalized;
 
   const result = useQuery<SuggestionItem[], WeatherClientError>({
     queryKey: ["search", normalized],
@@ -28,5 +33,6 @@ export function useSuggestions(input: string): UseSuggestionsResult {
   return {
     data: result.data ?? [],
     isLoading: enabled && result.isFetching,
+    isPending,
   };
 }
