@@ -177,17 +177,13 @@ export function SearchBar({
             }
           >
             <div
-              className={`card-surface flex items-center gap-4 rounded-3xl px-6 py-4 transition-all duration-300${
+              className={`search-surface flex items-center gap-3 rounded-[1.75rem] px-5 py-3 lg:gap-3.5 lg:py-3.5${
                 isMobileOpen ? " flex-1" : ""
-              }${
-                hasFocus && !isMobileOpen
-                  ? " ring-[3px] ring-sky-400/25 [.night_&]:ring-sky-300/15"
-                  : ""
               }`}
             >
               <SearchIcon
-                className="size-7 shrink-0 text-sky-500 [.night_&]:text-foreground/45"
-                strokeWidth={2}
+                className="size-[18px] shrink-0 text-foreground/30 [.night_&]:text-foreground/35 lg:size-5"
+                strokeWidth={2.25}
                 aria-hidden="true"
               />
               <Input
@@ -202,7 +198,7 @@ export function SearchBar({
                 onChange={(e) => handleChange(e.target.value)}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
-                className="font-display font-light h-auto flex-1 border-0 bg-transparent p-0 text-2xl tracking-tight shadow-none placeholder:font-light placeholder:text-foreground/35 focus-visible:ring-0 sm:text-3xl"
+                className="font-display h-auto flex-1 border-0 bg-transparent p-0 text-lg font-normal tracking-tight shadow-none placeholder:text-foreground/30 focus-visible:ring-0 lg:text-xl"
               />
             </div>
 
