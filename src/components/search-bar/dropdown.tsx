@@ -6,6 +6,7 @@ import { RecentSection } from "./recent-section";
 import { SuggestionsList, SuggestionsLoading } from "./suggestions-list";
 
 interface SearchDropdownProps {
+  isMobileOpen: boolean;
   trimmed: string;
   filteredRecent: HistoryItem[];
   allRecent: HistoryItem[];
@@ -23,6 +24,7 @@ interface SearchDropdownProps {
 }
 
 export function SearchDropdown({
+  isMobileOpen,
   trimmed,
   filteredRecent,
   allRecent,
@@ -41,83 +43,110 @@ export function SearchDropdown({
   const len = trimmed.length;
 
   return (
-    <div className="search-dropdown dropdown-enter absolute left-0 right-0 top-full z-20 mt-3 max-h-[60vh] overflow-y-auto overflow-x-hidden rounded-2xl p-2">
-      {len === 0 && allRecent.length > 0 && (
-        <RecentSection
-          items={allRecent}
-          onSelect={onRecentSelect}
-          onRemove={onRecentRemove}
-          onClearAll={onRecentClearAll}
-          clearDialogOpen={clearDialogOpen}
-          onClearDialogOpenChange={onClearDialogOpenChange}
-        />
-      )}
+    <div
+      className={
+        isMobileOpen
+          ? "flex flex-1 flex-col overflow-hidden"
+          : "search-dropdown dropdown-enter absolute left-0 right-0 top-full z-20 mt-3 flex max-h-[60vh] flex-col overflow-hidden rounded-2xl p-2"
+      }
+    >
+      <div
+        className={
+          isMobileOpen
+            ? "flex-1 overflow-y-auto overflow-x-hidden px-2"
+            : "flex-1 overflow-y-auto overflow-x-hidden"
+        }
+      >
+        {len === 0 && allRecent.length > 0 && (
+          <RecentSection
+            isMobileOpen={isMobileOpen}
+            items={allRecent}
+            onSelect={onRecentSelect}
+            onRemove={onRecentRemove}
+            onClearAll={onRecentClearAll}
+            clearDialogOpen={clearDialogOpen}
+            onClearDialogOpenChange={onClearDialogOpenChange}
+          />
+        )}
 
-      {len > 0 && len < MIN_SUGGESTION_LENGTH && (
-        <>
-          {filteredRecent.length > 0 && (
-            <RecentSection
-              items={filteredRecent}
-              onSelect={onRecentSelect}
-              onRemove={onRecentRemove}
-              onClearAll={onRecentClearAll}
-              clearDialogOpen={clearDialogOpen}
-              onClearDialogOpenChange={onClearDialogOpenChange}
-            />
-          )}
-          <div className="flex items-center gap-2.5 px-3 py-3">
-            <KeyboardIcon className="size-4 text-foreground/30" strokeWidth={1.75} aria-hidden="true" />
-            <p className="text-[13px] font-medium text-foreground/40">
-              Keep typing for city suggestions…
-            </p>
-          </div>
-        </>
-      )}
-
-      {len >= MIN_SUGGESTION_LENGTH && (
-        <>
-          {filteredRecent.length > 0 && (
-            <RecentSection
-              items={filteredRecent}
-              onSelect={onRecentSelect}
-              onRemove={onRecentRemove}
-              onClearAll={onRecentClearAll}
-              clearDialogOpen={clearDialogOpen}
-              onClearDialogOpenChange={onClearDialogOpenChange}
-            />
-          )}
-
-          {isSuggestionsLoading ? (
-            <SuggestionsLoading />
-          ) : suggestions.length > 0 ? (
-            <SuggestionsList
-              items={suggestions}
-              showHeader={filteredRecent.length > 0}
-              onSelect={onSuggestionSelect}
-            />
-          ) : filteredRecent.length === 0 ? (
-            <div className="flex flex-col items-center gap-1 py-6">
-              <p className="text-sm font-medium text-foreground/50">No cities found</p>
-              <p className="text-xs text-foreground/30">Try a different spelling</p>
+        {len > 0 && len < MIN_SUGGESTION_LENGTH && (
+          <>
+            {filteredRecent.length > 0 && (
+              <RecentSection
+                isMobileOpen={isMobileOpen}
+                items={filteredRecent}
+                onSelect={onRecentSelect}
+                onRemove={onRecentRemove}
+                onClearAll={onRecentClearAll}
+                clearDialogOpen={clearDialogOpen}
+                onClearDialogOpenChange={onClearDialogOpenChange}
+              />
+            )}
+            <div className="flex items-center gap-2.5 px-3 py-3">
+              <KeyboardIcon className="size-4 text-foreground/30" strokeWidth={1.75} aria-hidden="true" />
+              <p className="text-[13px] font-medium text-foreground/40">
+                Keep typing for city suggestions…
+              </p>
             </div>
-          ) : null}
+          </>
+        )}
 
-          {showSelectPrompt && (
-            <p role="alert" className="px-4 pt-1 pb-2 text-[13px] font-medium text-destructive">
-              Select a city from the list
-            </p>
-          )}
-        </>
-      )}
+        {len >= MIN_SUGGESTION_LENGTH && (
+          <>
+            {filteredRecent.length > 0 && (
+              <RecentSection
+                isMobileOpen={isMobileOpen}
+                items={filteredRecent}
+                onSelect={onRecentSelect}
+                onRemove={onRecentRemove}
+                onClearAll={onRecentClearAll}
+                clearDialogOpen={clearDialogOpen}
+                onClearDialogOpenChange={onClearDialogOpenChange}
+              />
+            )}
 
-      <div className="mt-1 flex items-center gap-1.5 px-1 pb-1 pt-1">
+            {isSuggestionsLoading ? (
+              <SuggestionsLoading />
+            ) : suggestions.length > 0 ? (
+              <SuggestionsList
+                items={suggestions}
+                showHeader={filteredRecent.length > 0}
+                onSelect={onSuggestionSelect}
+              />
+            ) : filteredRecent.length === 0 ? (
+              <div className="flex flex-col items-center gap-1 py-6">
+                <p className="text-sm font-medium text-foreground/50">No cities found</p>
+                <p className="text-xs text-foreground/30">Try a different spelling</p>
+              </div>
+            ) : null}
+
+            {showSelectPrompt && (
+              <p role="alert" className="px-4 pt-1 pb-2 text-[13px] font-medium text-destructive">
+                Select a city from the list
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
+      <div
+        className={
+          isMobileOpen
+            ? "flex shrink-0 items-center gap-2 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2"
+            : "mt-1 flex shrink-0 items-center gap-1.5 px-1 pb-1 pt-1"
+        }
+      >
         <button
           type="button"
           onMouseDown={(e) => {
             e.preventDefault();
             onLocationRequest();
           }}
-          className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-foreground/[0.04] py-2.5 text-[13px] font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]"
+          className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
+            isMobileOpen
+              ? " bg-foreground/[0.06] py-3.5 text-[14px]"
+              : " bg-foreground/[0.04] py-2.5"
+          }`}
         >
           <LocateFixedIcon
             className="size-3.5 transition-transform duration-300 group-hover:scale-110"
@@ -132,7 +161,11 @@ export function SearchDropdown({
             e.preventDefault();
             onRandomSelect();
           }}
-          className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-foreground/[0.04] py-2.5 text-[13px] font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]"
+          className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
+            isMobileOpen
+              ? " bg-foreground/[0.06] py-3.5 text-[14px]"
+              : " bg-foreground/[0.04] py-2.5"
+          }`}
         >
           <ShuffleIcon
             className="size-3.5 transition-transform duration-300 group-hover:rotate-180"

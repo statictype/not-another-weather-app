@@ -1,8 +1,9 @@
 import { SearchIcon } from "lucide-react";
-import { type FormEvent, useId, useRef, useState } from "react";
+import { type FormEvent, type AnimationEvent, useEffect, useId, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { MIN_SUGGESTION_LENGTH } from "./constants";
 import { SearchDropdown } from "./dropdown";
 
@@ -20,15 +21,6 @@ interface SearchBarProps {
   onRandomSelect: () => void;
 }
 
-/**
- * Search input with an adaptive dropdown:
- *   - focused + empty → recent searches
- *   - focused + 1–2 chars → filtered recents + "keep typing" hint
- *   - focused + 3+ chars → filtered recents on top, then city suggestions
- *
- * Weather is only fetched when the user explicitly selects a city (suggestion
- * or recent item). Typing alone never triggers a fetch.
- */
 export function SearchBar({
   value,
   onValueChange,
@@ -44,14 +36,18 @@ export function SearchBar({
 }: SearchBarProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
   const [hasFocus, setHasFocus] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [showSelectPrompt, setShowSelectPrompt] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [clipVars, setClipVars] = useState<React.CSSProperties | undefined>(undefined);
 
   const trimmed = value.trim();
   const len = trimmed.length;
 
-  // Filter recent items by case-insensitive substring match when there's input.
   const filteredRecent =
     len === 0
       ? recentItems
@@ -59,7 +55,60 @@ export function SearchBar({
           item.displayName.toLowerCase().includes(trimmed.toLowerCase()),
         );
 
+  const isMobileOpen = !isDesktop && (hasFocus || isClosing);
   const showDropdown = clearDialogOpen || hasFocus;
+
+  // Body scroll lock + neutralize ancestor animations that create
+  // containing blocks (the header's `rise` animation retains a computed
+  // transform which breaks `position: fixed` on the overlay).
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const header = containerRef.current?.closest("header");
+    if (header instanceof HTMLElement) {
+      header.style.animation = "none";
+    }
+
+    return () => {
+      document.body.style.overflow = prev;
+      if (header instanceof HTMLElement) {
+        header.style.animation = "";
+      }
+    };
+  }, [isMobileOpen]);
+
+  function handleFocus() {
+    if (!isDesktop && containerRef.current) {
+      const r = containerRef.current.getBoundingClientRect();
+      setClipVars({
+        "--clip-top": `${r.top}px`,
+        "--clip-right": `${window.innerWidth - r.right}px`,
+        "--clip-bottom": `${window.innerHeight - r.bottom}px`,
+        "--clip-left": `${r.left}px`,
+      } as React.CSSProperties);
+    }
+    setHasFocus(true);
+  }
+
+  function handleBlur() {
+    if (isDesktop) setHasFocus(false);
+  }
+
+  function handleClose() {
+    setIsClosing(true);
+  }
+
+  function handleAnimationEnd(e: AnimationEvent) {
+    if (e.animationName === "overlay-collapse") {
+      setIsClosing(false);
+      setHasFocus(false);
+      setShowSelectPrompt(false);
+      onValueChange("");
+      inputRef.current?.blur();
+    }
+  }
 
   function handleChange(next: string) {
     onValueChange(next);
@@ -73,27 +122,32 @@ export function SearchBar({
     }
   }
 
-  function handleRecentSelect(item: HistoryItem) {
+  function closeSearch() {
     setShowSelectPrompt(false);
-    inputRef.current?.blur();
+    if (isDesktop) {
+      inputRef.current?.blur();
+    } else {
+      handleClose();
+    }
+  }
+
+  function handleRecentSelect(item: HistoryItem) {
+    closeSearch();
     onRecentSelect(item);
   }
 
   function handleSuggestionSelect(item: SuggestionItem) {
-    setShowSelectPrompt(false);
-    inputRef.current?.blur();
+    closeSearch();
     onSuggestionSelect(item);
   }
 
   function handleLocationRequest() {
-    setShowSelectPrompt(false);
-    inputRef.current?.blur();
+    closeSearch();
     onLocationRequest();
   }
 
   function handleRandomSelect() {
-    setShowSelectPrompt(false);
-    inputRef.current?.blur();
+    closeSearch();
     onRandomSelect();
   }
 
@@ -103,35 +157,72 @@ export function SearchBar({
         <label htmlFor={inputId} className="sr-only">
           Search city
         </label>
-        <div className="relative">
+        <div
+          ref={containerRef}
+          className={
+            isMobileOpen
+              ? `mobile-search-overlay fixed inset-0 z-50 flex flex-col${
+                  isClosing ? " overlay-exit" : " overlay-enter"
+                }`
+              : "relative"
+          }
+          style={isMobileOpen ? clipVars : undefined}
+          onAnimationEnd={handleAnimationEnd}
+        >
           <div
-            className={`card-surface flex items-center gap-4 rounded-3xl px-6 py-4 transition-all duration-300 ${
-              hasFocus ? "ring-[3px] ring-sky-400/25 [.night_&]:ring-sky-300/15" : ""
-            }`}
+            className={
+              isMobileOpen
+                ? "flex shrink-0 items-center gap-3 px-5 pb-3 pt-[max(1.5rem,env(safe-area-inset-top))]"
+                : ""
+            }
           >
-            <SearchIcon
-              className="size-7 shrink-0 text-sky-500 [.night_&]:text-foreground/45"
-              strokeWidth={2}
-              aria-hidden="true"
-            />
-            <Input
-              ref={inputRef}
-              id={inputId}
-              type="search"
-              inputMode="search"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder="Search a city…"
-              value={value}
-              onChange={(e) => handleChange(e.target.value)}
-              onFocus={() => setHasFocus(true)}
-              onBlur={() => setHasFocus(false)}
-              className="font-display font-light h-auto flex-1 border-0 bg-transparent p-0 text-2xl tracking-tight shadow-none placeholder:font-light placeholder:text-foreground/35 focus-visible:ring-0 sm:text-3xl"
-            />
+            <div
+              className={`card-surface flex items-center gap-4 rounded-3xl px-6 py-4 transition-all duration-300${
+                isMobileOpen ? " flex-1" : ""
+              }${
+                hasFocus && !isMobileOpen
+                  ? " ring-[3px] ring-sky-400/25 [.night_&]:ring-sky-300/15"
+                  : ""
+              }`}
+            >
+              <SearchIcon
+                className="size-7 shrink-0 text-sky-500 [.night_&]:text-foreground/45"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+              <Input
+                ref={inputRef}
+                id={inputId}
+                type="search"
+                inputMode="search"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Search a city…"
+                value={value}
+                onChange={(e) => handleChange(e.target.value)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className="font-display font-light h-auto flex-1 border-0 bg-transparent p-0 text-2xl tracking-tight shadow-none placeholder:font-light placeholder:text-foreground/35 focus-visible:ring-0 sm:text-3xl"
+              />
+            </div>
+
+            {isMobileOpen && (
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleClose();
+                }}
+                className="shrink-0 text-[15px] font-medium text-foreground/50 transition-colors duration-150 active:text-foreground/70"
+              >
+                Cancel
+              </button>
+            )}
           </div>
 
           {showDropdown && (
             <SearchDropdown
+              isMobileOpen={isMobileOpen}
               trimmed={trimmed}
               filteredRecent={filteredRecent}
               allRecent={recentItems}

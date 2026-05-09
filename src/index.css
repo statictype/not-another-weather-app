@@ -486,3 +486,78 @@ html, body { background: oklch(0.97 0.02 230); }
 .swap-d-4 { animation-delay: 0.15s; }
 .swap-d-5 { animation-delay: 0.20s; }
 .swap-d-6 { animation-delay: 0.25s; }
+
+/* ── Mobile search overlay ─────────────────────────────────────── */
+@keyframes overlay-expand {
+  from {
+    clip-path: inset(
+      var(--clip-top) var(--clip-right) var(--clip-bottom) var(--clip-left)
+      round 1.5rem
+    );
+    opacity: 0.4;
+  }
+  to {
+    clip-path: inset(0 round 0);
+    opacity: 1;
+  }
+}
+@keyframes overlay-collapse {
+  from {
+    clip-path: inset(0 round 0);
+    opacity: 1;
+  }
+  to {
+    clip-path: inset(
+      var(--clip-top) var(--clip-right) var(--clip-bottom) var(--clip-left)
+      round 1.5rem
+    );
+    opacity: 0;
+  }
+}
+.overlay-enter {
+  animation: overlay-expand 0.4s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.overlay-exit {
+  animation: overlay-collapse 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.mobile-search-overlay {
+  background: oklch(0.97 0.02 230 / 0.97);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+.night .mobile-search-overlay {
+  background: oklch(0.13 0.008 250 / 0.97);
+}
+
+/* ── Carousel ──────────────────────────────────────────────────── */
+.carousel-card {
+  background:
+    linear-gradient(160deg, oklch(1 0 0 / 0.75), oklch(0.97 0.01 230 / 0.45));
+  border: 1px solid oklch(1 0 0 / 0.7);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.5) inset,
+    0 8px 20px -10px oklch(0.4 0.12 240 / 0.18);
+}
+.night .carousel-card {
+  background:
+    linear-gradient(160deg, oklch(0.22 0.015 250 / 0.75), oklch(0.18 0.02 255 / 0.45));
+  border: 1px solid oklch(1 0 0 / 0.08);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.04) inset,
+    0 8px 20px -10px oklch(0 0 0 / 0.45);
+}
+
+.carousel-fade {
+  background: linear-gradient(to left, oklch(0.97 0.02 230 / 0.95), transparent);
+}
+.night .carousel-fade {
+  background: linear-gradient(to left, oklch(0.13 0.008 250 / 0.95), transparent);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
