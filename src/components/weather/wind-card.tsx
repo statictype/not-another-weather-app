@@ -21,7 +21,7 @@ export function WindCard({ windKph, windDir, gustKph }: WindCardProps) {
         </span>
         <span className="font-display font-light text-foreground/55 text-base">km/h</span>
       </div>
-      <p className="font-display font-normal text-foreground/55 mt-1.5 text-[10px] uppercase tracking-[0.18em] 2xl:text-xs">
+      <p className="font-display font-normal text-foreground/55 mt-1.5 text-xs uppercase tracking-[0.18em]">
         {beaufort(windKph)}
       </p>
       <div className="relative mt-5 grid grid-cols-3 gap-3 border-t border-foreground/6 pt-4">
@@ -35,7 +35,7 @@ export function WindCard({ windKph, windDir, gustKph }: WindCardProps) {
 
 function TileLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-display font-normal text-foreground/55 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] 2xl:text-xs">
+    <p className="font-display font-normal text-foreground/55 flex items-center gap-2 text-xs uppercase tracking-[0.2em]">
       {children}
     </p>
   );
@@ -44,7 +44,7 @@ function TileLabel({ children }: { children: React.ReactNode }) {
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
-      <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.18em]">
+      <p className="font-display font-normal text-foreground/55 text-xs uppercase tracking-[0.18em]">
         {label}
       </p>
       <p className="font-display mt-0.5 text-lg tracking-tight">

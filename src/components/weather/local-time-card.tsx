@@ -21,7 +21,7 @@ export function LocalTimeCard({ tz, isDay }: LocalTimeCardProps) {
         <div className="absolute -right-16 -top-16 size-56 rounded-full bg-rose-300/40 blur-3xl" />
       )}
       <div className="relative">
-        <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.2em] 2xl:text-xs">
+        <p className="font-display font-normal text-foreground/55 text-xs uppercase tracking-[0.2em]">
           Local time
         </p>
         <p className="font-display font-light mt-3 text-4xl leading-none tracking-tight xl:text-2xl 2xl:text-4xl">

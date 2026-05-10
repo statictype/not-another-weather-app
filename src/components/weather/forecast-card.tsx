@@ -58,7 +58,7 @@ function DayRow({ day, label }: { day: ForecastDay; label: string }) {
         aria-hidden="true"
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.18em]">
+        <span className="font-display font-normal text-foreground/55 text-xs uppercase tracking-[0.18em]">
           {label}
         </span>
         <span className="font-display mt-1 text-3xl leading-none tracking-tight">

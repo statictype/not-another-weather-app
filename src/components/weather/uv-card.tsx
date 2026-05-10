@@ -25,7 +25,7 @@ export function UvCard({ uv, isDay }: UvCardProps) {
       />
       <p
         className={cn(
-          "font-display font-normal text-[10px] uppercase tracking-[0.2em] 2xl:text-xs",
+          "font-display font-normal text-xs uppercase tracking-[0.2em]",
           isDay ? "text-foreground/55" : "text-white/20",
         )}
       >

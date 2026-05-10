@@ -62,7 +62,7 @@ function Row({
         ) : (
           <p aria-hidden="true" className="h-[1rem] w-20 animate-pulse rounded bg-foreground/10" />
         )}
-        <p className="font-display font-normal text-foreground/55 text-[10px] uppercase tracking-[0.16em]">
+        <p className="font-display font-normal text-foreground/55 text-xs uppercase tracking-[0.16em]">
           {label}
         </p>
       </div>
