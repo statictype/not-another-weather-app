@@ -21,6 +21,7 @@ body,
  */
 
 @theme inline {
+  --text-xs: 0.75rem;
   --font-sans: "Work Sans", system-ui, sans-serif;
   --font-display: "Work Sans", system-ui, sans-serif;
   --font-mono: "Work Sans", ui-monospace, monospace;
@@ -398,65 +399,6 @@ html, body { background: oklch(0.97 0.02 230); }
   border-color: oklch(1 0 0 / 0.06) !important;
 }
 
-/* ── Empty-state ambient orbs ────────────────────────────────────── */
-@keyframes orb-drift {
-  0%   { transform: translate(-10%, -15%) scale(1);   }
-  33%  { transform: translate(8%, -5%)   scale(1.12); }
-  66%  { transform: translate(-5%, 10%)  scale(0.95); }
-  100% { transform: translate(-10%, -15%) scale(1);   }
-}
-@keyframes orb-drift-2 {
-  0%   { transform: translate(12%, 10%) scale(1);    }
-  50%  { transform: translate(-8%, -8%) scale(1.08); }
-  100% { transform: translate(12%, 10%) scale(1);    }
-}
-
-.empty-orb {
-  width: 28rem;
-  height: 28rem;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    oklch(0.82 0.12 220 / 0.35) 0%,
-    oklch(0.78 0.10 250 / 0.15) 45%,
-    transparent 70%
-  );
-  filter: blur(60px);
-  animation: orb-drift 18s ease-in-out infinite;
-}
-.empty-orb-secondary {
-  width: 20rem;
-  height: 20rem;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    oklch(0.88 0.08 190 / 0.3) 0%,
-    oklch(0.84 0.06 170 / 0.1) 50%,
-    transparent 70%
-  );
-  filter: blur(50px);
-  animation: orb-drift-2 14s ease-in-out infinite;
-  animation-delay: -4s;
-}
-
-/* Night: cooler, dimmer orbs */
-.night .empty-orb {
-  background: radial-gradient(
-    circle,
-    oklch(0.35 0.08 260 / 0.4) 0%,
-    oklch(0.25 0.06 270 / 0.15) 45%,
-    transparent 70%
-  );
-}
-.night .empty-orb-secondary {
-  background: radial-gradient(
-    circle,
-    oklch(0.30 0.06 230 / 0.3) 0%,
-    oklch(0.22 0.04 240 / 0.1) 50%,
-    transparent 70%
-  );
-}
-
 /* ── Search dropdown ────────────────────────────────────────────── */
 .search-dropdown {
   background: oklch(0.99 0.005 230);
@@ -475,24 +417,6 @@ html, body { background: oklch(0.97 0.02 230); }
     0 16px 32px -8px oklch(0 0 0 / 0.35);
 }
 
-@keyframes dropdown-in {
-  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
-  to   { opacity: 1; transform: none; }
-}
-.dropdown-enter {
-  animation: dropdown-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-@keyframes item-in {
-  from { opacity: 0; transform: translateX(-6px); }
-  to   { opacity: 1; transform: none; }
-}
-.item-stagger { animation: item-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.item-d-0 { animation-delay: 0.03s; }
-.item-d-1 { animation-delay: 0.06s; }
-.item-d-2 { animation-delay: 0.09s; }
-.item-d-3 { animation-delay: 0.12s; }
-.item-d-4 { animation-delay: 0.15s; }
 
 /* ── Entrance animations ────────────────────────────────────────── */
 @keyframes rise {
@@ -516,40 +440,6 @@ html, body { background: oklch(0.97 0.02 230); }
 .swap-d-4 { animation-delay: 0.15s; }
 .swap-d-5 { animation-delay: 0.20s; }
 .swap-d-6 { animation-delay: 0.25s; }
-
-/* ── Mobile search overlay ─────────────────────────────────────── */
-@keyframes overlay-expand {
-  from {
-    clip-path: inset(
-      var(--clip-top) var(--clip-right) var(--clip-bottom) var(--clip-left)
-      round 1.5rem
-    );
-    opacity: 0.4;
-  }
-  to {
-    clip-path: inset(0 round 0);
-    opacity: 1;
-  }
-}
-@keyframes overlay-collapse {
-  from {
-    clip-path: inset(0 round 0);
-    opacity: 1;
-  }
-  to {
-    clip-path: inset(
-      var(--clip-top) var(--clip-right) var(--clip-bottom) var(--clip-left)
-      round 1.5rem
-    );
-    opacity: 0;
-  }
-}
-.overlay-enter {
-  animation: overlay-expand 0.4s cubic-bezier(0.32, 0.72, 0, 1) both;
-}
-.overlay-exit {
-  animation: overlay-collapse 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
-}
 
 .mobile-search-overlay {
   background: oklch(0.97 0.02 230 / 0.97);
@@ -590,4 +480,25 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+.search-dropdown * {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.5 0 0 / 0.12) transparent;
+}
+.search-dropdown *::-webkit-scrollbar {
+  width: 6px;
+}
+.search-dropdown *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.search-dropdown *::-webkit-scrollbar-thumb {
+  background: oklch(0.5 0 0 / 0.12);
+  border-radius: 3px;
+}
+.night .search-dropdown * {
+  scrollbar-color: oklch(1 0 0 / 0.12) transparent;
+}
+.night .search-dropdown *::-webkit-scrollbar-thumb {
+  background: oklch(1 0 0 / 0.12);
 }

@@ -1,4 +1,5 @@
 import { KeyboardIcon, LocateFixedIcon, ShuffleIcon } from "lucide-react";
+import { motion } from "motion/react";
 import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
 import { MIN_SUGGESTION_LENGTH } from "./constants";
@@ -23,6 +24,12 @@ interface SearchDropdownProps {
   onRandomSelect: () => void;
 }
 
+const dropdownVariants = {
+  hidden: { opacity: 0, y: -4, scale: 0.98 },
+  visible: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -4, scale: 0.98 },
+};
+
 export function SearchDropdown({
   isMobileOpen,
   trimmed,
@@ -42,21 +49,27 @@ export function SearchDropdown({
 }: SearchDropdownProps) {
   const len = trimmed.length;
 
+  const Wrapper = isMobileOpen ? "div" : motion.div;
+  const wrapperProps = isMobileOpen
+    ? {}
+    : {
+        variants: dropdownVariants,
+        initial: "hidden" as const,
+        animate: "visible" as const,
+        exit: "exit" as const,
+        transition: { type: "spring" as const, stiffness: 500, damping: 35 },
+      };
+
   return (
-    <div
+    <Wrapper
       className={
         isMobileOpen
           ? "flex flex-1 flex-col overflow-hidden"
-          : "search-dropdown dropdown-enter absolute left-0 right-0 top-full z-20 mt-3 flex max-h-[60vh] flex-col overflow-hidden rounded-2xl p-2"
+          : "search-dropdown absolute left-0 right-0 top-full z-20 mt-3 flex max-h-[60vh] flex-col overflow-hidden rounded-2xl p-2"
       }
+      {...wrapperProps}
     >
-      <div
-        className={
-          isMobileOpen
-            ? "flex-1 overflow-y-auto overflow-x-hidden px-2"
-            : "flex-1 overflow-y-auto overflow-x-hidden"
-        }
-      >
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {len === 0 && allRecent.length > 0 && (
           <RecentSection
             isMobileOpen={isMobileOpen}
@@ -84,7 +97,7 @@ export function SearchDropdown({
             )}
             <div className="flex items-center gap-2.5 px-3 py-3">
               <KeyboardIcon className="size-4 text-foreground/30" strokeWidth={1.75} aria-hidden="true" />
-              <p className="text-[13px] font-medium text-foreground/40">
+              <p className="text-xs font-medium text-foreground/40">
                 Keep typing for city suggestions…
               </p>
             </div>
@@ -121,7 +134,7 @@ export function SearchDropdown({
             ) : null}
 
             {showSelectPrompt && (
-              <p role="alert" className="px-4 pt-1 pb-2 text-[13px] font-medium text-destructive">
+              <p role="alert" className="px-4 pt-1 pb-2 text-xs font-medium text-destructive">
                 Select a city from the list
               </p>
             )}
@@ -142,9 +155,9 @@ export function SearchDropdown({
             e.preventDefault();
             onLocationRequest();
           }}
-          className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
+          className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
             isMobileOpen
-              ? " bg-foreground/[0.06] py-3.5 text-[14px]"
+              ? " bg-foreground/[0.06] py-3.5 text-sm"
               : " bg-foreground/[0.04] py-2.5"
           }`}
         >
@@ -161,9 +174,9 @@ export function SearchDropdown({
             e.preventDefault();
             onRandomSelect();
           }}
-          className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
+          className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
             isMobileOpen
-              ? " bg-foreground/[0.06] py-3.5 text-[14px]"
+              ? " bg-foreground/[0.06] py-3.5 text-sm"
               : " bg-foreground/[0.04] py-2.5"
           }`}
         >
@@ -175,6 +188,6 @@ export function SearchDropdown({
           Surprise me
         </button>
       </div>
-    </div>
+    </Wrapper>
   );
 }

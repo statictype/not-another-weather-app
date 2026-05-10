@@ -1,4 +1,5 @@
 import { MapPinIcon } from "lucide-react";
+import { motion } from "motion/react";
 import type { SuggestionItem } from "@/api/types";
 import { SectionHeader } from "./section-header";
 
@@ -8,6 +9,17 @@ interface SuggestionsListProps {
   onSelect: (item: SuggestionItem) => void;
 }
 
+const listVariants = {
+  visible: { transition: { staggerChildren: 0.03 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -6 },
+  visible: { opacity: 1, x: 0 },
+};
+
+const itemTransition = { type: "spring" as const, stiffness: 500, damping: 35 };
+
 export function SuggestionsList({ items, showHeader, onSelect }: SuggestionsListProps) {
   return (
     <div>
@@ -16,17 +28,25 @@ export function SuggestionsList({ items, showHeader, onSelect }: SuggestionsList
           <SectionHeader label="Suggestions" />
         </div>
       )}
-      <ul className="flex flex-col gap-0.5">
-        {items.map((item, i) => {
+      <motion.ul
+        className="flex flex-col gap-0.5"
+        initial="hidden"
+        animate="visible"
+        variants={listVariants}
+      >
+        {items.map((item) => {
           const city = item.name;
           const rest = [item.region, item.country].filter(Boolean).join(", ");
           return (
-            <li
+            <motion.li
               key={item.id}
-              className={`item-stagger item-d-${Math.min(i, 4)} group`}
+              variants={itemVariants}
+              transition={itemTransition}
+              className="group"
             >
-              <button
+              <motion.button
                 type="button"
+                whileTap={{ scale: 0.98 }}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   onSelect(item);
@@ -38,20 +58,20 @@ export function SuggestionsList({ items, showHeader, onSelect }: SuggestionsList
                   <MapPinIcon className="size-3.5 text-sky-600/70 [.night_&]:text-foreground/45" strokeWidth={2} aria-hidden="true" />
                 </span>
                 <span className="flex min-w-0 flex-col">
-                  <span className="font-display truncate text-[15px] font-medium tracking-tight text-foreground/85 transition-colors duration-150 group-hover:text-foreground">
+                  <span className="font-display truncate text-sm font-medium tracking-tight text-foreground/85 transition-colors duration-150 group-hover:text-foreground">
                     {city}
                   </span>
                   {rest && (
-                    <span className="truncate text-[12px] text-foreground/40">
+                    <span className="truncate text-xs text-foreground/40">
                       {rest}
                     </span>
                   )}
                 </span>
-              </button>
-            </li>
+              </motion.button>
+            </motion.li>
           );
         })}
-      </ul>
+      </motion.ul>
     </div>
   );
 }
@@ -60,7 +80,7 @@ export function SuggestionsLoading() {
   return (
     <ul className="flex flex-col gap-0.5">
       {[1, 2, 3].map((i) => (
-        <li key={i} className={`item-stagger item-d-${Math.min(i - 1, 4)} flex items-center gap-3 rounded-xl px-2 py-2`}>
+        <li key={i} className="flex items-center gap-3 rounded-xl px-2 py-2">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.04]">
             <MapPinIcon
               className="size-3.5 text-foreground/15"

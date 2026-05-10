@@ -147,7 +147,7 @@ export function App() {
       />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
-        <header className="rise rise-1 relative z-30 mb-8 flex items-center gap-2 md:gap-6">
+        <header className="relative z-30 mb-8 flex items-center gap-2 md:gap-6">
           <h1 className="text-5xl sm:text-7xl shrink-0 leading-none" aria-label="Weather">
             <span aria-hidden="true">😶‍🌫️</span>
           </h1>
