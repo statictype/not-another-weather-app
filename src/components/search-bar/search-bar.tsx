@@ -124,19 +124,29 @@ export function SearchBar({
           {isMobileOpen ? (
             <motion.div
               key="mobile-overlay"
-              className="mobile-search-overlay fixed inset-0 z-50 flex flex-col"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex flex-col"
             >
-              <div className="flex shrink-0 items-center gap-3 px-5 pb-3 pt-6 sm:pt-8">
+              <motion.div
+                className="mobile-search-overlay absolute inset-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.06, delay: 0.22 } }}
+                transition={{ duration: 0.2 }}
+              />
+
+              <div className="relative flex shrink-0 items-center gap-3 px-5 pb-3 pt-6 sm:pt-8">
                 <motion.div
                   className="search-surface flex flex-1 items-center gap-3 rounded-[1.75rem] px-5 py-3"
                   initial={{ x: 40 }}
-                  animate={{ x: 0 }}
-                  exit={{ x: 40 }}
-                  transition={spring}
+                  animate={{ x: 0, transition: spring }}
+                  exit={{
+                    x: 52,
+                    opacity: 0,
+                    transition: {
+                      x: { type: "spring", stiffness: 400, damping: 30 },
+                      opacity: { duration: 0.06, delay: 0.22 },
+                    },
+                  }}
                 >
                   <SearchIcon
                     className="size-[18px] shrink-0 text-foreground/30 [.night_&]:text-foreground/35"
@@ -167,33 +177,38 @@ export function SearchBar({
                   }}
                   className="shrink-0 text-sm font-medium text-foreground/50 active:text-foreground/70"
                   initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 16 }}
-                  transition={spring}
+                  animate={{ opacity: 1, x: 0, transition: spring }}
+                  exit={{ opacity: 0, x: 16, transition: { duration: 0.12 } }}
                 >
                   Cancel
                 </motion.button>
               </div>
 
-              {showDropdown && (
-                <SearchDropdown
-                  isMobileOpen
-                  trimmed={trimmed}
-                  filteredRecent={filteredRecent}
-                  allRecent={recentItems}
-                  suggestions={suggestions}
-                  isSuggestionsLoading={isSuggestionsLoading}
-                  showSelectPrompt={showSelectPrompt}
-                  onRecentSelect={handleRecentSelect}
-                  onRecentRemove={onRecentRemove}
-                  onRecentClearAll={onRecentClearAll}
-                  clearDialogOpen={clearDialogOpen}
-                  onClearDialogOpenChange={setClearDialogOpen}
-                  onSuggestionSelect={handleSuggestionSelect}
-                  onLocationRequest={handleLocationRequest}
-                  onRandomSelect={handleRandomSelect}
-                />
-              )}
+              <motion.div
+                className="relative flex flex-1 flex-col overflow-hidden"
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.12 }}
+              >
+                {showDropdown && (
+                  <SearchDropdown
+                    isMobileOpen
+                    trimmed={trimmed}
+                    filteredRecent={filteredRecent}
+                    allRecent={recentItems}
+                    suggestions={suggestions}
+                    isSuggestionsLoading={isSuggestionsLoading}
+                    showSelectPrompt={showSelectPrompt}
+                    onRecentSelect={handleRecentSelect}
+                    onRecentRemove={onRecentRemove}
+                    onRecentClearAll={onRecentClearAll}
+                    clearDialogOpen={clearDialogOpen}
+                    onClearDialogOpenChange={setClearDialogOpen}
+                    onSuggestionSelect={handleSuggestionSelect}
+                    onLocationRequest={handleLocationRequest}
+                    onRandomSelect={handleRandomSelect}
+                  />
+                )}
+              </motion.div>
             </motion.div>
           ) : (
             <div className="relative">
