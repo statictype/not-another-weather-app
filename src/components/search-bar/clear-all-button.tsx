@@ -10,7 +10,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 
 interface ClearAllButtonProps {
   onConfirm: () => void;
@@ -22,16 +21,14 @@ export function ClearAllButton({ onConfirm, open, onOpenChange }: ClearAllButton
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
           onMouseDown={(e) => e.preventDefault()}
-          className="h-7 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/30 transition-colors hover:text-destructive/70"
+          className="font-display flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-foreground/30 transition-colors hover:text-destructive/70"
         >
-          <Trash2Icon className="size-3.5" aria-hidden="true" />
+          <Trash2Icon className="size-3" aria-hidden="true" />
           Clear
-        </Button>
+        </button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
