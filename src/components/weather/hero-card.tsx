@@ -1,6 +1,5 @@
 import type { CurrentConditions, WeatherForecast, WeatherLocation } from "@/api/types";
 import { cn } from "@/lib/utils";
-import { CircleIcon } from "lucide-react";
 import { ConditionIcon } from "./condition-icon";
 
 interface HeroCardProps {
@@ -30,12 +29,12 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
       )}
 
       <div className="relative flex h-full flex-col gap-2">
-        <p className="font-display font-normal text-xs uppercase tracking-[0.15em] text-white/60 flex flex-wrap gap-0.5">
+        <p className="font-display font-light text-xs uppercase tracking-[0.15em] text-white flex flex-wrap gap-0.5">
         <span>{location.region}</span> <span>·</span> <span className="shrink-0">{location.country}</span>
         </p>
 
         <div className="grid grid-cols-[1fr_auto] md:flex-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(8rem,12rem)] md:items-center md:gap-x-2">
-          <h2 className="col-span-2 font-display font-light text-balance text-4xl leading-[0.95] md:col-span-1 lg:text-5xl 2xl:text-6xl 2xl:tracking-tight">
+          <h2 className="col-span-2 font-display font-light text-balance text-4xl leading-[0.95] md:col-span-1 xl:text-5xl xl:tracking-tight">
             {location.name}
           </h2>
 
@@ -54,7 +53,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
 
           <div className="col-start-2 row-start-2 row-end-4 mt-6 flex flex-col items-end justify-end gap-1.5 pl-6 md:col-start-1 md:row-end-3 md:flex-row md:flex-wrap md:items-baseline md:justify-start md:gap-x-4 md:gap-y-2 md:pl-0">
             {today ? (
-              <p className="order-1 font-display font-normal text-base min-h-3.5 text-white/60 md:order-3">
+              <p className="order-1 font-display font-light text-sm md:text-base min-h-3.5 text-white md:order-3">
                 ↑ {Math.round(today.maxC)}°
                 <span className="ml-1">↓ {Math.round(today.minC)}°</span>
               </p>
@@ -62,17 +61,17 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               <div className="order-1 h-4 w-16 animate-pulse rounded bg-white/20 md:order-3" aria-hidden="true" />
             )}
 
-            <div className="order-2 flex items-end md:order-1 md:basis-full">
-              <span className="font-display text-6xl leading-[0.78] tracking-[-0.06em] md:text-[5.5rem] lg:text-[8rem]">
+            <div className="order-2 flex items-stretch text-6xl md:text-[5.5rem] lg:text-[8rem] md:order-1 md:basis-full">
+              <span className="font-display leading-[0.78] tracking-[-0.06em]">
                 {Math.round(current.tempC)}
               </span>
-              <span className="ml-0.5 flex flex-col items-start self-stretch font-display font-light text-white/80 md:ml-1 md:text-white/60 lg:ml-2">
-                <CircleIcon className="mt-[-0.05em] size-2.5 md:size-3 lg:size-3.5" strokeWidth={2.5} />
-                <span className="mt-auto text-base md:text-lg lg:text-xl">C</span>
+              <span className="ml-[0.06em] flex flex-col justify-between pt-[0.025em] pb-[0.038em] font-display font-light text-white md:text-white/80 xl:pb-[0.026em]">
+                <span className="text-[0.38em] leading-none xl:text-[0.3em]">°</span>
+                <span className="text-[0.26em] leading-none font-normal xl:text-[0.2em]">C</span>
               </span>
             </div>
 
-            <p className="order-3 font-display font-normal text-base min-h-3.5 text-white/60 md:order-2">
+            <p className="order-3 font-display font-light text-sm md:text-base min-h-3.5 text-white md:order-2">
               feels like {Math.round(current.feelsLikeC)}°
             </p>
           </div>
@@ -82,7 +81,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               {current.conditionText}
             </p>
             {today ? (
-              <p className="font-display font-normal text-base text-white/60">
+              <p className="font-display font-light text-sm md:text-base text-white">
                 {today.chanceOfRain}% chance of rain
               </p>
             ) : (
