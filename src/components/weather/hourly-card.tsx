@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, DropletIcon, DropletOffIcon } from "lucide-react";
 import type { HourlyForecast } from "@/api/types";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
@@ -16,13 +16,13 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
   return (
     <section className="swap-in swap-d-3 bento-tile flex flex-col p-6">
       <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-        Coming up
+        Hourly
       </p>
-      <div className="mt-3">
+      <div className="mt-4">
         {slots ? (
           <HourlyStrip slots={slots} />
         ) : (
-          <div className="flex gap-5">
+          <div className="flex">
             {Array.from({ length: 4 }, (_, i) => (
               <SlotSkeleton key={i} />
             ))}
@@ -77,7 +77,7 @@ function HourlyStrip({ slots }: { slots: HourlyForecast[] }) {
 
       <div
         ref={ref}
-        className="scrollbar-none flex gap-5 overflow-x-auto"
+        className="scrollbar-none flex overflow-x-auto divide-x divide-foreground/6"
       >
         {slots.map((s) => (
           <Slot key={s.time} slot={s} />
@@ -101,9 +101,15 @@ function HourlyStrip({ slots }: { slots: HourlyForecast[] }) {
 
 function Slot({ slot }: { slot: HourlyForecast }) {
   const label = formatHourLabel(slot.time);
+  const temp = Math.round(slot.tempC);
+  const feels = Math.round(slot.feelsLikeC);
+  const max = Math.max(temp, feels);
+  const min = Math.min(temp, feels);
+  const collapse = max - min < 2;
+  const noRain = slot.chanceOfRain === 0;
 
   return (
-    <div className="flex w-16 shrink-0 flex-col items-center gap-1.5">
+    <div className="flex w-20 shrink-0 flex-col items-center gap-1.5">
       <span className="font-display text-xs font-medium uppercase tracking-wider text-foreground/60">
         {label}
       </span>
@@ -115,14 +121,28 @@ function Slot({ slot }: { slot: HourlyForecast }) {
         aria-hidden="true"
       />
       <span className="font-display leading-none tracking-tight">
-        <span className="text-lg">{Math.round(slot.tempC)}°</span>
-        <span className="ml-0.5 text-xs text-foreground/50">
-          {Math.round(slot.feelsLikeC)}°
-        </span>
+        <span className="text-lg">{max}°</span>
+        {!collapse && (
+          <span className="ml-0.5 text-xs text-foreground/50">{min}°</span>
+        )}
       </span>
       <span className="flex items-center gap-0.5 text-foreground/55">
-        <svg className="size-2.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-3-2-6-3.5-8.5L12 1 8.5 6.5C7 9 5 12 5 15a7 7 0 0 0 7 7z" /></svg>
-        <span className="font-display text-xs">{slot.chanceOfRain}%</span>
+        {noRain ? (
+          <DropletOffIcon
+            className="size-3.5 shrink-0 text-foreground/[0.18] md:size-4.5"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+        ) : (
+          <>
+            <DropletIcon
+              className="size-3 shrink-0 md:size-4.5"
+              strokeWidth={2}
+              aria-hidden="true"
+            />
+            <span className="font-display text-xs">{slot.chanceOfRain}%</span>
+          </>
+        )}
       </span>
     </div>
   );
@@ -130,7 +150,7 @@ function Slot({ slot }: { slot: HourlyForecast }) {
 
 function SlotSkeleton() {
   return (
-    <div className="flex w-16 shrink-0 flex-col items-center gap-1.5" aria-hidden="true">
+    <div className="flex w-20 shrink-0 flex-col items-center gap-1.5" aria-hidden="true">
       <div className="h-3 w-8 animate-pulse rounded bg-foreground/10" />
       <div className="size-7 animate-pulse rounded-full bg-foreground/10" />
       <div className="h-4 w-10 animate-pulse rounded bg-foreground/10" />
@@ -148,10 +168,9 @@ function pickSlots(hourly: HourlyForecast[], tz: string): HourlyForecast[] {
     hourMap.set(key, h);
   }
 
-  const offsets = [3, 6, 9, 12, 15, 18, 21, 24];
   const results: HourlyForecast[] = [];
 
-  for (const offset of offsets) {
+  for (let offset = 1; offset <= 24; offset++) {
     const targetHour = nowHour + offset;
     const { date, hour } = rollForward(nowDate, targetHour);
     const hh = String(hour).padStart(2, "0");
