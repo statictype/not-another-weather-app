@@ -1,3 +1,4 @@
+import { UmbrellaIcon } from "lucide-react";
 import type { CurrentConditions, WeatherForecast, WeatherLocation } from "@/api/types";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
@@ -28,79 +29,81 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
         </>
       )}
 
-      <div className="relative flex h-full flex-col gap-2">
-        <p className="font-display font-light text-xs uppercase tracking-[0.15em] text-white flex flex-wrap gap-0.5">
-        <span>{location.region}</span> <span>·</span> <span className="shrink-0">{location.country}</span>
-        </p>
-
-        <div className="grid grid-cols-[1fr_auto] md:flex-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(8rem,12rem)] md:items-center md:gap-x-2">
-          <h2 className="col-span-2 font-display font-light text-balance text-4xl leading-[0.95] md:col-span-1 xl:text-5xl xl:tracking-tight">
+      <div className="relative grid h-full grid-cols-[1fr_auto] grid-rows-[auto_1fr_auto] gap-x-4 gap-y-6 md:grid-cols-[4fr_2fr] md:gap-x-2">
+        {/* TOP: country/region label + city name */}
+        <div className="col-span-2 row-start-1 flex flex-col gap-2 md:col-span-1 md:col-start-1">
+          <p className="font-display font-light text-xs uppercase tracking-[0.15em] text-white flex flex-wrap gap-0.5">
+            <span>{location.region}</span> <span>·</span> <span className="shrink-0">{location.country}</span>
+          </p>
+          <h2 className="font-display font-light text-balance text-4xl leading-[0.95] md:text-5xl xl:tracking-tight 2xl:text-6xl">
             {location.name}
           </h2>
+        </div>
 
-          <div className="col-start-1 row-start-2 mt-6 flex items-center justify-start md:col-start-2 md:row-start-1 md:row-end-3 md:mt-0 md:justify-center md:px-3">
-            <ConditionIcon
-              text={current.conditionText}
-              isDay={isDay}
-              className={cn(
-                "shrink-0 size-20 md:size-36 lg:size-40 xl:size-40",
-                isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
-              )}
-              strokeWidth={1}
-              aria-hidden="true"
-            />
-          </div>
+        {/* ICON: middle-left on mobile, vertically centered col 2 on desktop */}
+        <div className="col-start-1 row-start-2 flex items-center justify-start md:row-span-3 md:col-end-1 md:row-start-1 md:self-center md:justify-self-end md:px-3">
+          <ConditionIcon
+            text={current.conditionText}
+            isDay={isDay}
+            className={cn(
+              "shrink-0 size-20 md:size-36 lg:size-40 xl:size-40",
+              isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
+            )}
+            strokeWidth={1}
+            aria-hidden="true"
+          />
+        </div>
 
-          <div className="col-start-2 row-start-2 row-end-4 mt-6 flex flex-col items-end justify-end gap-1.5 pl-6 md:col-start-1 md:row-end-3 md:flex-row md:flex-wrap md:items-baseline md:justify-start md:gap-x-4 md:gap-y-2 md:pl-0">
-            {today ? (
-              <p className="order-1 font-display font-light text-sm md:text-base min-h-3.5 text-white md:order-3">
-                ↑ {Math.round(today.maxC)}°
-                <span className="ml-1">↓ {Math.round(today.minC)}°</span>
+        {/* CONDITIONS: bottom-left on mobile, right column centered on desktop */}
+        <div className="col-start-1 row-start-3 flex min-w-0 flex-col items-start justify-end gap-1 text-left md:row-span-3 md:col-start-2 md:row-start-1 md:self-center md:items-end md:justify-start md:gap-2 md:text-right">
+          <p className="font-display font-normal text-base md:text-2xl">
+            {current.conditionText}
+          </p>
+          {today ? (
+            <div className="flex flex-col gap-1">
+              <p className="font-display font-light text-sm md:text-base text-white flex items-center gap-1.5 md:justify-end">
+                <UmbrellaIcon className="size-4 shrink-0 md:size-5" strokeWidth={2} aria-hidden="true" />
+                {today.chanceOfRain}% rain
               </p>
-            ) : (
-              <div className="order-1 h-4 w-16 animate-pulse rounded bg-white/20 md:order-3" aria-hidden="true" />
-            )}
-
-            <div className="order-2 flex items-stretch text-6xl md:text-[5.5rem] lg:text-[8rem] md:order-1 md:basis-full">
-              <span className="font-display leading-[0.78] tracking-[-0.06em]">
-                {Math.round(current.tempC)}
-              </span>
-              <span className="ml-[0.06em] flex flex-col justify-between pt-[0.025em] pb-[0.038em] font-display font-light text-white md:text-white/80 md:pb-[0.02em]">
-                <span className="text-[0.38em] leading-none xl:text-[0.3em]">°</span>
-                <span className="text-[0.26em] leading-none font-normal xl:text-[0.2em]">C</span>
-              </span>
+              <p className="font-display font-light text-sm md:text-base text-white/75 flex items-center gap-1.5 md:justify-end">
+                <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                {current.cloud}% cloud
+              </p>
             </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <p aria-hidden="true" className="h-[1.25rem] w-28 animate-pulse rounded bg-white/20" />
+              <p aria-hidden="true" className="h-[1.25rem] w-24 animate-pulse rounded bg-white/20" />
+            </div>
+          )}
+        </div>
 
-            <p className="order-3 font-display font-light text-sm md:text-base min-h-3.5 text-white md:order-2">
-              feels like {Math.round(current.feelsLikeC)}°
+        {/* TEMPS: bottom-right on mobile, bottom-left on desktop */}
+        <div className="col-start-2 row-start-3 flex flex-col items-end gap-1.5 md:col-start-1 md:row-start-3 md:flex-row md:flex-wrap md:items-baseline md:justify-start md:gap-x-4 md:gap-y-2">
+          {today ? (
+            <p className="order-1 font-display font-light text-sm md:text-base min-h-3.5 text-white md:order-2">
+              ↑ {Math.round(today.maxC)}°
+              <span className="ml-1">↓ {Math.round(today.minC)}°</span>
             </p>
+          ) : (
+            <div className="order-1 h-4 w-16 animate-pulse rounded bg-white/20 md:order-2" aria-hidden="true" />
+          )}
+
+          <div className="order-2 flex items-stretch text-6xl md:text-[5.5rem] lg:text-[8rem] md:order-1 md:basis-full">
+            <span className="font-display leading-[0.78] tracking-[-0.06em]">
+              {Math.round(current.tempC)}
+            </span>
+            <span className="ml-[0.06em] flex flex-col justify-between pt-[0.025em] pb-[0.038em] font-display font-light text-white md:text-white/80 md:pb-[0.02em]">
+              <span className="text-[0.38em] leading-none xl:text-[0.3em]">°</span>
+              <span className="text-[0.26em] leading-none font-normal xl:text-[0.2em]">C</span>
+            </span>
           </div>
 
-          <div className="col-start-1 row-start-3 flex min-w-0 flex-col justify-end gap-0.5 pt-4 md:col-start-3 md:row-start-1 md:row-end-3 md:gap-2 md:pt-0 md:text-right">
-            <p className="font-display font-normal text-base md:text-2xl lg:text-lg 2xl:text-xl">
-              {current.conditionText}
-            </p>
-            {today ? (
-              <div className="flex flex-col gap-1">
-                <p className="font-display font-light text-sm md:text-base text-white flex items-center gap-1.5">
-                  <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-3-2-6-3.5-8.5L12 1 8.5 6.5C7 9 5 12 5 15a7 7 0 0 0 7 7z"/></svg>
-                  {today.chanceOfRain}% rain
-                </p>
-                <p className="font-display font-light text-sm md:text-base text-white/75 flex items-center gap-1.5">
-                  <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-                  {current.cloud}% cloud
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                <p aria-hidden="true" className="h-[1.25rem] w-28 animate-pulse rounded bg-white/20 md:self-end" />
-                <p aria-hidden="true" className="h-[1.25rem] w-24 animate-pulse rounded bg-white/20 md:self-end" />
-              </div>
-            )}
-          </div>
+          <p className="order-3 font-display font-light text-sm md:text-base min-h-3.5 text-white md:order-3">
+            feels like {Math.round(current.feelsLikeC)}°
+          </p>
         </div>
       </div>
     </section>
   );
 }
-
