@@ -41,6 +41,7 @@ const londonCurrent: WeatherCurrent = {
   current: {
     tempC: 12.3,
     feelsLikeC: 11.1,
+    heatIndexC: 12.3,
     conditionText: "Partly cloudy",
     conditionCode: 1003,
     timeOfDay: "day",
@@ -59,6 +60,7 @@ const londonCurrent: WeatherCurrent = {
 
 const londonForecast: WeatherForecast = {
   today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+  airQualityIndex: 2,
   forecast: [
     {
       date: "2026-04-07",
@@ -79,6 +81,7 @@ const londonForecast: WeatherForecast = {
     moonPhase: "Waxing Gibbous",
     moonIllumination: 72,
   },
+  hourly: [],
 };
 
 const londonYesterday: WeatherYesterday = { yesterday: null };

@@ -2,14 +2,11 @@ import type { ForecastDay } from "@/api/types";
 import { ConditionIcon } from "./condition-icon";
 
 interface ForecastCardProps {
-  /** 3-day forecast days (today first). Undefined until the forecast tier lands. */
   forecast: ForecastDay[] | undefined;
-  /** Previous day. Undefined while pending; null when unavailable. */
   yesterday: ForecastDay | null | undefined;
 }
 
 export function ForecastCard({ forecast, yesterday }: ForecastCardProps) {
-  // Compose the visible day list. "Yesterday" slides in when its tier lands.
   const days: Array<
     { key: string; day: ForecastDay; label: string } | { key: string; skeleton: true }
   > = [];
@@ -53,21 +50,21 @@ function DayRow({ day, label }: { day: ForecastDay; label: string }) {
       <ConditionIcon
         text={day.conditionText}
         isDay={day.isDay}
-        className="text-foreground/60 size-10 shrink-0"
+        className="size-10 shrink-0 text-foreground/60"
         strokeWidth={1.5}
         aria-hidden="true"
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="font-display font-normal text-foreground/55 text-xs uppercase tracking-[0.18em]">
+        <span className="font-display text-xs font-medium uppercase tracking-[0.18em] text-foreground/55">
           {label}
         </span>
         <span className="font-display mt-1 text-3xl leading-none tracking-tight">
           {Math.round(day.maxC)}°
-          <span className="font-display font-light text-foreground/45 ml-1 text-base">
+          <span className="font-display ml-1 text-base font-light text-foreground/45">
             / {Math.round(day.minC)}°
           </span>
         </span>
-        <span className="font-display font-light text-foreground/55 mt-1 truncate text-xs">
+        <span className="font-display mt-1 truncate text-sm font-light text-foreground/55">
           {day.conditionText}
         </span>
       </div>
@@ -82,7 +79,7 @@ function DayRowSkeleton() {
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="h-3 w-16 animate-pulse rounded bg-foreground/10" />
         <div className="h-7 w-20 animate-pulse rounded bg-foreground/10" />
-        <div className="h-3 w-24 animate-pulse rounded bg-foreground/10" />
+        <div className="h-3.5 w-24 animate-pulse rounded bg-foreground/10" />
       </div>
     </div>
   );

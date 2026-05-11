@@ -20,6 +20,7 @@ const currentFixture: WeatherCurrent = {
   current: {
     tempC: 12.3,
     feelsLikeC: 11.1,
+    heatIndexC: 12.3,
     conditionText: "Partly cloudy",
     conditionCode: 1003,
     timeOfDay: "day",
@@ -38,6 +39,7 @@ const currentFixture: WeatherCurrent = {
 
 const forecastFixture: WeatherForecast = {
   today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+  airQualityIndex: 2,
   forecast: [
     {
       date: "2026-04-07",
@@ -58,6 +60,7 @@ const forecastFixture: WeatherForecast = {
     moonPhase: "Waxing Gibbous",
     moonIllumination: 72,
   },
+  hourly: [],
 };
 
 const yesterdayFixture: WeatherYesterday = { yesterday: null };

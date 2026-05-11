@@ -1,45 +1,26 @@
 import type { WeatherCurrent } from "@/api/types";
 import { cn } from "@/lib/utils";
 import { useWeatherForecast, useWeatherYesterday } from "@/hooks/use-weather";
+import { AirComfortCard } from "./air-comfort-card";
 import { AstroCard } from "./astro-card";
-import { AtmosphereCardFromCurrent } from "./atmosphere-card";
+import { AtmospherePanel } from "./atmosphere-panel";
+import { ExposureCard } from "./exposure-card";
 import { ForecastCard } from "./forecast-card";
 import { HeroCard } from "./hero-card";
-import { LocalTimeCard } from "./local-time-card";
-import { UvCard } from "./uv-card";
-import { WindCard } from "./wind-card";
+import { HourlyCard } from "./hourly-card";
+import { TimeCard } from "./time-card";
 
 interface WeatherGridProps {
-  /** Normalized query string, used as the key for the deferred tier hooks. */
   query: string | null;
-  /** Current-tier data — always present by the time this component mounts. */
   current: WeatherCurrent;
-  /** True while a refetch is in flight; fades the grid to signal staleness. */
   isStale: boolean;
 }
 
-/**
- * Layout shell for the weather view.
- *
- * Fires the two deferred queries (forecast + yesterday) at the top, then
- * distributes narrow prop slices to each card. Cards that depend on a
- * deferred tier accept `undefined` for their slice and render a shimmer
- * until it lands.
- *
- * The three-tier split means:
- *   - HeroCard, AtmosphereCard, LocalTimeCard, WindCard, UvCard paint
- *     the moment `current` lands (the LCP event).
- *   - AstroCard and the HeroCard's stats row populate when
- *     `useWeatherForecast` resolves.
- *   - The "Yesterday" column of ForecastCard slots in when
- *     `useWeatherYesterday` resolves.
- */
 export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
   const forecast = useWeatherForecast(query);
   const yesterday = useWeatherYesterday(query);
 
   const swapKey = `${c.location.name}-${c.location.country}`;
-  const isDay = c.current.timeOfDay === "day";
 
   return (
     <div
@@ -50,16 +31,34 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         isStale && "opacity-60",
       )}
     >
+      {/* Row 1: Hero (8) + Time & Hourly stacked (4) */}
       <HeroCard location={c.location} current={c.current} today={forecast.data?.today} />
-      <AtmosphereCardFromCurrent current={c.current} />
-      <LocalTimeCard tz={c.location.tz} isDay={isDay} />
+      <div className="col-span-1 flex flex-col gap-5 sm:col-span-12 sm:gap-6 xl:col-span-4">
+        <TimeCard tz={c.location.tz} />
+        <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
+      </div>
+
+      {/* Row 2: Astro (2) + Atmosphere (4) + Air Comfort (3) + UV/AQI (3) */}
       <AstroCard astro={forecast.data?.astro} />
-      <WindCard
+      <AtmospherePanel
         windKph={c.current.windKph}
         windDir={c.current.windDir}
-        gustKph={c.current.gustKph}
+        pressureMb={c.current.pressureMb}
+        visibilityKm={c.current.visibilityKm}
       />
-      <UvCard uv={c.current.uv} isDay={isDay} />
+      <AirComfortCard
+        tempC={c.current.tempC}
+        feelsLikeC={c.current.feelsLikeC}
+        dewpointC={c.current.dewpointC}
+        humidity={c.current.humidity}
+      />
+      <ExposureCard
+        uv={c.current.uv}
+        airQualityIndex={forecast.data?.airQualityIndex ?? null}
+        isDay={c.current.timeOfDay === "day"}
+      />
+
+      {/* Row 3: Forecast (12) */}
       <ForecastCard forecast={forecast.data?.forecast} yesterday={yesterday.data?.yesterday} />
     </div>
   );

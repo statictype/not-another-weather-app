@@ -34,6 +34,7 @@ export type WeatherLocation = z.infer<typeof WeatherLocationSchema>;
 export const CurrentConditionsSchema = z.object({
   tempC: z.number(),
   feelsLikeC: z.number(),
+  heatIndexC: z.number(),
   conditionText: z.string(),
   conditionCode: z.number(),
   timeOfDay: z.enum(["day", "night"]),
@@ -49,6 +50,19 @@ export const CurrentConditionsSchema = z.object({
   precipMm: z.number(),
 });
 export type CurrentConditions = z.infer<typeof CurrentConditionsSchema>;
+
+export const HourlyForecastSchema = z.object({
+  /** ISO datetime string, e.g. "2026-05-09 14:00". */
+  time: z.string(),
+  tempC: z.number(),
+  feelsLikeC: z.number(),
+  conditionText: z.string(),
+  conditionCode: z.number(),
+  isDay: z.boolean(),
+  chanceOfRain: z.number(),
+  cloud: z.number(),
+});
+export type HourlyForecast = z.infer<typeof HourlyForecastSchema>;
 
 export const ForecastDaySchema = z.object({
   /** ISO date (YYYY-MM-DD) at the queried location. */
@@ -88,8 +102,11 @@ export const WeatherForecastSchema = z.object({
     maxC: z.number(),
     chanceOfRain: z.number(),
   }),
+  /** US EPA index, 1–6. `null` when upstream omits the air-quality block. */
+  airQualityIndex: z.number().nullable(),
   forecast: z.array(ForecastDaySchema),
   astro: AstroSchema,
+  hourly: z.array(HourlyForecastSchema),
 });
 export type WeatherForecast = z.infer<typeof WeatherForecastSchema>;
 

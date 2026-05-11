@@ -3,6 +3,7 @@ import type {
   Astro,
   CurrentConditions,
   ForecastDay,
+  HourlyForecast,
   WeatherCurrent,
   WeatherForecast,
   WeatherLocation,
@@ -32,6 +33,7 @@ const UpstreamLocationSchema = z.object({
 const UpstreamCurrentBlockSchema = z.object({
   temp_c: z.number(),
   feelslike_c: z.number(),
+  heatindex_c: z.number().nullish(),
   is_day: z.union([z.literal(0), z.literal(1)]),
   condition: z.object({ text: z.string(), code: z.number() }),
   wind_kph: z.number(),
@@ -44,11 +46,27 @@ const UpstreamCurrentBlockSchema = z.object({
   cloud: z.number().nullish(),
   dewpoint_c: z.number().nullish(),
   precip_mm: z.number().nullish(),
+  air_quality: z
+    .object({
+      "us-epa-index": z.number(),
+    })
+    .passthrough()
+    .nullish(),
 });
 
 const UpstreamCurrentResponseSchema = z.object({
   location: UpstreamLocationSchema,
   current: UpstreamCurrentBlockSchema,
+});
+
+const UpstreamHourSchema = z.object({
+  time: z.string(),
+  temp_c: z.number(),
+  feelslike_c: z.number(),
+  is_day: z.union([z.literal(0), z.literal(1)]),
+  condition: z.object({ text: z.string(), code: z.number() }),
+  chance_of_rain: z.number(),
+  cloud: z.number(),
 });
 
 const UpstreamForecastDaySchema = z.object({
@@ -68,10 +86,17 @@ const UpstreamForecastDaySchema = z.object({
     moon_phase: z.string(),
     moon_illumination: z.union([z.number(), z.string()]),
   }),
+  hour: z.array(UpstreamHourSchema).optional(),
 });
 
 const UpstreamForecastResponseSchema = z.object({
   location: UpstreamLocationSchema,
+  /**
+   * The forecast endpoint always echoes a `current` block, but we only
+   * need it for `air_quality` (passed via `aqi=yes`). Everything else
+   * comes from the dedicated current.json call on the fast path.
+   */
+  current: UpstreamCurrentBlockSchema.optional(),
   forecast: z.object({
     forecastday: z.array(UpstreamForecastDaySchema),
   }),
@@ -213,7 +238,7 @@ export async function fetchForecast3(
   url.searchParams.set("key", apiKey);
   url.searchParams.set("q", query);
   url.searchParams.set("days", "3");
-  url.searchParams.set("aqi", "no");
+  url.searchParams.set("aqi", "yes");
   url.searchParams.set("alerts", "no");
 
   const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
@@ -221,14 +246,20 @@ export async function fetchForecast3(
   if (!today) {
     throw new WeatherApiError("upstream", "Weather service returned an incomplete response.");
   }
+  const hourly: HourlyForecast[] = raw.forecast.forecastday.flatMap(
+    (d) => (d.hour ?? []).map(shapeHourly),
+  );
+  const epa = raw.current?.air_quality?.["us-epa-index"];
   return {
     today: {
       minC: round1(today.day.mintemp_c),
       maxC: round1(today.day.maxtemp_c),
       chanceOfRain: today.day.daily_chance_of_rain,
     },
+    airQualityIndex: typeof epa === "number" ? epa : null,
     forecast: raw.forecast.forecastday.map(shapeForecastDay),
     astro: shapeAstro(today.astro),
+    hourly,
   };
 }
 
@@ -271,6 +302,10 @@ function shapeCurrent(raw: UpstreamCurrent): CurrentConditions {
   return {
     tempC: round1(raw.temp_c),
     feelsLikeC: round1(raw.feelslike_c),
+    // Heat index is only meaningful in warm/humid weather; in cold air
+    // the upstream may omit it. Fall back to the air temperature so
+    // the field is always a real number for downstream consumers.
+    heatIndexC: round1(raw.heatindex_c ?? raw.temp_c),
     conditionText: raw.condition.text,
     conditionCode: raw.condition.code,
     timeOfDay: raw.is_day === 1 ? "day" : "night",
@@ -297,6 +332,19 @@ function shapeForecastDay(d: UpstreamForecastDay): ForecastDay {
     conditionText: d.day.condition.text,
     conditionCode: d.day.condition.code,
     isDay: true,
+  };
+}
+
+function shapeHourly(h: z.infer<typeof UpstreamHourSchema>): HourlyForecast {
+  return {
+    time: h.time,
+    tempC: round1(h.temp_c),
+    feelsLikeC: round1(h.feelslike_c),
+    conditionText: h.condition.text,
+    conditionCode: h.condition.code,
+    isDay: h.is_day === 1,
+    chanceOfRain: h.chance_of_rain,
+    cloud: h.cloud,
   };
 }
 

@@ -30,6 +30,7 @@ const location = {
 const current = {
   tempC: 12.3,
   feelsLikeC: 11.1,
+  heatIndexC: 12.3,
   conditionText: "Partly cloudy",
   conditionCode: 1003,
   timeOfDay: "day" as const,
@@ -115,20 +116,45 @@ describe("WeatherCurrentSchema", () => {
   });
 });
 
+const hourlyEntry = {
+  time: "2026-04-07 15:00",
+  tempC: 13.2,
+  feelsLikeC: 12.0,
+  conditionText: "Partly cloudy",
+  conditionCode: 1003,
+  isDay: true,
+  chanceOfRain: 10,
+  cloud: 45,
+};
+
 describe("WeatherForecastSchema", () => {
   it("parses a canonical fixture", () => {
     const fixture = {
       today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+      airQualityIndex: 2,
       forecast: [forecastDay],
       astro,
+      hourly: [hourlyEntry],
+    };
+    expect(WeatherForecastSchema.parse(fixture)).toEqual(fixture);
+  });
+  it("accepts a null airQualityIndex", () => {
+    const fixture = {
+      today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+      airQualityIndex: null,
+      forecast: [forecastDay],
+      astro,
+      hourly: [],
     };
     expect(WeatherForecastSchema.parse(fixture)).toEqual(fixture);
   });
   it("rejects a string chanceOfRain in today", () => {
     const fixture = {
       today: { minC: 8, maxC: 15.5, chanceOfRain: "high" },
+      airQualityIndex: null,
       forecast: [forecastDay],
       astro,
+      hourly: [],
     };
     expect(() => WeatherForecastSchema.parse(fixture)).toThrow();
   });

@@ -65,7 +65,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               <span className="font-display leading-[0.78] tracking-[-0.06em]">
                 {Math.round(current.tempC)}
               </span>
-              <span className="ml-[0.06em] flex flex-col justify-between pt-[0.025em] pb-[0.038em] font-display font-light text-white md:text-white/80 xl:pb-[0.026em]">
+              <span className="ml-[0.06em] flex flex-col justify-between pt-[0.025em] pb-[0.038em] font-display font-light text-white md:text-white/80 md:pb-[0.02em]">
                 <span className="text-[0.38em] leading-none xl:text-[0.3em]">°</span>
                 <span className="text-[0.26em] leading-none font-normal xl:text-[0.2em]">C</span>
               </span>
@@ -81,14 +81,21 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               {current.conditionText}
             </p>
             {today ? (
-              <p className="font-display font-light text-sm md:text-base text-white">
-                {today.chanceOfRain}% chance of rain
-              </p>
+              <div className="flex flex-col gap-1">
+                <p className="font-display font-light text-sm md:text-base text-white flex items-center gap-1.5">
+                  <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-3-2-6-3.5-8.5L12 1 8.5 6.5C7 9 5 12 5 15a7 7 0 0 0 7 7z"/></svg>
+                  {today.chanceOfRain}% rain
+                </p>
+                <p className="font-display font-light text-sm md:text-base text-white/75 flex items-center gap-1.5">
+                  <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                  {current.cloud}% cloud
+                </p>
+              </div>
             ) : (
-              <p
-                aria-hidden="true"
-                className="h-[1.25rem] w-32 animate-pulse rounded bg-white/20 md:self-end"
-              />
+              <div className="flex flex-col gap-1.5">
+                <p aria-hidden="true" className="h-[1.25rem] w-28 animate-pulse rounded bg-white/20 md:self-end" />
+                <p aria-hidden="true" className="h-[1.25rem] w-24 animate-pulse rounded bg-white/20 md:self-end" />
+              </div>
             )}
           </div>
         </div>

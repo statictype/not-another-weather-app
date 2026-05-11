@@ -11,6 +11,7 @@ export type {
   Astro,
   CurrentConditions,
   ForecastDay,
+  HourlyForecast,
   WeatherCurrent,
   WeatherForecast,
   WeatherLocation,

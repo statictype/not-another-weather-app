@@ -328,6 +328,23 @@ html, body { background: oklch(0.97 0.02 230); }
 .tile-temp  { background: linear-gradient(160deg, oklch(0.94 0.07 30 / 0.9),  oklch(0.88 0.10 15 / 0.6));  }
 .tile-feels { background: linear-gradient(160deg, oklch(0.94 0.06 160 / 0.9), oklch(0.88 0.09 175 / 0.6)); }
 
+/* ── Air-comfort tint anchors ─────────────────────────────────────── */
+/* Each bucket exposes --ac-dry and --ac-humid. The card mixes between
+ * them in oklch using the air-axis humidity position. Night overrides
+ * live in the .night block below. */
+.ac-red    { --ac-dry: #fad4d4; --ac-humid: #f59694; }
+.ac-orange { --ac-dry: #ffc09a; --ac-humid: #ffa168; }
+.ac-yellow { --ac-dry: #fffddb; --ac-humid: #fff9a5; }
+.ac-green  { --ac-dry: #def5de; --ac-humid: #91dc91; }
+.ac-blue   { --ac-dry: #b3edff; --ac-humid: #80e2ff; }
+.ac-silver { --ac-dry: #e6ebf3; --ac-humid: #ccd6e6; }
+
+/* Per-mode gradient depth: how much the top stop lifts toward white,
+ * how much the bottom stop deepens toward black, and how much the
+ * whole base color gets darkened in night mode for legibility. */
+:root  { --ac-lift: 14%; --ac-shadow: 3%;  --ac-base-darken: 0%;  }
+.night { --ac-lift: 4%;  --ac-shadow: 20%; --ac-base-darken: 38%; }
+
 /* ── Night overrides ─────────────────────────────────────────────── */
 /* Scoped under .night (applied on the App root when current is night). */
 .night {
@@ -381,6 +398,14 @@ html, body { background: oklch(0.97 0.02 230); }
     linear-gradient(160deg, oklch(0.15 0 0 / 0.7), oklch(0.13 0 0 / 0.5));
   border-color: oklch(1 0 0 / 0.04);
 }
+
+/* Air-comfort tint anchors — night palette */
+.night .ac-red    { --ac-dry: #1a0808; --ac-humid: #2e0a0a; }
+.night .ac-orange { --ac-dry: #1a0a00; --ac-humid: #2e1100; }
+.night .ac-yellow { --ac-dry: #1a1102; --ac-humid: #4d3205; }
+.night .ac-green  { --ac-dry: #001a11; --ac-humid: #003421; }
+.night .ac-blue   { --ac-dry: #00141a; --ac-humid: #003b4d; }
+.night .ac-silver { --ac-dry: #141517; --ac-humid: #3d4045; }
 
 /* Hero night: cooler deep blues */
 .hero-night {
