@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, HttpResponse, http } from "msw";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
 import type {
   SuggestionItem,
@@ -123,6 +123,25 @@ function renderAppAt(url: string) {
 beforeEach(() => {
   __resetHistoryStoreForTests();
   window.history.replaceState(null, "", "/");
+
+  // Force the desktop search layout. The mobile overlay remounts the input
+  // on focus (different JSX subtree), which detaches the element `user.type`
+  // is targeting and leaves the input empty; the mobile recent pills also
+  // omit the "Load weather for X" aria-label these tests query by.
+  vi.stubGlobal(
+    "matchMedia",
+    (query: string) => ({
+      matches: query.includes("min-width: 1024px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }),
+  );
+
   server.use(
     http.get("/api/weather", ({ request }) => {
       const q = new URL(request.url).searchParams.get("q")?.toLowerCase() ?? "";
@@ -147,6 +166,10 @@ beforeEach(() => {
       return HttpResponse.json([]);
     }),
   );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("Oasis (integration)", () => {
