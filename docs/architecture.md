@@ -4,46 +4,61 @@
 
 ```
 src/
-├── worker.ts              # Worker entry: routes /api/* and falls through to assets
-├── worker/                # Backend (Cloudflare Worker)
-│   ├── handler.ts         # /api/weather pipeline composition
-│   ├── weather-api.ts     # Upstream client + DTO shaping + error mapping
-│   ├── cache.ts           # Query normalization + Cache API helpers
-│   ├── errors.ts          # WeatherApiError + status mapping
-│   └── types.ts           # Env + DTO + ErrorResponse
+├── worker.ts              # Worker entry: dispatches /api/* routes, falls through to ASSETS
+├── worker/                # Backend (Cloudflare Worker), one file per endpoint
+│   ├── handler-current.ts    # GET /api/weather             (current conditions, 10 min cache)
+│   ├── handler-forecast.ts   # GET /api/weather/forecast    (today + 3-day + astro + hourly, 1 h cache)
+│   ├── handler-yesterday.ts  # GET /api/weather/yesterday   (previous-day history, 24 h cache, non-fatal)
+│   ├── search-handler.ts     # GET /api/search              (autocomplete, no edge cache — `useSuggestions` keeps a 60 s client-side stale window)
+│   ├── weather-api.ts        # Upstream client + DTO shaping + error mapping
+│   ├── cache.ts              # Cache API helpers (per-endpoint TTL)
+│   ├── respond.ts            # Shared JSON / cache-header response builders
+│   ├── errors.ts             # WeatherApiError + upstream-code → kind mapping
+│   └── types.ts              # Env binding type
 ├── api/                   # Frontend API client
-│   ├── weather.ts         # fetch wrapper that throws typed errors
-│   └── types.ts           # Mirrors the worker DTO
+│   ├── weather.ts         # fetch wrappers (current / forecast / yesterday / search) — throws WeatherClientError
+│   └── types.ts           # Type-only re-exports from @/lib/schemas + SuggestionItem
 ├── hooks/
 │   ├── use-debounced-value.ts
-│   ├── use-history.ts     # localStorage + useSyncExternalStore
-│   ├── use-undo.ts        # Pending-removal state machine
-│   └── use-weather.ts     # TanStack Query wrapper
+│   ├── use-media-query.ts       # SSR-safe matchMedia subscription
+│   ├── use-search-param.ts      # ?city= as a useSyncExternalStore source
+│   ├── use-suggestions.ts       # Autocomplete query (debounced 300ms, 3-char min)
+│   ├── use-undo.ts              # Pending-removal state machine
+│   ├── use-weather.ts           # Three TanStack Query hooks: current / forecast / yesterday
+│   └── use-history/             # Reducer + in-module pub/sub over localStorage
 ├── components/
-│   ├── search-bar.tsx
-│   ├── weather-result.tsx # State-machine container
-│   ├── weather-card.tsx
-│   ├── history-list.tsx
+│   ├── search-bar/        # Composite search input (dropdown, suggestions, recent, clear-all)
+│   ├── weather/           # The card grid — hero, hourly, forecast, astro, atmosphere, wind, etc.
+│   ├── weather-result.tsx # State-machine container (drives off `current` only)
 │   ├── empty-state.tsx
 │   ├── error-state.tsx
 │   ├── quota-exceeded-state.tsx
 │   ├── weather-skeleton.tsx
-│   └── ui/                # shadcn/ui primitives (vendored)
+│   └── ui/                # shadcn/ui primitives (vendored — ESLint ignores this folder)
 ├── lib/
-│   ├── query-client.ts    # TanStack Query config
+│   ├── schemas.ts         # Zod DTOs — single source of truth for the wire boundary (RFC 008)
+│   ├── errors.ts          # Error taxonomy table (kind ↔ status ↔ message)
+│   ├── query.ts           # normalizeQuery — shared by worker cache key + frontend query key
+│   ├── query-client.ts    # TanStack Query config + retry policy
+│   ├── air-comfort.ts     # Heat-index / humidity comfort scoring used by AirComfortCard
+│   ├── random-cities.ts   # Pool for the "surprise me" button
 │   └── utils.ts           # cn() helper
-└── App.tsx                # Composition
+├── test/                  # MSW server + setup (frontend project only)
+├── App.tsx                # Composition
+├── main.tsx               # Root, QueryClient, URL bootstrap from history (replaceState)
+└── integration.test.tsx   # End-to-end-ish coverage of the URL → fetch → render → history flow
 ```
 
 ## Design choices
 
-- **Single Cloudflare Worker hosts both surfaces.** The same `wrangler deploy` ships the SPA bundle (via the static-asset binding) and the `/api/weather` proxy. The upstream API key lives only on the server side and never reaches the browser, while the proxy and the frontend share an origin so there's no CORS to wire up.
-- **Shaped DTO at the proxy boundary.** The frontend never sees the upstream vendor's schema. Swapping weather providers means changing one file in the Worker. The DTO is intentionally minimal — only fields the UI actually renders.
-- **Edge cache with query normalization.** The Worker caches successful responses for 10 minutes, keyed on a normalized query (trimmed, lowercased, whitespace collapsed). `London`, `london`, `LONDON`, and `London ` all share one cache entry. This is what keeps the demo within the free tier under reasonable load.
-- **Closed error union end-to-end.** Both the Worker and the frontend client model errors as a discriminated union (`not_found | quota_exceeded | invalid_query | upstream | network`), and the renderer is one exhaustive switch. Adding a new error kind is a single-spot change that TypeScript enforces.
-- **Search-as-you-type with debounce + cancellation.** No submit button. After 500ms of idle typing the query fires; if the user keeps typing, the in-flight request is cancelled via `AbortSignal`. TanStack Query dedupes identical queries and keeps the previous successful result visible while a new (or failing) one runs.
-- **Asymmetric error policy.** Input errors (`not_found`) annotate the search input as inline validation and leave the previous weather card on screen. System errors (`quota_exceeded`, `network`, `upstream`) take over the result area. The user is never punished for typos.
-- **Auto-load is silent.** On mount, the most recent history item is fetched with `source: "auto"`. If that fetch fails, the failure is silent (the empty state appears) — a returning user shouldn't open the app to an error message they didn't ask for. Errors from auto-loads only become visible when they explain a global degradation (quota exceeded).
+- **Single Cloudflare Worker hosts both surfaces.** The same `wrangler deploy` ships the SPA bundle (via the static-asset binding) and the four `/api/*` endpoints. The upstream API key lives only on the server side and never reaches the browser, and proxy + frontend share an origin so there's no CORS to wire up.
+- **Three-tier weather pipeline.** Rather than one fat `/api/weather` call, the worker exposes `current`, `forecast`, and `yesterday` as independent endpoints with TTLs sized to their volatility (10 min / 1 h / 24 h). The hero paints from `current` alone (LCP-critical), and the forecast + yesterday tiers stream in inside the grid. `yesterday` is treated as non-fatal — upstream failures resolve to `{ yesterday: null }` so the rest of the page still renders. See RFC 001.
+- **Shaped DTOs defined once, in zod.** `src/lib/schemas.ts` is the single source of truth for every wire shape. The worker value-imports the schemas to validate upstream responses; the frontend type-imports only, so zod's runtime is tree-shaken out of the client bundle. An ESLint rule blocks runtime zod imports in `src/{api,hooks,components}`. See RFC 008.
+- **Edge cache with query normalization.** Each weather endpoint caches successful responses at the edge (10 min / 1 h / 24 h), keyed on a normalized query (trimmed, lowercased, internal whitespace collapsed). `London`, `london`, `LONDON`, and `London ` all share one cache entry per endpoint. The autocomplete endpoint (`/api/search`) is intentionally not edge-cached — results are ephemeral and the client-side debounce + 60 s `staleTime` keeps the upstream call rate low. `normalizeQuery` in `src/lib/query.ts` is shared by the worker's cache key and the frontend's TanStack Query key so the two sides can't drift.
+- **Closed error union end-to-end.** Both worker and frontend client model errors as a discriminated union (`not_found | quota_exceeded | invalid_query | upstream | network`) defined in a single table (`src/lib/errors.ts`) that derives the kind ↔ status ↔ default-message mappings. Adding a kind is a one-row change that TypeScript propagates.
+- **Retry policy follows the error taxonomy.** `src/lib/query-client.ts` skips retry on the three user-meaningful kinds (`not_found`, `invalid_query`, `quota_exceeded`) so the UI reacts instantly. Transient network and upstream failures retry up to 2 times with exponential backoff capped at 5 s. `useWeatherYesterday` further overrides `retry: 0` to honour the tier's non-fatal contract.
+- **URL is the source of truth for the active city.** `?city=…` drives every fetch. `main.tsx` bootstraps the URL from history with `replaceState` on cold load, so returning users still see their last city — but from the first paint the URL accurately reflects what's on screen. Because every fetch is now legitimately the user's intent, there is no "silent fallback" — failed system fetches (network/upstream) take over the result area with a retry CTA. See RFC 007.
+- **Autocomplete is the debounced surface, weather fetches are not.** Suggestions (`/api/search`) fire 300 ms after idle typing, gated at 3 chars. The actual weather fetch only fires when the URL changes — selecting a suggestion, picking from recent history, geolocation, or "surprise me". TanStack Query dedupes identical keys and `placeholderData: keepPreviousData` keeps the previous successful card on screen while a new fetch is in flight.
 - **History via `useSyncExternalStore`.** localStorage is React's textbook "external store." Every `useHistory()` consumer subscribes to the same in-module pub/sub, so deletions in one component re-render the others without prop drilling or Context. Cross-tab updates are wired through the native `storage` event.
 
 ## Gotchas
@@ -79,4 +94,4 @@ enough with `keepPreviousData`.
 - **TanStack Query 5** for async state, caching, and request lifecycle
 - **Tailwind v4** + **shadcn/ui** with a custom theme
 - **Vitest** + **MSW** + **@cloudflare/vitest-pool-workers**
-- **Biome** for lint, format, and import organize
+- **ESLint** (typescript-eslint, react-hooks, react-refresh) + **Prettier**

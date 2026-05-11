@@ -1,0 +1,69 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+| Command                             | Purpose                                                        |
+| ----------------------------------- | -------------------------------------------------------------- |
+| `pnpm typecheck`                    | Type-check all three project references (app, node, worker)    |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint over `**/*.{ts,tsx}`                                    |
+| `pnpm format` / `pnpm format:check` | Prettier                                                       |
+| `pnpm test:run`                     | Vitest single run across both projects (`frontend` + `worker`) |
+| `pnpm test`                         | Vitest watch                                                   |
+| `pnpm build`                        | `tsc -b && vite build`                                         |
+| `pnpm ci`                           | Full gate: format:check → lint → typecheck → test:run → build  |
+
+**Do not run `pnpm dev`.** The user runs the dev server themselves; use `typecheck` / `lint` / `build` for verification.
+
+### Running a single test
+
+Vitest is configured as two projects, so target one with `--project`:
+
+```bash
+pnpm test:run --project frontend src/hooks/use-history.test.ts
+pnpm test:run --project worker -t "cache hit"
+```
+
+The `worker` project runs in workerd via `@cloudflare/vitest-pool-workers` (real Cache API, real bindings); the `frontend` project runs in jsdom with **MSW** at the network boundary.
+
+## Architecture
+
+A single Cloudflare Worker ships both the SPA (static-asset binding) and four `/api/*` endpoints. One `wrangler deploy`, one origin, no CORS, and the WeatherAPI key never leaves the server.
+
+The weather pipeline is split into three independently-cacheable tiers so the hero can paint without waiting for the full payload:
+
+- `GET /api/weather` → current conditions, LCP-critical (10 min edge TTL)
+- `GET /api/weather/forecast` → today + 3-day + astro + hourly (1 h edge TTL)
+- `GET /api/weather/yesterday` → previous-day history (24 h edge TTL, **non-fatal** — upstream failures resolve to `{ yesterday: null }`)
+- `GET /api/search` → autocomplete (no edge cache; 60 s client-side staleTime in `useSuggestions`)
+
+Key contracts that span multiple files:
+
+- **DTO shapes defined once, in zod.** `src/lib/schemas.ts` is the single source of truth. Worker value-imports the schemas to validate upstream responses; frontend type-imports only, so zod is tree-shaken out of the client bundle. The frontend never sees the vendor's schema — swapping providers is one file in the Worker.
+- **Closed error union end-to-end.** `src/lib/errors.ts` is a single table deriving the `kind ↔ status ↔ default-message` mappings. Adding a new kind is a one-row change that TypeScript propagates. The renderer in `WeatherResult` only special-cases `quota_exceeded` (full takeover) and `network`/`upstream`-without-data (retry CTA); other kinds fall through to previous-or-empty.
+- **Retry policy is encoded in `src/lib/query-client.ts`.** User-meaningful kinds (`not_found`, `invalid_query`, `quota_exceeded`) never retry — they reach the UI instantly. `network` / `upstream` retry up to 2 times with exponential backoff capped at 5 s. `useWeatherYesterday` further overrides to `retry: 0` because its tier is non-fatal — one failure resolves the column away rather than hammering upstream.
+- **Shared query normalization.** `normalizeQuery` in `src/lib/query.ts` is used by both the worker's edge-cache key and the frontend's TanStack Query key. Trimmed, lowercased, internal whitespace collapsed — so `London` / `london` / `LONDON ` share one cache entry per endpoint, and the two sides can't drift.
+- **URL is the source of truth for the active city.** `?city=…` drives every weather fetch via `useSearchParam` (a `useSyncExternalStore` over the URL). `main.tsx` seeds the URL from history with `replaceState` on cold load. Autocomplete is the only debounced surface (300 ms, in `useSuggestions`); weather fetches fire only on URL change.
+- **`keepPreviousData` keeps the previous card visible** during a new fetch — see the gotcha section below.
+- **History via `useSyncExternalStore`** over localStorage. Every `useHistory()` consumer subscribes to the same in-module pub/sub; cross-tab updates ride the native `storage` event.
+
+Full design narrative lives in [`docs/architecture.md`](./docs/architecture.md); RFCs in [`docs/rfcs/`](./docs/rfcs/).
+
+## Conventions enforced by tooling
+
+- **Path alias `@/*` → `src/*`** (both Vite and TS).
+- **React Compiler is on** (`babel-plugin-react-compiler`). Avoid hand-rolled `useMemo`/`useCallback` unless there's a measured reason — the compiler handles memoization.
+- **Strict TS** including `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`. Array/record indexing yields `T | undefined`; optional props can't be set to `undefined` explicitly.
+- **Zod is banned from the frontend bundle.** ESLint blocks `import "zod"` in `src/api`, `src/hooks`, `src/components`. Shared DTO types come from `@/lib/schemas` via **type-only** imports; the runtime schemas + zod itself live on the Worker side. See `docs/rfcs/008-zod-wire-boundaries.md`.
+- **`src/components/ui/`** is vendored shadcn primitives — ESLint ignores it; don't reformat or refactor wholesale.
+
+## Gotcha: bump `CACHE_VERSION` when changing DTO shapes
+
+`src/worker/cache.ts` includes `CACHE_VERSION` (currently `"5"`) in every edge cache key. If you change a shape in `src/lib/schemas.ts` without bumping it, the previously-cached entries — still valid against the _old_ upstream schema — will continue to serve from `caches.default` and render against new client expectations as `undefined` fields. There's no automated guard; bumping is a discipline thing whenever the DTO surface changes.
+
+## Gotcha: `keepPreviousData` + commit-on-success effects
+
+All three weather hooks (`useWeather`, `useWeatherForecast`, `useWeatherYesterday`) use `placeholderData: keepPreviousData`. After a query-key change there's a window where `query.isSuccess === true` but `query.data` still points at the **previous** city's payload (`query.isPlaceholderData === true`). Any `useEffect` that correlates `query.data` with the current query key during that window will write stale data under a fresh key.
+
+**Rule:** when gating on `query.isSuccess`, also gate on `!query.isPlaceholderData` (or wait for `isFetching === false`). The history-commit effect in `App.tsx` is the canonical example. `docs/architecture.md` has the full incident write-up.

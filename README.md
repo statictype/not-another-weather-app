@@ -21,7 +21,7 @@ pnpm install
 pnpm dev
 ```
 
-The dev server runs Vite + the Cloudflare Worker together. The app is available at the URL Vite prints; `/api/weather` is handled by the Worker locally.
+The dev server runs Vite + the Cloudflare Worker together. The app is available at the URL Vite prints; `/api/*` is handled by the Worker locally.
 
 To run against the real upstream API with your own key, see [Local API key](./docs/deployment.md#local-api-key).
 
@@ -30,9 +30,8 @@ To run against the real upstream API with your own key, see [Local API key](./do
 - **[Architecture](./docs/architecture.md)** — module layout, stack, key design choices
 - **[Testing](./docs/testing.md)** — what's covered and why
 - **[Deployment](./docs/deployment.md)** — CF Worker deploy, CI, scripts
-- **[Roadmap](./docs/roadmap.md)** — what I'd add with more time
-- **[RFCs](./docs/rfcs/)** — forward-looking design proposals (state machine, error taxonomy, URL as source of truth, …)
-- **[Decisions](./docs/decisions/)** — short ADRs for one-off calls (e.g. [why perf is 99 not 100](./docs/decisions/001-lighthouse-ceiling.md))
+- **[RFCs](./docs/rfcs/)** — design proposals
+- **[Decisions](./docs/decisions/)** — short ADRs for one-off calls
 
 ## License
 

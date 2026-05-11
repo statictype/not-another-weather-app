@@ -1,5 +1,14 @@
 # RFC 008 — Zod at wire boundaries
 
+> **Status.** Shipped, with one caveat: the automated bundle-size regression
+> check called for in **D3** and **Migration step 7** is **not implemented yet**.
+> The one-time manual verification at implementation time confirmed the
+> zero-bundle-impact constraint held, and the `no-restricted-imports`
+> ESLint rule (D3 belt-and-suspenders) is in place — that's currently the
+> only ongoing guard. The inline comment in `src/lib/schemas.ts` that
+> mentions a "build-size regression test" is aspirational until this gap
+> is closed. Tracking issue: TBD.
+
 ## Problem
 
 Two places in the codebase cross a wire and lie about type safety:
