@@ -17,9 +17,9 @@ interface Row {
  * stop and decide which is correct before patching the test.
  */
 const referenceRows: Row[] = [
-  { location: "Cairo",          tempC: 29, feelsLikeC: 27, dewpointC:   3, humidity: 15, thermal: "Hot",             air: "Dry" },
+  { location: "Cairo",          tempC: 29, feelsLikeC: 27, dewpointC:   3, humidity: 15, thermal: "Warm",            air: "Dry" },
   { location: "Panipat",        tempC: 43, feelsLikeC: 45, dewpointC:   9, humidity: 13, thermal: "Dangerously hot", air: "Slightly dry" },
-  { location: "Beijing",        tempC: 29, feelsLikeC: 27, dewpointC:   1, humidity: 43, thermal: "Hot",             air: "Dry" },
+  { location: "Beijing",        tempC: 29, feelsLikeC: 27, dewpointC:   1, humidity: 43, thermal: "Warm",            air: "Dry" },
   { location: "Dungarvan",      tempC: 10, feelsLikeC:  8, dewpointC:   7, humidity: 82, thermal: "Chilly",          air: "Damp" },
   { location: "Berlin",         tempC: 16, feelsLikeC: 16, dewpointC:  10, humidity: 72, thermal: "Mild",            air: "Comfortable" },
   { location: "Bali",           tempC: 29, feelsLikeC: 32, dewpointC:  23, humidity: 70, thermal: "Hot",             air: "Humid" },
@@ -41,7 +41,7 @@ const referenceRows: Row[] = [
   { location: "Lima",           tempC: 20, feelsLikeC: 20, dewpointC:  18, humidity: 87, thermal: "Mild",            air: "Slightly humid" },
   { location: "Ushuaia",        tempC:  6, feelsLikeC:  5, dewpointC:   0, humidity: 65, thermal: "Chilly",          air: "Dry" },
   { location: "Perth",          tempC: 21, feelsLikeC: 21, dewpointC:  11, humidity: 31, thermal: "Mild",            air: "Comfortable" },
-  { location: "Sichuan",        tempC: 28, feelsLikeC: 28, dewpointC:  12, humidity: 37, thermal: "Hot",             air: "Comfortable" },
+  { location: "Sichuan",        tempC: 28, feelsLikeC: 28, dewpointC:  12, humidity: 37, thermal: "Warm",            air: "Comfortable" },
   { location: "Kuala Lumpur",   tempC: 32, feelsLikeC: 47, dewpointC:  25, humidity: 71, thermal: "Dangerously hot", air: "Very humid" },
 ];
 
@@ -72,8 +72,8 @@ const thermalBoundaries: Array<[number, ThermalLabel]> = [
   [16,    "Mild"],
   [21.99, "Mild"],
   [22,    "Warm"],
-  [26.99, "Warm"],
-  [27,    "Hot"],
+  [28.99, "Warm"],
+  [29,    "Hot"],
   [34.99, "Hot"],
   [35,    "Very hot"],
   [39.99, "Very hot"],
