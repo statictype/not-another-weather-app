@@ -327,6 +327,23 @@ html, body { background: oklch(0.97 0.02 230); }
 .tile-rain  { background: linear-gradient(160deg, oklch(0.93 0.07 270 / 0.9), oklch(0.86 0.10 285 / 0.6)); }
 .tile-temp  { background: linear-gradient(160deg, oklch(0.94 0.07 30 / 0.9),  oklch(0.88 0.10 15 / 0.6));  }
 .tile-feels { background: linear-gradient(160deg, oklch(0.94 0.06 160 / 0.9), oklch(0.88 0.09 175 / 0.6)); }
+.tile-astro {
+  background:
+    radial-gradient(60% 80% at 80% 100%, oklch(0.96 0.09 60 / 0.7), transparent 65%),
+    linear-gradient(170deg, oklch(0.9 0.07 280 / 0.8), oklch(0.96 0.05 80 / 0.85));
+  transition: background 0.4s ease;
+}
+.tile-astro-moon {
+  background:
+    radial-gradient(65% 85% at 80% 100%, oklch(0.99 0.005 230 / 0.85), transparent 65%),
+    linear-gradient(170deg, oklch(0.88 0.08 280 / 0.85), oklch(0.99 0.006 240 / 0.95));
+  transition: background 0.4s ease;
+}
+
+/* Moon dark-side fill — adapts per mode so the unlit hemisphere
+ * has clear contrast against the card background. */
+:root  { --moon-dark: oklch(0.36 0.05 265); }
+.night { --moon-dark: oklch(0.08 0.005 250); }
 
 /* ── Air-comfort tint anchors ─────────────────────────────────────── */
 /* Each bucket exposes --ac-dry and --ac-humid. The card mixes between
@@ -334,7 +351,7 @@ html, body { background: oklch(0.97 0.02 230); }
  * live in the .night block below. */
 .ac-red    { --ac-dry: #fad4d4; --ac-humid: #f59694; }
 .ac-orange { --ac-dry: #ffc09a; --ac-humid: #ffa168; }
-.ac-yellow { --ac-dry: #fffddb; --ac-humid: #fff9a5; }
+.ac-yellow { --ac-dry: #fff5d0; --ac-humid: #ffe080; }
 .ac-green  { --ac-dry: #def5de; --ac-humid: #91dc91; }
 .ac-blue   { --ac-dry: #b3edff; --ac-humid: #80e2ff; }
 .ac-silver { --ac-dry: #e6ebf3; --ac-humid: #ccd6e6; }
@@ -391,6 +408,12 @@ html, body { background: oklch(0.97 0.02 230); }
   background:
     linear-gradient(160deg, oklch(0.22 0.05 210 / 0.95), oklch(0.15 0.06 218 / 0.7));
   filter: grayscale(20%);
+}
+/* Astro tile night: deep observatory indigo with a faint moonlit lift */
+.night .tile-astro {
+  background:
+    radial-gradient(55% 70% at 78% 0%, oklch(0.32 0.06 270 / 0.6), transparent 65%),
+    linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
 /* UV tile at night — fully greyed, no hue, flatter than active tiles */
 .night .tile-uv-off {
@@ -458,6 +481,12 @@ html, body { background: oklch(0.97 0.02 230); }
   from { opacity: 0; transform: translateY(8px) scale(0.985); }
   to   { opacity: 1; transform: none; }
 }
+
+@keyframes astro-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.astro-fade { animation: astro-fade 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .swap-in { animation: swap-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .swap-d-1 { animation-delay: 0.00s; }
 .swap-d-2 { animation-delay: 0.05s; }

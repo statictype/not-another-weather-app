@@ -38,11 +38,9 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
       </div>
 
-      {/* Row 2: Astro (2) + Atmosphere (4) + Air Comfort (3) + UV/AQI (3) */}
+      {/* Row 2: Astro (3) + Atmosphere (3) + Air Comfort (3) + UV/AQI (3) */}
       <AstroCard astro={forecast.data?.astro} />
       <AtmospherePanel
-        windKph={c.current.windKph}
-        windDir={c.current.windDir}
         pressureMb={c.current.pressureMb}
         visibilityKm={c.current.visibilityKm}
       />
@@ -51,6 +49,8 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         feelsLikeC={c.current.feelsLikeC}
         dewpointC={c.current.dewpointC}
         humidity={c.current.humidity}
+        windKph={c.current.windKph}
+        windDir={c.current.windDir}
       />
       <ExposureCard
         uv={c.current.uv}
