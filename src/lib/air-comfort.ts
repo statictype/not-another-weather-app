@@ -58,7 +58,7 @@ function thermalLabel(feelsLikeC: number): ThermalLabel {
   if (feelsLikeC < 10) return "Chilly";
   if (feelsLikeC < 16) return "Cool";
   if (feelsLikeC < 22) return "Mild";
-  if (feelsLikeC < 27) return "Warm";
+  if (feelsLikeC < 29) return "Warm";
   if (feelsLikeC < 35) return "Hot";
   if (feelsLikeC < 40) return "Very hot";
   return "Dangerously hot";
@@ -76,4 +76,59 @@ function airLabel(dewpointC: number): AirLabel {
 
 function isDamp(tempC: number, humidity: number): boolean {
   return tempC < 12 && humidity > 80;
+}
+
+export type AirComfortBucket =
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "blue"
+  | "silver";
+
+const THERMAL_BUCKET: Record<ThermalLabel, AirComfortBucket> = {
+  "Dangerously hot": "red",
+  "Very hot":        "red",
+  "Hot":             "orange",
+  "Warm":            "yellow",
+  "Mild":            "green",
+  "Cool":            "blue",
+  "Chilly":          "blue",
+  "Cold":            "silver",
+  "Very cold":       "silver",
+};
+
+const AIR_HUMID_PCT: Record<AirLabel, number> = {
+  "Very dry":        0,
+  "Dry":            15,
+  "Slightly dry":   30,
+  "Comfortable":    50,
+  "Slightly humid": 65,
+  "Humid":          80,
+  "Very humid":    100,
+  "Damp":           90,
+};
+
+export interface AirComfortStyle {
+  bucketClass: string;
+  background: string;
+}
+
+export function airComfortStyle({
+  thermal,
+  air,
+}: {
+  thermal: ThermalLabel;
+  air: AirLabel;
+}): AirComfortStyle {
+  const bucket = THERMAL_BUCKET[thermal];
+  const pct = AIR_HUMID_PCT[air];
+  const base = `color-mix(in oklch, color-mix(in oklch, var(--ac-dry), var(--ac-humid) ${pct}%), black var(--ac-base-darken))`;
+  return {
+    bucketClass: `ac-${bucket}`,
+    background: `linear-gradient(160deg,
+      color-mix(in oklch, ${base}, white var(--ac-lift)) 0%,
+      ${base} 45%,
+      color-mix(in oklch, ${base}, black var(--ac-shadow)) 100%)`,
+  };
 }

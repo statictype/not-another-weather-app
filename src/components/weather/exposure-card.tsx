@@ -1,40 +1,44 @@
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 interface ExposureCardProps {
   uv: number;
   airQualityIndex: number | null;
+  pressureMb: number;
   isDay: boolean;
 }
 
 export function ExposureCard({
   uv,
   airQualityIndex,
+  pressureMb,
   isDay,
 }: ExposureCardProps) {
   return (
-    <section className="swap-in swap-d-6 bento-tile flex flex-col p-6 sm:col-span-6 xl:col-span-3">
-      <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-        UV &amp; Air
-      </p>
-
-      <div className="mt-4 flex flex-1 flex-col gap-4">
-        <MetricRow
-          label="UV Index"
-          value={isDay ? Math.round(uv) : null}
-          tag={isDay ? uvLabel(uv) : "Nighttime"}
-          scale={isDay ? uvScale(uv) : null}
-          dim={!isDay}
-        />
-        <div className="h-px bg-foreground/8" />
-        <MetricRow
-          label="Air Quality"
-          value={airQualityIndex}
-          tag={
-            airQualityIndex == null ? "Not available" : aqiLabel(airQualityIndex)
-          }
-          scale={airQualityIndex == null ? null : aqiScale(airQualityIndex)}
-          dim={airQualityIndex == null}
-        />
+    <section className="swap-in swap-d-5 bento-tile flex flex-col p-6 sm:col-span-12 xl:col-span-6">
+      <div className="flex flex-1 flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
+        <div className="flex flex-1 flex-col gap-4">
+          <MetricRow
+            label="UV Index"
+            value={isDay ? Math.round(uv) : null}
+            tag={isDay ? uvLabel(uv) : "Nighttime"}
+            scale={isDay ? uvScale(uv) : null}
+            dim={!isDay}
+          />
+          <div className="h-px bg-foreground/8" />
+          <MetricRow
+            label="Air Quality"
+            value={airQualityIndex}
+            tag={
+              airQualityIndex == null
+                ? "Not available"
+                : aqiLabel(airQualityIndex)
+            }
+            scale={airQualityIndex == null ? null : aqiScale(airQualityIndex)}
+            dim={airQualityIndex == null}
+          />
+        </div>
+        <PressureGauge pressureMb={pressureMb} />
       </div>
     </section>
   );
@@ -71,22 +75,103 @@ function MetricRow({
           {tag}
         </span>
       </div>
-      <div className="relative mt-1 h-1.5 overflow-hidden rounded-full">
-        <div
-          className={cn(
-            "absolute inset-0 rounded-full",
-            !scale && "bg-foreground/6",
-          )}
-          style={scale ? { background: scale.gradient } : undefined}
-        />
+      <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-foreground/6">
         {scale && (
           <div
-            className="absolute top-1/2 size-3 -translate-y-1/2 rounded-full bg-white shadow-[0_0_0_2px_rgba(0,0,0,0.18)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+            className="absolute inset-0 rounded-full transition-[clip-path] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
             style={{
-              left: `clamp(0px, calc(${scale.pct}% - 6px), calc(100% - 12px))`,
+              background: scale.gradient,
+              clipPath: `inset(0 ${100 - scale.pct}% 0 0)`,
             }}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+function PressureGauge({ pressureMb }: { pressureMb: number }) {
+  // Map 980–1050 mb onto the half-circle so the sweet spot (1013–1022 mb)
+  // sits centered under the apex where the gradient is green.
+  const PRESSURE_MIN = 980;
+  const PRESSURE_MAX = 1050;
+  const clamped = Math.max(
+    PRESSURE_MIN,
+    Math.min(PRESSURE_MAX, pressureMb),
+  );
+  const pct = (clamped - PRESSURE_MIN) / (PRESSURE_MAX - PRESSURE_MIN);
+
+  const CX = 110;
+  const CY = 110;
+  const R = 90;
+  const ARC_LEN = Math.PI * R;
+
+  const uid = useId();
+  const gradId = `${uid}-pressure-grad`;
+  const arcPath = `M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`;
+
+  return (
+    <div className="relative flex shrink-0 flex-col items-center sm:w-[240px]">
+      <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
+        Pressure
+      </p>
+      <div className="relative mt-2 w-full">
+        <svg
+          viewBox="0 0 220 130"
+          className="block w-full"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#1e3a8a" />
+              <stop offset="0.07" stopColor="#3b82f6" />
+              <stop offset="0.30" stopColor="#06b6d4" />
+              <stop offset="0.47" stopColor="#4ade80" />
+              <stop offset="0.60" stopColor="#4ade80" />
+              <stop offset="0.78" stopColor="#facc15" />
+              <stop offset="0.92" stopColor="#fb923c" />
+              <stop offset="1" stopColor="#ef4444" />
+            </linearGradient>
+          </defs>
+
+          {/* Background track */}
+          <path
+            d={arcPath}
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.08"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          {/* Color-coded arc, drawn only up to the current value */}
+          <path
+            d={arcPath}
+            fill="none"
+            stroke={`url(#${gradId})`}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={`${pct * ARC_LEN} ${ARC_LEN}`}
+            style={{
+              transition:
+                "stroke-dasharray 700ms cubic-bezier(0.32,0.72,0,1)",
+            }}
+          />
+        </svg>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex flex-col items-center">
+          <p className="font-display text-3xl leading-none tracking-tight">
+            {Math.round(pressureMb)}
+            <span className="ml-1.5 text-sm text-foreground/50">mb</span>
+          </p>
+          <p className="font-display mt-1 text-xs tracking-tight text-foreground/65">
+            {pressureLabel(pressureMb)}
+          </p>
+        </div>
+
+        <div className="mt-1 flex justify-between px-1 font-display text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/40">
+          <span>{PRESSURE_MIN}</span>
+          <span>{PRESSURE_MAX}</span>
+        </div>
       </div>
     </div>
   );
@@ -105,7 +190,7 @@ function uvScale(uv: number): Scale {
   return {
     pct,
     gradient:
-      "linear-gradient(to right, #4ade80, #a3e635, #facc15, #fb923c, #ef4444, #a855f7)",
+      "linear-gradient(to right, #4ade80 0%, #a3e635 20%, #facc15 40%, #fb923c 60%, #ef4444 88%, #7f1d1d 100%)",
   };
 }
 
@@ -134,6 +219,14 @@ function aqiScale(epa: number): Scale {
   return {
     pct,
     gradient:
-      "linear-gradient(to right, #4ade80, #facc15, #fb923c, #ef4444, #a855f7, #7e22ce)",
+      "linear-gradient(to right, #4ade80 0%, #facc15 25%, #fb923c 50%, #ef4444 75%, #b91c1c 90%, #7f1d1d 100%)",
   };
+}
+
+function pressureLabel(mb: number): string {
+  if (mb < 1000) return "Low";
+  if (mb < 1013) return "Below normal";
+  if (mb <= 1022) return "Normal";
+  if (mb <= 1035) return "Above normal";
+  return "High";
 }
