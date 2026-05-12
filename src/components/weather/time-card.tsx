@@ -5,9 +5,9 @@ interface TimeCardProps {
 }
 
 export function TimeCard({ tz }: TimeCardProps) {
-  const [, setTick] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -16,19 +16,19 @@ export function TimeCard({ tz }: TimeCardProps) {
       <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
         Local time
       </p>
-      <p className="font-display mt-1 text-4xl leading-none tracking-tight xl:text-3xl 2xl:text-4xl">
-        {formatTime(tz)}
+      <p className="font-display mt-4 text-4xl leading-none tracking-tight xl:text-3xl 2xl:text-4xl">
+        {formatTime(now, tz)}
       </p>
       <p className="font-display mt-1.5 text-sm font-light text-foreground/45">
-        {formatDate(tz)}
+        {formatDate(now, tz)}
       </p>
     </section>
   );
 }
 
-function formatTime(tz: string): string {
+function formatTime(now: number, tz: string): string {
   try {
-    return new Date()
+    return new Date(now)
       .toLocaleTimeString("en-US", {
         timeZone: tz,
         hour: "numeric",
@@ -41,9 +41,9 @@ function formatTime(tz: string): string {
   }
 }
 
-function formatDate(tz: string): string {
+function formatDate(now: number, tz: string): string {
   try {
-    return new Date().toLocaleDateString("en-US", {
+    return new Date(now).toLocaleDateString("en-US", {
       timeZone: tz,
       weekday: "long",
       month: "short",
