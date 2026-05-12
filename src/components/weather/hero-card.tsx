@@ -29,24 +29,24 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
         </>
       )}
 
-      <div className="relative grid h-full grid-cols-[1fr_auto] grid-rows-[auto_1fr_auto] gap-x-4 gap-y-6 md:grid-cols-[4fr_2fr] md:gap-x-2">
-        {/* TOP: country/region label + city name */}
-        <div className="col-span-2 row-start-1 flex flex-col gap-2 md:col-span-1 md:col-start-1">
+      <div className="relative grid h-full grid-cols-[1fr_auto] grid-rows-[auto_1fr_auto] gap-x-4 gap-y-6 md:grid-cols-[4fr_minmax(0,12rem)]">
+        {/* TOP-LEFT: country/region label + city name */}
+        <div className="col-start-1 row-start-1 flex min-w-0 flex-col gap-2">
           <p className="font-display font-light text-xs uppercase tracking-[0.15em] text-white flex flex-wrap gap-0.5">
             <span>{location.region}</span> <span>·</span> <span className="shrink-0">{location.country}</span>
           </p>
-          <h2 className="font-display font-light text-balance text-4xl leading-[0.95] md:text-5xl xl:tracking-tight 2xl:text-6xl">
+          <h2 className="font-display font-light text-balance text-4xl leading-[0.95] md:text-5xl xl:tracking-tight">
             {location.name}
           </h2>
         </div>
 
         {/* ICON: middle-left on mobile, vertically centered col 2 on desktop */}
-        <div className="col-start-1 row-start-2 flex items-center justify-start md:row-span-3 md:col-end-1 md:row-start-1 md:self-center md:justify-self-end md:px-3">
+        <div className="col-start-1 row-start-2 flex items-center justify-start md:row-span-2 md:col-end-1 md:row-start-2 md:self-center md:justify-self-end 2xl:self-end">
           <ConditionIcon
             text={current.conditionText}
             isDay={isDay}
             className={cn(
-              "shrink-0 size-20 md:size-36 lg:size-40 xl:size-40",
+              "shrink-0 size-20 md:size-36 lg:size-40 xl:size-40 2xl:size-52",
               isDay ? "text-white/90" : "text-[oklch(0.52_0.02_250)]",
             )}
             strokeWidth={1}
@@ -54,9 +54,9 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
           />
         </div>
 
-        {/* CONDITIONS: bottom-left on mobile, right column centered on desktop */}
-        <div className="col-start-1 row-start-3 flex min-w-0 flex-col items-start justify-end gap-1 text-left md:row-span-3 md:col-start-2 md:row-start-1 md:self-center md:items-end md:justify-start md:gap-2 md:text-right">
-          <p className="font-display font-normal text-base md:text-2xl">
+        {/* CONDITIONS: bottom-left on mobile, right column middle row on desktop */}
+        <div className="col-start-1 row-start-3 flex min-w-0 flex-col items-start justify-end gap-1 text-left md:col-start-2 md:row-start-3 md:self-center md:items-end md:justify-start md:gap-2 md:text-right 2xl:self-end">
+          <p className="font-display font-normal text-base md:text-xl">
             {current.conditionText}
           </p>
           {today ? (
