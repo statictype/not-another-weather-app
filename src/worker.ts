@@ -1,7 +1,5 @@
-import { handleCurrent } from "./worker/handler-current";
-import { handleForecast } from "./worker/handler-forecast";
-import { handleYesterday } from "./worker/handler-yesterday";
 import { handleSearch } from "./worker/search-handler";
+import { createTierHandler } from "./worker/tiers";
 import type { Env } from "./worker/types";
 
 /**
@@ -19,6 +17,11 @@ import type { Env } from "./worker/types";
  * Anything else is handed to the static-asset binding, which serves the
  * built SPA (with `not_found_handling: "single-page-application"`).
  */
+
+const handleCurrent = createTierHandler("current");
+const handleForecast = createTierHandler("forecast");
+const handleYesterday = createTierHandler("yesterday");
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);

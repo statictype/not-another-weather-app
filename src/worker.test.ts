@@ -327,15 +327,16 @@ describe("Worker /api/weather/yesterday", () => {
     expect(body.yesterday?.minC).toBe(6);
   });
 
-  it("returns { yesterday: null } (non-fatal) when upstream fails", async () => {
+  it("surfaces upstream failures as 502/upstream — UI handles non-fatality via optional chaining", async () => {
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/history.json") })
       .reply(500, { error: { code: 9999, message: "boom" } });
 
     const res = await SELF.fetch("https://example.com/api/weather/yesterday?q=YesterdayFailCity");
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ yesterday: null });
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: { kind: string } };
+    expect(body.error.kind).toBe("upstream");
   });
 
   it("caches yesterday responses per (city, dt)", async () => {
@@ -357,10 +358,10 @@ describe("Worker /api/weather/yesterday", () => {
     expect(res.status).toBe(400);
   });
 
-  it("keeps schema-rejected upstream non-fatal — 200 with { yesterday: null }", async () => {
-    // Missing `forecastday` — UpstreamForecastResponseSchema will throw,
-    // but the yesterday path swallows errors and returns null so the
-    // rest of the page still renders.
+  it("rejects a schema-broken upstream body with 502/upstream and no leaked field names", async () => {
+    // Missing `forecastday` — UpstreamForecastResponseSchema rejects.
+    // Previously this was swallowed into { yesterday: null }; the
+    // rendering layer now handles non-fatality via optional chaining.
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/history.json") })
@@ -369,7 +370,9 @@ describe("Worker /api/weather/yesterday", () => {
     const res = await SELF.fetch(
       "https://example.com/api/weather/yesterday?q=YesterdaySchemaReject",
     );
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ yesterday: null });
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: { kind: string; message: string } };
+    expect(body.error.kind).toBe("upstream");
+    expect(body.error.message.toLowerCase()).not.toContain("forecastday");
   });
 });

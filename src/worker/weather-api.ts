@@ -246,8 +246,8 @@ export async function fetchForecast3(
   if (!today) {
     throw new WeatherApiError("upstream", "Weather service returned an incomplete response.");
   }
-  const hourly: HourlyForecast[] = raw.forecast.forecastday.flatMap(
-    (d) => (d.hour ?? []).map(shapeHourly),
+  const hourly: HourlyForecast[] = raw.forecast.forecastday.flatMap((d) =>
+    (d.hour ?? []).map(shapeHourly),
   );
   const epa = raw.current?.air_quality?.["us-epa-index"];
   return {
@@ -274,16 +274,13 @@ export async function fetchYesterday(
   url.searchParams.set("q", query);
   url.searchParams.set("dt", dt);
 
-  try {
-    const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
-    const day = raw.forecast?.forecastday?.[0];
-    if (!day) return { yesterday: null };
-    return { yesterday: shapeForecastDay(day) };
-  } catch (err) {
-    // History failures are non-fatal — the UI just omits the column.
-    console.warn("[oasis] yesterday fetch failed (non-fatal)", err);
-    return { yesterday: null };
-  }
+  const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
+  const day = raw.forecast?.forecastday?.[0];
+  // `null` here is upstream-OK-no-data (the date is simply absent), not
+  // upstream-failed. Failures throw and are surfaced to the client; the
+  // grid omits the column via optional chaining on `yesterday.data?.yesterday`.
+  if (!day) return { yesterday: null };
+  return { yesterday: shapeForecastDay(day) };
 }
 
 function shapeLocation(raw: UpstreamLocation): WeatherLocation {

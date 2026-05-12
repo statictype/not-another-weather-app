@@ -5,10 +5,8 @@
 ```
 src/
 ├── worker.ts              # Worker entry: dispatches /api/* routes, falls through to ASSETS
-├── worker/                # Backend (Cloudflare Worker), one file per endpoint
-│   ├── handler-current.ts    # GET /api/weather             (current conditions, 10 min cache)
-│   ├── handler-forecast.ts   # GET /api/weather/forecast    (today + 3-day + astro + hourly, 1 h cache)
-│   ├── handler-yesterday.ts  # GET /api/weather/yesterday   (previous-day history, 24 h cache, non-fatal)
+├── worker/                # Backend (Cloudflare Worker)
+│   ├── tiers.ts              # SERVER_TIERS table (ttl/fetch/extras) + createTierHandler factory — one row per weather tier
 │   ├── search-handler.ts     # GET /api/search              (autocomplete, no edge cache — `useSuggestions` keeps a 60 s client-side stale window)
 │   ├── weather-api.ts        # Upstream client + DTO shaping + error mapping
 │   ├── cache.ts              # Cache API helpers (per-endpoint TTL)
@@ -38,6 +36,7 @@ src/
 ├── lib/
 │   ├── schemas.ts         # Zod DTOs — single source of truth for the wire boundary (RFC 008)
 │   ├── errors.ts          # Error taxonomy table (kind ↔ status ↔ message)
+│   ├── tiers.ts           # WeatherTier union + route paths — wire-spanning identity for the three tiers
 │   ├── query.ts           # normalizeQuery — shared by worker cache key + frontend query key
 │   ├── query-client.ts    # TanStack Query config + retry policy
 │   ├── air-comfort.ts     # Heat-index / humidity comfort scoring used by AirComfortCard
@@ -52,11 +51,11 @@ src/
 ## Design choices
 
 - **Single Cloudflare Worker hosts both surfaces.** The same `wrangler deploy` ships the SPA bundle (via the static-asset binding) and the four `/api/*` endpoints. The upstream API key lives only on the server side and never reaches the browser, and proxy + frontend share an origin so there's no CORS to wire up.
-- **Three-tier weather pipeline.** Rather than one fat `/api/weather` call, the worker exposes `current`, `forecast`, and `yesterday` as independent endpoints with TTLs sized to their volatility (10 min / 1 h / 24 h). The hero paints from `current` alone (LCP-critical), and the forecast + yesterday tiers stream in inside the grid. `yesterday` is treated as non-fatal — upstream failures resolve to `{ yesterday: null }` so the rest of the page still renders. See RFC 001.
+- **Three-tier weather pipeline.** Rather than one fat `/api/weather` call, the worker exposes `current`, `forecast`, and `yesterday` as independent endpoints with TTLs sized to their volatility (10 min / 1 h / 24 h). The hero paints from `current` alone (LCP-critical), and the forecast + yesterday tiers stream in inside the grid. The three tiers are defined as a single named concept (`WeatherTier` in `src/lib/tiers.ts`) — worker-side `SERVER_TIERS` and client-side `CLIENT_TIERS` tables are both keyed by this union so adding or renaming a tier is a one-row change on each side rather than three new files. `yesterday` is treated as non-fatal **at the render layer**: the grid passes `yesterday.data?.yesterday` to `ForecastCard`, which omits the column when undefined. Server returns errors honestly; the client uses `retry: 0` so failures stay quiet. See RFC 001.
 - **Shaped DTOs defined once, in zod.** `src/lib/schemas.ts` is the single source of truth for every wire shape. The worker value-imports the schemas to validate upstream responses; the frontend type-imports only, so zod's runtime is tree-shaken out of the client bundle. An ESLint rule blocks runtime zod imports in `src/{api,hooks,components}`. See RFC 008.
 - **Edge cache with query normalization.** Each weather endpoint caches successful responses at the edge (10 min / 1 h / 24 h), keyed on a normalized query (trimmed, lowercased, internal whitespace collapsed). `London`, `london`, `LONDON`, and `London ` all share one cache entry per endpoint. The autocomplete endpoint (`/api/search`) is intentionally not edge-cached — results are ephemeral and the client-side debounce + 60 s `staleTime` keeps the upstream call rate low. `normalizeQuery` in `src/lib/query.ts` is shared by the worker's cache key and the frontend's TanStack Query key so the two sides can't drift.
 - **Closed error union end-to-end.** Both worker and frontend client model errors as a discriminated union (`not_found | quota_exceeded | invalid_query | upstream | network`) defined in a single table (`src/lib/errors.ts`) that derives the kind ↔ status ↔ default-message mappings. Adding a kind is a one-row change that TypeScript propagates.
-- **Retry policy follows the error taxonomy.** `src/lib/query-client.ts` skips retry on the three user-meaningful kinds (`not_found`, `invalid_query`, `quota_exceeded`) so the UI reacts instantly. Transient network and upstream failures retry up to 2 times with exponential backoff capped at 5 s. `useWeatherYesterday` further overrides `retry: 0` to honour the tier's non-fatal contract.
+- **Retry policy follows the error taxonomy.** `src/lib/query-client.ts` skips retry on the three user-meaningful kinds (`not_found`, `invalid_query`, `quota_exceeded`) so the UI reacts instantly. Transient network and upstream failures retry up to 2 times with exponential backoff capped at 5 s. The yesterday tier's `retry: 0` is a row in `CLIENT_TIERS` (in `src/hooks/use-weather.ts`) — paired with the render-layer's optional chaining, it keeps non-fatal failures silent.
 - **URL is the source of truth for the active city.** `?city=…` drives every fetch. `main.tsx` bootstraps the URL from history with `replaceState` on cold load, so returning users still see their last city — but from the first paint the URL accurately reflects what's on screen. Because every fetch is now legitimately the user's intent, there is no "silent fallback" — failed system fetches (network/upstream) take over the result area with a retry CTA. See RFC 007.
 - **Autocomplete is the debounced surface, weather fetches are not.** Suggestions (`/api/search`) fire 300 ms after idle typing, gated at 3 chars. The actual weather fetch only fires when the URL changes — selecting a suggestion, picking from recent history, geolocation, or "surprise me". TanStack Query dedupes identical keys and `placeholderData: keepPreviousData` keeps the previous successful card on screen while a new fetch is in flight.
 - **History via `useSyncExternalStore`.** localStorage is React's textbook "external store." Every `useHistory()` consumer subscribes to the same in-module pub/sub, so deletions in one component re-render the others without prop drilling or Context. Cross-tab updates are wired through the native `storage` event.

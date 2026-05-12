@@ -1,4 +1,5 @@
 import { defaultMessage, kindForStatus, type WeatherErrorKind } from "@/lib/errors";
+import { WEATHER_TIER_PATHS, type WeatherTier } from "@/lib/tiers";
 import type { SuggestionItem, WeatherCurrent, WeatherForecast, WeatherYesterday } from "./types";
 
 /**
@@ -57,16 +58,20 @@ async function request<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+export function fetchTier<T>(tier: WeatherTier, query: string): Promise<T> {
+  return request<T>(`${WEATHER_TIER_PATHS[tier]}?q=${encodeURIComponent(query)}`);
+}
+
 export function fetchCurrent(query: string): Promise<WeatherCurrent> {
-  return request<WeatherCurrent>(`/api/weather?q=${encodeURIComponent(query)}`);
+  return fetchTier<WeatherCurrent>("current", query);
 }
 
 export function fetchForecast(query: string): Promise<WeatherForecast> {
-  return request<WeatherForecast>(`/api/weather/forecast?q=${encodeURIComponent(query)}`);
+  return fetchTier<WeatherForecast>("forecast", query);
 }
 
 export function fetchYesterday(query: string): Promise<WeatherYesterday> {
-  return request<WeatherYesterday>(`/api/weather/yesterday?q=${encodeURIComponent(query)}`);
+  return fetchTier<WeatherYesterday>("yesterday", query);
 }
 
 export function fetchSearch(query: string): Promise<SuggestionItem[]> {

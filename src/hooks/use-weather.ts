@@ -1,12 +1,8 @@
 import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { WeatherCurrent, WeatherForecast, WeatherYesterday } from "@/api/types";
-import {
-  fetchCurrent,
-  fetchForecast,
-  fetchYesterday,
-  type WeatherClientError,
-} from "@/api/weather";
+import { fetchTier, type WeatherClientError } from "@/api/weather";
 import { normalizeQuery } from "@/lib/query";
+import type { WeatherTier } from "@/lib/tiers";
 
 /**
  * Three parallel hooks, one per deferred tier. See `docs/rfcs/001-*.md`.
@@ -18,7 +14,40 @@ import { normalizeQuery } from "@/lib/query";
  * All three share the same normalized query string so cache keys line
  * up with the worker's edge cache. They fire in parallel and resolve
  * independently — each card subscribes only to the query it needs.
+ *
+ * Per-tier knobs live in `CLIENT_TIERS` below; the three named hooks are
+ * thin typed wrappers around the shared `useWeatherTier`.
  */
+
+interface ClientTier {
+  staleTime: number;
+  gcTime: number;
+  refetchOnWindowFocus: boolean;
+  /** Omit to defer to the global retry policy in `query-client.ts`. */
+  retry?: number;
+}
+
+const CLIENT_TIERS: Record<WeatherTier, ClientTier> = {
+  current: {
+    staleTime: 120_000, // 2 min — matches the 10 min edge TTL / 5
+    gcTime: 600_000, // 10 min
+    refetchOnWindowFocus: true,
+  },
+  forecast: {
+    staleTime: 30 * 60_000, // 30 min
+    gcTime: 60 * 60_000, // 1 h
+    refetchOnWindowFocus: false,
+  },
+  yesterday: {
+    staleTime: 60 * 60_000, // 1 h
+    gcTime: 24 * 60 * 60_000, // 24 h
+    refetchOnWindowFocus: false,
+    // Non-fatal at the render layer (the grid omits the column via
+    // optional chaining), so a retry would only burn cycles on an
+    // outcome the UI already handles gracefully.
+    retry: 0,
+  },
+};
 
 export interface UseWeatherOptions {
   /** The committed query to fetch. `null` means "do nothing". */
@@ -28,6 +57,27 @@ export interface UseWeatherOptions {
 }
 
 export type UseWeatherResult = UseQueryResult<WeatherCurrent, WeatherClientError>;
+
+function useWeatherTier<T>(
+  tier: WeatherTier,
+  query: string | null,
+  minLength: number,
+): UseQueryResult<T, WeatherClientError> {
+  const normalized = normalizeQuery(query) ?? "";
+  const enabled = normalized.length >= minLength;
+  const config = CLIENT_TIERS[tier];
+
+  return useQuery<T, WeatherClientError>({
+    queryKey: ["weather", tier, normalized],
+    queryFn: () => fetchTier<T>(tier, normalized),
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: config.staleTime,
+    gcTime: config.gcTime,
+    refetchOnWindowFocus: config.refetchOnWindowFocus,
+    ...(config.retry !== undefined ? { retry: config.retry } : {}),
+  });
+}
 
 /**
  * Fast path: fetches `/api/weather` (current + location). Drives the
@@ -39,62 +89,25 @@ export type UseWeatherResult = UseQueryResult<WeatherCurrent, WeatherClientError
  */
 export function useWeather(options: UseWeatherOptions): UseWeatherResult {
   const { query, minLength = 3 } = options;
-  const normalized = normalizeQuery(query) ?? "";
-  const enabled = normalized.length >= minLength;
-
-  return useQuery<WeatherCurrent, WeatherClientError>({
-    queryKey: ["weather", "current", normalized],
-    queryFn: () => fetchCurrent(normalized),
-    enabled,
-    placeholderData: keepPreviousData,
-    staleTime: 120_000, // 2 min — matches the 10 min edge TTL / 5
-    gcTime: 600_000, // 10 min
-  });
+  return useWeatherTier<WeatherCurrent>("current", query, minLength);
 }
 
 /**
- * Deferred tier: today's min/max, 3-day forecast, astro. Edge cache is
- * 1 hour, so the client can go noticeably further — 30 min stale, 1 h
- * gc, no refetch on window focus.
+ * Deferred tier: today's min/max, 3-day forecast, astro.
  */
 export function useWeatherForecast(
   query: string | null,
   minLength = 3,
 ): UseQueryResult<WeatherForecast, WeatherClientError> {
-  const normalized = normalizeQuery(query) ?? "";
-  const enabled = normalized.length >= minLength;
-
-  return useQuery<WeatherForecast, WeatherClientError>({
-    queryKey: ["weather", "forecast", normalized],
-    queryFn: () => fetchForecast(normalized),
-    enabled,
-    placeholderData: keepPreviousData,
-    staleTime: 30 * 60_000, // 30 min
-    gcTime: 60 * 60_000, // 1 h
-    refetchOnWindowFocus: false,
-  });
+  return useWeatherTier<WeatherForecast>("forecast", query, minLength);
 }
 
 /**
- * Slowest tier: previous-day history. The server caches for 24 hours so
- * the client caches generously too — no point refetching something
- * whose key is rolling over at UTC midnight.
+ * Slowest tier: previous-day history. Non-fatal at the render layer.
  */
 export function useWeatherYesterday(
   query: string | null,
   minLength = 3,
 ): UseQueryResult<WeatherYesterday, WeatherClientError> {
-  const normalized = normalizeQuery(query) ?? "";
-  const enabled = normalized.length >= minLength;
-
-  return useQuery<WeatherYesterday, WeatherClientError>({
-    queryKey: ["weather", "yesterday", normalized],
-    queryFn: () => fetchYesterday(normalized),
-    enabled,
-    placeholderData: keepPreviousData,
-    staleTime: 60 * 60_000, // 1 h
-    gcTime: 24 * 60 * 60_000, // 24 h
-    refetchOnWindowFocus: false,
-    retry: 0, // yesterday failures are non-fatal; UI omits the column
-  });
+  return useWeatherTier<WeatherYesterday>("yesterday", query, minLength);
 }
