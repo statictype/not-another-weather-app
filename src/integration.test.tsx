@@ -213,6 +213,59 @@ describe("Oasis (integration)", () => {
     });
   });
 
+  it("clicking 'My location' multiple times dedupes despite GPS jitter", async () => {
+    // GPS reads at the same physical spot jitter in the trailing
+    // decimals — without rounding, each click composes a unique query
+    // string and history (which dedupes by exact match) keeps them
+    // all. `handleLocationRequest` rounds to ~1km precision so the
+    // jittered reads collapse into one entry.
+    // Typical GPS jitter is 5–10m at the same spot. The readings below
+    // span ~15m and stay inside one 100m bin so `.toFixed(3)` collapses
+    // them to a single query.
+    const readings = [
+      { coords: { latitude: 51.52313, longitude: -0.12893 } },
+      { coords: { latitude: 51.52319, longitude: -0.12889 } },
+      { coords: { latitude: 51.52316, longitude: -0.12894 } },
+    ];
+    let readIdx = 0;
+    const getCurrentPosition = vi.fn(
+      (success: PositionCallback) => {
+        success(readings[readIdx++ % readings.length] as GeolocationPosition);
+      },
+    );
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+
+    // Any /api/weather call lands as London so each location-derived
+    // query commits to history.
+    server.use(
+      http.get("/api/weather", () => HttpResponse.json(londonCurrent)),
+    );
+
+    const user = userEvent.setup();
+    renderAppAt("/");
+    const input = screen.getByLabelText(/city/i);
+
+    for (let i = 0; i < readings.length; i++) {
+      await user.click(input);
+      const myLocation = await screen.findByRole("button", { name: /my location/i });
+      await user.click(myLocation);
+      await waitFor(() => {
+        expect(new URL(window.location.href).searchParams.get("city")).toBeTruthy();
+      });
+      // Hero paints — that's when the history-commit effect fires.
+      await screen.findAllByText(/feels like 11/i);
+    }
+
+    await user.click(input);
+    const recentButtons = await screen.findAllByRole("button", {
+      name: /load weather for/i,
+    });
+    expect(recentButtons).toHaveLength(1);
+  });
+
   it("pressing Enter with no matching city shows validation and does not fetch", async () => {
     // The desktop dropdown auto-focuses the top city match and Enter
     // commits it — so to exercise the validation path the typed query

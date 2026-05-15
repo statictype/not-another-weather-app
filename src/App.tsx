@@ -116,9 +116,15 @@ export function App() {
     }
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const q = `${position.coords.latitude},${position.coords.longitude}`;
+        // Round to ~100m precision (3 decimals). Coarser than typical
+        // GPS noise (5–10m) so repeated reads at the same spot dedupe
+        // into a single history entry, but tight enough that the
+        // rounded point is still inside the user's block and is
+        // overwhelmingly likely to reverse-geocode to the same place.
+        const lat = position.coords.latitude.toFixed(3);
+        const lon = position.coords.longitude.toFixed(3);
         setInputValue("");
-        setSearchParam("city", q);
+        setSearchParam("city", `${lat},${lon}`);
       },
       () => {
         toast("Could not determine your location");

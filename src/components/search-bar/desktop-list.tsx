@@ -209,47 +209,45 @@ interface RecentRowProps {
 
 function RecentRow({ nav, focused, setFocusedKey, onSelect, onRemove }: RecentRowProps) {
   return (
-    <li className="relative">
+    <li
+      className="relative"
+      onMouseEnter={() => setFocusedKey(nav.key)}
+    >
       {focused && <FocusPill />}
-      <div
-        onMouseEnter={() => setFocusedKey(nav.key)}
-        className="group relative flex items-center gap-2 px-3 py-2.5"
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.985 }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onSelect(nav.item);
+        }}
+        className="relative flex w-full items-center px-3 py-3 pr-11 text-left focus-visible:outline-none"
+        aria-label={`Load weather for ${nav.item.displayName}`}
       >
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.985 }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            onSelect(nav.item);
-          }}
-          className="flex flex-1 items-center text-left focus-visible:outline-none"
-          aria-label={`Load weather for ${nav.item.displayName}`}
+        <span
+          className={
+            "font-display flex-1 truncate text-[15px] font-medium tracking-tight transition-colors duration-150" +
+            (focused ? " text-foreground" : " text-foreground/75")
+          }
         >
-          <span
-            className={
-              "font-display flex-1 truncate text-[15px] font-medium tracking-tight transition-colors duration-150" +
-              (focused ? " text-foreground" : " text-foreground/75")
-            }
-          >
-            {nav.item.displayName}
-          </span>
-        </motion.button>
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.9 }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRemove(nav.item);
-          }}
-          animate={{ opacity: focused ? 1 : 0 }}
-          transition={{ duration: 0.15 }}
-          className="flex size-6 shrink-0 items-center justify-center rounded-full text-foreground/40 transition-colors duration-150 hover:bg-foreground/[0.08] hover:text-foreground/70 focus-visible:outline-none"
-          aria-label={`Remove ${nav.item.displayName} from history`}
-        >
-          <XIcon className="size-3" strokeWidth={2.5} aria-hidden="true" />
-        </motion.button>
-      </div>
+          {nav.item.displayName}
+        </span>
+      </motion.button>
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.9 }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onRemove(nav.item);
+        }}
+        animate={{ opacity: focused ? 1 : 0 }}
+        transition={focused ? PILL_TRANSITION : { duration: 0 }}
+        className="absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/40 transition-colors duration-150 hover:bg-foreground/[0.08] hover:text-foreground/70 focus-visible:outline-none"
+        aria-label={`Remove ${nav.item.displayName} from history`}
+      >
+        <XIcon className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+      </motion.button>
     </li>
   );
 }
@@ -276,7 +274,7 @@ function SuggestionRow({ nav, focused, setFocusedKey, onSelect }: SuggestionRowP
           e.preventDefault();
           onSelect(nav.item);
         }}
-        className="relative flex w-full items-center px-3 py-2.5 text-left focus-visible:outline-none"
+        className="relative flex w-full items-center px-3 py-3 text-left focus-visible:outline-none"
         aria-label={`Search weather for ${city}, ${rest}`}
       >
         <span className="flex min-w-0 flex-1 flex-col">
@@ -357,7 +355,7 @@ function SuggestionLoadingRows() {
   return (
     <ul className="flex flex-col">
       {[0, 1, 2].map((i) => (
-        <li key={i} className="flex items-center gap-3 px-3 py-2.5">
+        <li key={i} className="flex items-center gap-3 px-3 py-3">
           <div className="flex flex-1 flex-col gap-1.5">
             <span className="h-3.5 w-40 animate-pulse rounded-md bg-foreground/[0.06]" />
             <span className="h-2.5 w-24 animate-pulse rounded-md bg-foreground/[0.04]" />
