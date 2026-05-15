@@ -7,10 +7,10 @@ import { SearchBar } from "@/components/search-bar";
 // invisible to the user and keeps sonner out of the first-paint chunk.
 const Toaster = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
 import { WeatherResult } from "@/components/weather-result";
-import { type HistoryItem, useHistory } from "@/hooks/use-history";
+import type { HistoryItem } from "@/hooks/use-history";
+import { useReversibleHistory } from "@/hooks/use-reversible-history";
 import { setSearchParam, useSearchParam } from "@/hooks/use-search-param";
 import { useSuggestions } from "@/hooks/use-suggestions";
-import { useUndo } from "@/hooks/use-undo";
 import { useWeather } from "@/hooks/use-weather";
 import { pickRandomCity } from "@/lib/random-cities";
 
@@ -25,14 +25,7 @@ export function App() {
   const activeQuery = useSearchParam("city");
 
   // ─── History + undo ──────────────────────────────────────────────────
-  const {
-    history,
-    add: addHistory,
-    remove: removeHistory,
-    clear: clearHistory,
-    restore,
-  } = useHistory();
-  const undo = useUndo<HistoryItem>(5000);
+  const { history, add: addHistory, removeWithUndo, clearAllWithUndo } = useReversibleHistory();
 
   // ─── City suggestions (debounced, 3+ chars) ──────────────────────────
   const suggestions = useSuggestions(inputValue);
@@ -76,37 +69,6 @@ export function App() {
   const handleHistorySelect = (item: HistoryItem) => {
     setInputValue("");
     setSearchParam("city", item.query);
-  };
-
-  // ─── History management ──────────────────────────────────────────────
-  const handleHistoryRemove = (item: HistoryItem) => {
-    removeHistory(item.id);
-    undo.stage({ items: [item], label: `Removed ${item.displayName}` });
-    toast(`Removed ${item.displayName}`, {
-      action: {
-        label: "Undo",
-        onClick: () => {
-          const restored = undo.undo();
-          if (restored) restore(restored.items);
-        },
-      },
-    });
-  };
-
-  const handleClearAll = () => {
-    if (history.length === 0) return;
-    const snapshot = [...history];
-    clearHistory();
-    undo.stage({ items: snapshot, label: `Cleared ${snapshot.length} searches` });
-    toast(`Cleared ${snapshot.length} recent searches`, {
-      action: {
-        label: "Undo",
-        onClick: () => {
-          const restored = undo.undo();
-          if (restored) restore(restored.items);
-        },
-      },
-    });
   };
 
   const handleLocationRequest = useCallback(() => {
@@ -166,8 +128,8 @@ export function App() {
               isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
               onSuggestionSelect={handleSuggestionSelect}
               onRecentSelect={handleHistorySelect}
-              onRecentRemove={handleHistoryRemove}
-              onRecentClearAll={handleClearAll}
+              onRecentRemove={removeWithUndo}
+              onRecentClearAll={clearAllWithUndo}
               onLocationRequest={handleLocationRequest}
               onRandomSelect={handleRandomSelect}
             />

@@ -1,17 +1,15 @@
 import { useSyncExternalStore } from "react";
-import { addHistoryItem } from "./reducer";
+import { addHistoryItem, clearHistory, removeHistoryItem, restoreHistoryItems } from "./reducer";
 import { getServerSnapshot, getSnapshot, subscribe, writeToStorage } from "./store";
-import { type HistoryItem, MAX_HISTORY } from "./types";
+import type { HistoryItem } from "./types";
 
 /**
  * Search history hook backed by localStorage.
  *
- * History semantics (locked in during design):
- *   - Items are stored newest-first.
- *   - Adding an existing query (case-insensitive) moves it to the top
- *     instead of duplicating.
- *   - Capped at MAX_HISTORY entries; oldest dropped when exceeded.
- *   - Items are only added on a successful fetch (the caller's job).
+ * Plumbing only: subscribe to the module store, and forward each mutator
+ * to the matching pure transition in `./reducer`. The semantics
+ * (newest-first, dedupe, cap at MAX_HISTORY, restore-by-id) live in
+ * the reducer functions so they can be tested without React.
  */
 
 export interface UseHistoryReturn {
@@ -26,25 +24,11 @@ export interface UseHistoryReturn {
 export function useHistory(): UseHistoryReturn {
   const history = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  const add = (item: Omit<HistoryItem, "id" | "addedAt">) => {
-    writeToStorage(addHistoryItem(getSnapshot(), item));
+  return {
+    history,
+    add: (item) => writeToStorage(addHistoryItem(getSnapshot(), item)),
+    remove: (id) => writeToStorage(removeHistoryItem(getSnapshot(), id)),
+    clear: () => writeToStorage(clearHistory()),
+    restore: (items) => writeToStorage(restoreHistoryItems(getSnapshot(), items)),
   };
-
-  const remove = (id: string) => {
-    writeToStorage(getSnapshot().filter((item) => item.id !== id));
-  };
-
-  const clear = () => {
-    writeToStorage([]);
-  };
-
-  const restore = (items: HistoryItem[]) => {
-    // Prepend restored items, dedupe by id, cap.
-    const current = getSnapshot();
-    const existingIds = new Set(current.map((i) => i.id));
-    const fresh = items.filter((i) => !existingIds.has(i.id));
-    writeToStorage([...fresh, ...current].slice(0, MAX_HISTORY));
-  };
-
-  return { history, add, remove, clear, restore };
 }

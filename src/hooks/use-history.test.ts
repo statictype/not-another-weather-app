@@ -3,8 +3,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   __resetHistoryStoreForTests,
   addHistoryItem,
+  clearHistory,
   type HistoryItem,
   MAX_HISTORY,
+  removeHistoryItem,
+  restoreHistoryItems,
   useHistory,
 } from "./use-history";
 
@@ -16,7 +19,7 @@ afterEach(() => {
   __resetHistoryStoreForTests();
 });
 
-describe("addHistoryItem (pure reducer)", () => {
+describe("addHistoryItem (pure)", () => {
   it("prepends a new item to an empty list", () => {
     const result = addHistoryItem([], { query: "London", displayName: "London, UK" });
     expect(result).toHaveLength(1);
@@ -31,15 +34,12 @@ describe("addHistoryItem (pure reducer)", () => {
     ];
     const result = addHistoryItem(seed, { query: "london", displayName: "London, UK" });
     expect(result).toHaveLength(3);
-    // London moved to the top with a fresh id; Paris and Berlin preserved.
     expect(result[0]?.query.toLowerCase()).toBe("london");
     expect(result[0]?.id).not.toBe("b");
-    // The new item preserves the input casing ("london"); previous Paris and Berlin retained.
     expect(result.map((i) => i.query)).toEqual(["london", "Paris", "Berlin"]);
   });
 
   it("caps the list at MAX_HISTORY entries, dropping the oldest", () => {
-    // Seed is newest-first (City0 at the front, CityN at the back).
     const seed: HistoryItem[] = Array.from({ length: MAX_HISTORY }, (_, i) => ({
       id: `id-${i}`,
       query: `City${i}`,
@@ -49,15 +49,80 @@ describe("addHistoryItem (pure reducer)", () => {
     const result = addHistoryItem(seed, { query: "Newest", displayName: "Newest" });
     expect(result).toHaveLength(MAX_HISTORY);
     expect(result[0]?.query).toBe("Newest");
-    // The oldest (last in the list) should have been dropped.
     expect(result.find((i) => i.query === `City${MAX_HISTORY - 1}`)).toBeUndefined();
-    // The second-oldest should still be present.
     expect(result.find((i) => i.query === `City${MAX_HISTORY - 2}`)).toBeDefined();
   });
 
   it("rejects empty/whitespace queries without mutating the list", () => {
     const seed: HistoryItem[] = [{ id: "a", query: "Paris", displayName: "Paris", addedAt: 1 }];
     expect(addHistoryItem(seed, { query: "   ", displayName: "" })).toEqual(seed);
+  });
+});
+
+describe("removeHistoryItem (pure)", () => {
+  it("removes the item with the matching id", () => {
+    const seed: HistoryItem[] = [
+      { id: "a", query: "Paris", displayName: "Paris", addedAt: 1 },
+      { id: "b", query: "London", displayName: "London", addedAt: 2 },
+    ];
+    expect(removeHistoryItem(seed, "a")).toEqual([
+      { id: "b", query: "London", displayName: "London", addedAt: 2 },
+    ]);
+  });
+
+  it("is a no-op when the id is absent", () => {
+    const seed: HistoryItem[] = [{ id: "a", query: "Paris", displayName: "Paris", addedAt: 1 }];
+    expect(removeHistoryItem(seed, "missing")).toEqual(seed);
+  });
+});
+
+describe("clearHistory (pure)", () => {
+  it("returns an empty list", () => {
+    expect(clearHistory()).toEqual([]);
+  });
+});
+
+describe("restoreHistoryItems (pure)", () => {
+  it("prepends restored items in order", () => {
+    const seed: HistoryItem[] = [{ id: "x", query: "Berlin", displayName: "Berlin", addedAt: 5 }];
+    const removed: HistoryItem[] = [
+      { id: "a", query: "Lisbon", displayName: "Lisbon", addedAt: 1 },
+      { id: "b", query: "Madrid", displayName: "Madrid", addedAt: 2 },
+    ];
+    expect(restoreHistoryItems(seed, removed).map((i) => i.query)).toEqual([
+      "Lisbon",
+      "Madrid",
+      "Berlin",
+    ]);
+  });
+
+  it("skips items whose id is already present (defensive against double-undo)", () => {
+    const seed: HistoryItem[] = [{ id: "a", query: "Paris", displayName: "Paris", addedAt: 1 }];
+    const removed: HistoryItem[] = [
+      { id: "a", query: "Paris", displayName: "Paris", addedAt: 1 },
+      { id: "b", query: "London", displayName: "London", addedAt: 2 },
+    ];
+    expect(restoreHistoryItems(seed, removed).map((i) => i.id)).toEqual(["b", "a"]);
+  });
+
+  it("respects the cap when prepending would overflow", () => {
+    const seed: HistoryItem[] = Array.from({ length: MAX_HISTORY }, (_, i) => ({
+      id: `id-${i}`,
+      query: `City${i}`,
+      displayName: `City${i}`,
+      addedAt: MAX_HISTORY - i,
+    }));
+    const removed: HistoryItem[] = [
+      { id: "r1", query: "Restored1", displayName: "Restored1", addedAt: 999 },
+      { id: "r2", query: "Restored2", displayName: "Restored2", addedAt: 998 },
+    ];
+    const result = restoreHistoryItems(seed, removed);
+    expect(result).toHaveLength(MAX_HISTORY);
+    expect(result[0]?.id).toBe("r1");
+    expect(result[1]?.id).toBe("r2");
+    // The two oldest cities were pushed off the end.
+    expect(result.find((i) => i.id === `id-${MAX_HISTORY - 1}`)).toBeUndefined();
+    expect(result.find((i) => i.id === `id-${MAX_HISTORY - 2}`)).toBeUndefined();
   });
 });
 

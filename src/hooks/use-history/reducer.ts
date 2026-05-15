@@ -1,5 +1,15 @@
 import { type HistoryItem, MAX_HISTORY } from "./types";
 
+/**
+ * Pure transitions for the history list.
+ *
+ * All four operations live here so the rules they share — the
+ * `MAX_HISTORY` cap, the lowercase dedupe on add, the by-id dedupe on
+ * restore — are centralized and the test surface is one module, not
+ * "the reducer plus three inline filters in the hook." The hook is
+ * plumbing on top of these functions.
+ */
+
 export function generateId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -7,24 +17,47 @@ export function generateId(): string {
   return `h_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 }
 
+function cap(items: HistoryItem[]): HistoryItem[] {
+  return items.slice(0, MAX_HISTORY);
+}
+
 /**
- * Pure reducer used by `add` — extracted so it can be tested directly
- * and re-used by undo (which has to splice items back into a specific
- * position). Lowercase comparison ensures "London" and "london" dedupe.
+ * Prepend a new item. Existing entries that match by case-insensitive
+ * query are removed first so the new occurrence moves to the top with
+ * a fresh id. Empty/whitespace queries are rejected without mutation.
  */
 export function addHistoryItem(
-  current: HistoryItem[],
+  state: HistoryItem[],
   next: Omit<HistoryItem, "id" | "addedAt">,
 ): HistoryItem[] {
   const normalizedQuery = next.query.trim().toLowerCase();
-  if (!normalizedQuery) return current;
+  if (!normalizedQuery) return state;
 
-  const filtered = current.filter((item) => item.query.trim().toLowerCase() !== normalizedQuery);
+  const filtered = state.filter((item) => item.query.trim().toLowerCase() !== normalizedQuery);
   const newItem: HistoryItem = {
     id: generateId(),
     query: next.query.trim(),
     displayName: next.displayName,
     addedAt: Date.now(),
   };
-  return [newItem, ...filtered].slice(0, MAX_HISTORY);
+  return cap([newItem, ...filtered]);
+}
+
+export function removeHistoryItem(state: HistoryItem[], id: string): HistoryItem[] {
+  return state.filter((item) => item.id !== id);
+}
+
+export function clearHistory(): HistoryItem[] {
+  return [];
+}
+
+/**
+ * Prepend restored items, deduping by id against the current list.
+ * Used by undo — the items already have their original ids, so an id
+ * collision means the same item is still present and we skip it.
+ */
+export function restoreHistoryItems(state: HistoryItem[], items: HistoryItem[]): HistoryItem[] {
+  const existingIds = new Set(state.map((i) => i.id));
+  const fresh = items.filter((i) => !existingIds.has(i.id));
+  return cap([...fresh, ...state]);
 }

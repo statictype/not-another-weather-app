@@ -21,8 +21,9 @@ src/
 │   ├── use-media-query.ts       # SSR-safe matchMedia subscription
 │   ├── use-search-param.ts      # ?city= as a useSyncExternalStore source
 │   ├── use-suggestions.ts       # Autocomplete query (debounced 300ms, 3-char min)
-│   ├── use-undo.ts              # Pending-removal state machine
+│   ├── use-undo.ts              # Pending-removal state machine (generic primitive)
 │   ├── use-weather.ts           # Three TanStack Query hooks: current / forecast / yesterday
+│   ├── use-reversible-history.ts # useHistory + useUndo + sonner toast, one call per action
 │   └── use-history/             # Reducer + in-module pub/sub over localStorage
 ├── components/
 │   ├── search-bar/        # Composite search input (dropdown, suggestions, recent, clear-all)
@@ -58,7 +59,8 @@ src/
 - **Retry policy follows the error taxonomy.** `src/lib/query-client.ts` skips retry on the three user-meaningful kinds (`not_found`, `invalid_query`, `quota_exceeded`) so the UI reacts instantly. Transient network and upstream failures retry up to 2 times with exponential backoff capped at 5 s. The yesterday tier's `retry: 0` is a row in `CLIENT_TIERS` (in `src/hooks/use-weather.ts`) — paired with the render-layer's optional chaining, it keeps non-fatal failures silent.
 - **URL is the source of truth for the active city.** `?city=…` drives every fetch. `main.tsx` bootstraps the URL from history with `replaceState` on cold load, so returning users still see their last city — but from the first paint the URL accurately reflects what's on screen. Because every fetch is now legitimately the user's intent, there is no "silent fallback" — failed system fetches (network/upstream) take over the result area with a retry CTA. See RFC 007.
 - **Autocomplete is the debounced surface, weather fetches are not.** Suggestions (`/api/search`) fire 300 ms after idle typing, gated at 3 chars. The actual weather fetch only fires when the URL changes — selecting a suggestion, picking from recent history, geolocation, or "surprise me". TanStack Query dedupes identical keys and `placeholderData: keepPreviousData` keeps the previous successful card on screen while a new fetch is in flight.
-- **History via `useSyncExternalStore`.** localStorage is React's textbook "external store." Every `useHistory()` consumer subscribes to the same in-module pub/sub, so deletions in one component re-render the others without prop drilling or Context. Cross-tab updates are wired through the native `storage` event.
+- **History via `useSyncExternalStore`.** localStorage is React's textbook "external store." Every `useHistory()` consumer subscribes to the same in-module pub/sub, so deletions in one component re-render the others without prop drilling or Context. Cross-tab updates are wired through the native `storage` event. All four history transitions (`add` / `remove` / `clear` / `restore`) live as pure functions in `src/hooks/use-history/reducer.ts` — the hook is plumbing on top. See RFC 010.
+- **`useReversibleHistory` owns the remove + undo + toast story.** Composes `useHistory` + `useUndo` and the sonner toast call so App.tsx gets a single function per destructive action (`removeWithUndo`, `clearAllWithUndo`). The ordering invariant (mutate → stage → toast → wire) is sealed inside the hook; sonner is hard-wired because it's the project's only toast lib and this file is the seam for any swap. See RFC 010.
 
 ## Gotchas
 
