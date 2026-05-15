@@ -213,12 +213,16 @@ describe("Oasis (integration)", () => {
     });
   });
 
-  it("pressing Enter without selecting shows a validation error and does not fetch", async () => {
+  it("pressing Enter with no matching city shows validation and does not fetch", async () => {
+    // The desktop dropdown auto-focuses the top city match and Enter
+    // commits it — so to exercise the validation path the typed query
+    // must produce no matches. The MSW search handler returns [] for
+    // anything that isn't "london".
     const user = userEvent.setup();
     renderAppAt("/");
 
     const input = screen.getByLabelText(/city/i);
-    await user.type(input, "London");
+    await user.type(input, "xyzgibberish");
     await user.keyboard("{Enter}");
 
     await waitFor(() => {

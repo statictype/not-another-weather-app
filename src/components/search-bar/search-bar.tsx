@@ -1,12 +1,22 @@
 import { SearchIcon } from "lucide-react";
-import { type FormEvent, useEffect, useId, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Input } from "@/components/ui/input";
 import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { MIN_SUGGESTION_LENGTH } from "./constants";
+import { DesktopDropdown } from "./desktop-dropdown";
 import { SearchDropdown } from "./dropdown";
+import { buildNavigableItems } from "./navigable";
 
 const spring = { type: "spring" as const, stiffness: 400, damping: 30 };
 
@@ -44,6 +54,10 @@ export function SearchBar({
   const [hasFocus, setHasFocus] = useState(false);
   const [showSelectPrompt, setShowSelectPrompt] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  // The user's explicit selection. `focusedKey` (below) falls back to
+  // the first navigable item when this is null or no longer matches a
+  // visible row — so we never need a setState-in-effect to reset it.
+  const [explicitKey, setExplicitKey] = useState<string | null>(null);
 
   const trimmed = value.trim();
   const len = trimmed.length;
@@ -54,6 +68,29 @@ export function SearchBar({
       : recentItems.filter((item) =>
           item.displayName.toLowerCase().includes(trimmed.toLowerCase()),
         );
+
+  const navigableItems = useMemo(
+    () =>
+      buildNavigableItems({
+        recent: filteredRecent,
+        suggestions: len >= MIN_SUGGESTION_LENGTH ? suggestions : [],
+      }),
+    [filteredRecent, suggestions, len],
+  );
+
+  // Desktop only: fall back to the first city row (recent or suggestion)
+  // when no explicit pick is set. Actions are reachable via arrow keys
+  // but never auto-focused — otherwise typing gibberish would put the
+  // cursor on "Use my location" and Enter would run it. Mobile keeps
+  // focusedKey null so Enter falls through to the validation prompt.
+  const fallbackKey =
+    navigableItems.find((i) => i.kind === "recent" || i.kind === "suggestion")
+      ?.key ?? null;
+  const focusedKey = isDesktop
+    ? explicitKey && navigableItems.some((i) => i.key === explicitKey)
+      ? explicitKey
+      : fallbackKey
+    : null;
 
   const isMobileOpen = !isDesktop && hasFocus;
   const showDropdown = clearDialogOpen || hasFocus;
@@ -81,8 +118,53 @@ export function SearchBar({
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (focusedKey) {
+      runFocused();
+      return;
+    }
     if (len >= MIN_SUGGESTION_LENGTH) {
       setShowSelectPrompt(true);
+    }
+  }
+
+  function runFocused() {
+    const item = navigableItems.find((i) => i.key === focusedKey);
+    if (!item) return;
+    if (item.kind === "recent") {
+      handleRecentSelect(item.item);
+    } else if (item.kind === "suggestion") {
+      handleSuggestionSelect(item.item);
+    } else if (item.action === "location") {
+      handleLocationRequest();
+    } else {
+      handleRandomSelect();
+    }
+  }
+
+  function moveFocus(delta: 1 | -1) {
+    if (navigableItems.length === 0) return;
+    const idx = navigableItems.findIndex((i) => i.key === focusedKey);
+    const nextIdx =
+      idx === -1
+        ? delta === 1
+          ? 0
+          : navigableItems.length - 1
+        : Math.max(0, Math.min(navigableItems.length - 1, idx + delta));
+    const nextKey = navigableItems[nextIdx]?.key;
+    if (nextKey) setExplicitKey(nextKey);
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (!isDesktop) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      moveFocus(1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      moveFocus(-1);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      closeSearch();
     }
   }
 
@@ -230,18 +312,18 @@ export function SearchBar({
                   onChange={(e) => handleChange(e.target.value)}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
+                  onKeyDown={handleKeyDown}
                   className="font-display h-auto flex-1 border-0 bg-transparent p-0 text-lg font-normal tracking-tight shadow-none placeholder:text-foreground/30 focus-visible:ring-0 lg:text-xl"
                 />
               </div>
 
               <AnimatePresence>
                 {showDropdown && (
-                  <SearchDropdown
-                    isMobileOpen={false}
+                  <DesktopDropdown
+                    navigableItems={navigableItems}
+                    focusedKey={focusedKey}
+                    setFocusedKey={setExplicitKey}
                     trimmed={trimmed}
-                    filteredRecent={filteredRecent}
-                    allRecent={recentItems}
-                    suggestions={suggestions}
                     isSuggestionsLoading={isSuggestionsLoading}
                     showSelectPrompt={showSelectPrompt}
                     onRecentSelect={handleRecentSelect}
