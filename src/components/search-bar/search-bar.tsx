@@ -84,8 +84,7 @@ export function SearchBar({
   // cursor on "Use my location" and Enter would run it. Mobile keeps
   // focusedKey null so Enter falls through to the validation prompt.
   const fallbackKey =
-    navigableItems.find((i) => i.kind === "recent" || i.kind === "suggestion")
-      ?.key ?? null;
+    navigableItems.find((i) => i.kind === "recent" || i.kind === "suggestion")?.key ?? null;
   const focusedKey = isDesktop
     ? explicitKey && navigableItems.some((i) => i.key === explicitKey)
       ? explicitKey
@@ -204,10 +203,7 @@ export function SearchBar({
 
         <AnimatePresence>
           {isMobileOpen ? (
-            <motion.div
-              key="mobile-overlay"
-              className="fixed inset-0 z-50 flex flex-col"
-            >
+            <motion.div key="mobile-overlay" className="fixed inset-0 z-50 flex flex-col">
               <motion.div
                 className="mobile-search-overlay absolute inset-0"
                 initial={{ opacity: 0 }}

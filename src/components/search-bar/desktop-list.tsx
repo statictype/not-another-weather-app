@@ -39,8 +39,7 @@ export function DesktopList(props: DesktopListProps) {
   const actions = props.navigableItems.filter((i) => i.kind === "action");
 
   const len = props.trimmed.length;
-  const showKeepTypingHint =
-    len > 0 && len < MIN_SUGGESTION_LENGTH && suggestions.length === 0;
+  const showKeepTypingHint = len > 0 && len < MIN_SUGGESTION_LENGTH && suggestions.length === 0;
   const showNoResults =
     len >= MIN_SUGGESTION_LENGTH &&
     !props.isSuggestionsLoading &&
@@ -105,12 +104,8 @@ export function DesktopList(props: DesktopListProps) {
             )}
             {showNoResults && (
               <div className="px-3 py-4">
-                <p className="text-sm font-medium text-foreground/55">
-                  No cities found
-                </p>
-                <p className="mt-0.5 text-xs text-foreground/35">
-                  Try a different spelling
-                </p>
+                <p className="text-sm font-medium text-foreground/55">No cities found</p>
+                <p className="mt-0.5 text-xs text-foreground/35">Try a different spelling</p>
               </div>
             )}
           </section>
@@ -209,10 +204,7 @@ interface RecentRowProps {
 
 function RecentRow({ nav, focused, setFocusedKey, onSelect, onRemove }: RecentRowProps) {
   return (
-    <li
-      className="relative"
-      onMouseEnter={() => setFocusedKey(nav.key)}
-    >
+    <li className="relative" onMouseEnter={() => setFocusedKey(nav.key)}>
       {focused && <FocusPill />}
       <motion.button
         type="button"
@@ -286,9 +278,7 @@ function SuggestionRow({ nav, focused, setFocusedKey, onSelect }: SuggestionRowP
           >
             {city}
           </span>
-          {rest && (
-            <span className="truncate text-xs text-foreground/45">{rest}</span>
-          )}
+          {rest && <span className="truncate text-xs text-foreground/45">{rest}</span>}
         </span>
       </motion.button>
     </li>

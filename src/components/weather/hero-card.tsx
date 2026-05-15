@@ -33,7 +33,8 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
         {/* TOP-LEFT: country/region label + city name */}
         <div className="col-start-1 row-start-1 flex min-w-0 flex-col gap-2">
           <p className="font-display font-light text-xs uppercase tracking-[0.15em] text-white flex flex-wrap gap-0.5">
-            <span>{location.region}</span> <span>·</span> <span className="shrink-0">{location.country}</span>
+            <span>{location.region}</span> <span>·</span>{" "}
+            <span className="shrink-0">{location.country}</span>
           </p>
           <h2 className="font-display font-light text-balance text-4xl leading-[0.95] md:text-5xl xl:tracking-tight">
             {location.name}
@@ -56,24 +57,43 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
 
         {/* CONDITIONS: bottom-left on mobile, right column middle row on desktop */}
         <div className="col-start-1 row-start-3 flex min-w-0 flex-col items-start justify-end gap-1 text-left md:col-start-2 md:row-start-3 md:self-center md:items-end md:justify-start md:gap-2 md:text-right 2xl:self-end">
-          <p className="font-display font-normal text-base md:text-xl">
-            {current.conditionText}
-          </p>
+          <p className="font-display font-normal text-base md:text-xl">{current.conditionText}</p>
           {today ? (
             <div className="flex flex-col gap-1">
               <p className="font-display font-light text-sm md:text-base text-white flex items-center gap-1.5 md:justify-end">
-                <UmbrellaIcon className="size-4 shrink-0 md:size-5" strokeWidth={2} aria-hidden="true" />
+                <UmbrellaIcon
+                  className="size-4 shrink-0 md:size-5"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
                 {today.chanceOfRain}% rain
               </p>
               <p className="font-display font-light text-sm md:text-base text-white/75 flex items-center gap-1.5 md:justify-end">
-                <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                <svg
+                  className="size-3.5 shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+                </svg>
                 {current.cloud}% cloud
               </p>
             </div>
           ) : (
             <div className="flex flex-col gap-1.5">
-              <p aria-hidden="true" className="h-[1.25rem] w-28 animate-pulse rounded bg-white/20" />
-              <p aria-hidden="true" className="h-[1.25rem] w-24 animate-pulse rounded bg-white/20" />
+              <p
+                aria-hidden="true"
+                className="h-[1.25rem] w-28 animate-pulse rounded bg-white/20"
+              />
+              <p
+                aria-hidden="true"
+                className="h-[1.25rem] w-24 animate-pulse rounded bg-white/20"
+              />
             </div>
           )}
         </div>
@@ -82,11 +102,13 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
         <div className="col-start-2 row-start-3 flex flex-col items-end gap-1.5 md:col-start-1 md:row-start-3 md:flex-row md:flex-wrap md:items-baseline md:justify-start md:gap-x-4 md:gap-y-2">
           {today ? (
             <p className="order-1 font-display font-light text-sm md:text-base min-h-3.5 text-white md:order-2">
-              ↑ {Math.round(today.maxC)}°
-              <span className="ml-1">↓ {Math.round(today.minC)}°</span>
+              ↑ {Math.round(today.maxC)}°<span className="ml-1">↓ {Math.round(today.minC)}°</span>
             </p>
           ) : (
-            <div className="order-1 h-4 w-16 animate-pulse rounded bg-white/20 md:order-2" aria-hidden="true" />
+            <div
+              className="order-1 h-4 w-16 animate-pulse rounded bg-white/20 md:order-2"
+              aria-hidden="true"
+            />
           )}
 
           <div className="order-2 flex items-stretch text-6xl md:text-[5.5rem] lg:text-[8rem] md:order-1 md:basis-full">

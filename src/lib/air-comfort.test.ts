@@ -17,32 +17,240 @@ interface Row {
  * stop and decide which is correct before patching the test.
  */
 const referenceRows: Row[] = [
-  { location: "Cairo",          tempC: 29, feelsLikeC: 27, dewpointC:   3, humidity: 15, thermal: "Warm",            air: "Dry" },
-  { location: "Panipat",        tempC: 43, feelsLikeC: 45, dewpointC:   9, humidity: 13, thermal: "Dangerously hot", air: "Slightly dry" },
-  { location: "Beijing",        tempC: 29, feelsLikeC: 27, dewpointC:   1, humidity: 43, thermal: "Warm",            air: "Dry" },
-  { location: "Dungarvan",      tempC: 10, feelsLikeC:  8, dewpointC:   7, humidity: 82, thermal: "Chilly",          air: "Damp" },
-  { location: "Berlin",         tempC: 16, feelsLikeC: 16, dewpointC:  10, humidity: 72, thermal: "Mild",            air: "Comfortable" },
-  { location: "Bali",           tempC: 29, feelsLikeC: 32, dewpointC:  23, humidity: 70, thermal: "Hot",             air: "Humid" },
-  { location: "Nuuk",           tempC:  2, feelsLikeC: -5, dewpointC:   0, humidity: 93, thermal: "Cold",            air: "Damp" },
-  { location: "Moscow",         tempC: 10, feelsLikeC:  9, dewpointC:   8, humidity: 87, thermal: "Chilly",          air: "Damp" },
-  { location: "Grand Canyon",   tempC:  2, feelsLikeC: -1, dewpointC: -12, humidity: 28, thermal: "Cold",            air: "Very dry" },
-  { location: "Las Vegas",      tempC: 26, feelsLikeC: 24, dewpointC: -11, humidity: 16, thermal: "Warm",            air: "Very dry" },
-  { location: "Kufra",          tempC: 24, feelsLikeC: 24, dewpointC:   6, humidity: 32, thermal: "Warm",            air: "Slightly dry" },
-  { location: "Windhoek",       tempC: 23, feelsLikeC: 23, dewpointC: -16, humidity:  7, thermal: "Warm",            air: "Very dry" },
-  { location: "Algiers",        tempC: 23, feelsLikeC: 25, dewpointC:  13, humidity: 47, thermal: "Warm",            air: "Comfortable" },
-  { location: "New York",       tempC: 12, feelsLikeC: 10, dewpointC:  -2, humidity: 38, thermal: "Cool",            air: "Dry" },
-  { location: "Los Angeles",    tempC: 17, feelsLikeC: 17, dewpointC:  15, humidity: 84, thermal: "Mild",            air: "Comfortable" },
-  { location: "Hammerfest",     tempC: 11, feelsLikeC: 11, dewpointC:   4, humidity: 40, thermal: "Cool",            air: "Slightly dry" },
-  { location: "Tripoli",        tempC: 22, feelsLikeC: 25, dewpointC:  14, humidity: 60, thermal: "Warm",            air: "Comfortable" },
-  { location: "Doha",           tempC: 40, feelsLikeC: 40, dewpointC:   8, humidity: 10, thermal: "Dangerously hot", air: "Slightly dry" },
-  { location: "Kananga",        tempC: 24, feelsLikeC: 26, dewpointC:  21, humidity: 81, thermal: "Warm",            air: "Humid" },
-  { location: "Porto Velho",    tempC: 19, feelsLikeC: 19, dewpointC:  16, humidity: 83, thermal: "Mild",            air: "Slightly humid" },
-  { location: "Ha, Bhutan",     tempC: 14, feelsLikeC: 13, dewpointC:   8, humidity: 69, thermal: "Cool",            air: "Slightly dry" },
-  { location: "Lima",           tempC: 20, feelsLikeC: 20, dewpointC:  18, humidity: 87, thermal: "Mild",            air: "Slightly humid" },
-  { location: "Ushuaia",        tempC:  6, feelsLikeC:  5, dewpointC:   0, humidity: 65, thermal: "Chilly",          air: "Dry" },
-  { location: "Perth",          tempC: 21, feelsLikeC: 21, dewpointC:  11, humidity: 31, thermal: "Mild",            air: "Comfortable" },
-  { location: "Sichuan",        tempC: 28, feelsLikeC: 28, dewpointC:  12, humidity: 37, thermal: "Warm",            air: "Comfortable" },
-  { location: "Kuala Lumpur",   tempC: 32, feelsLikeC: 47, dewpointC:  25, humidity: 71, thermal: "Dangerously hot", air: "Very humid" },
+  {
+    location: "Cairo",
+    tempC: 29,
+    feelsLikeC: 27,
+    dewpointC: 3,
+    humidity: 15,
+    thermal: "Warm",
+    air: "Dry",
+  },
+  {
+    location: "Panipat",
+    tempC: 43,
+    feelsLikeC: 45,
+    dewpointC: 9,
+    humidity: 13,
+    thermal: "Dangerously hot",
+    air: "Slightly dry",
+  },
+  {
+    location: "Beijing",
+    tempC: 29,
+    feelsLikeC: 27,
+    dewpointC: 1,
+    humidity: 43,
+    thermal: "Warm",
+    air: "Dry",
+  },
+  {
+    location: "Dungarvan",
+    tempC: 10,
+    feelsLikeC: 8,
+    dewpointC: 7,
+    humidity: 82,
+    thermal: "Chilly",
+    air: "Damp",
+  },
+  {
+    location: "Berlin",
+    tempC: 16,
+    feelsLikeC: 16,
+    dewpointC: 10,
+    humidity: 72,
+    thermal: "Mild",
+    air: "Comfortable",
+  },
+  {
+    location: "Bali",
+    tempC: 29,
+    feelsLikeC: 32,
+    dewpointC: 23,
+    humidity: 70,
+    thermal: "Hot",
+    air: "Humid",
+  },
+  {
+    location: "Nuuk",
+    tempC: 2,
+    feelsLikeC: -5,
+    dewpointC: 0,
+    humidity: 93,
+    thermal: "Cold",
+    air: "Damp",
+  },
+  {
+    location: "Moscow",
+    tempC: 10,
+    feelsLikeC: 9,
+    dewpointC: 8,
+    humidity: 87,
+    thermal: "Chilly",
+    air: "Damp",
+  },
+  {
+    location: "Grand Canyon",
+    tempC: 2,
+    feelsLikeC: -1,
+    dewpointC: -12,
+    humidity: 28,
+    thermal: "Cold",
+    air: "Very dry",
+  },
+  {
+    location: "Las Vegas",
+    tempC: 26,
+    feelsLikeC: 24,
+    dewpointC: -11,
+    humidity: 16,
+    thermal: "Warm",
+    air: "Very dry",
+  },
+  {
+    location: "Kufra",
+    tempC: 24,
+    feelsLikeC: 24,
+    dewpointC: 6,
+    humidity: 32,
+    thermal: "Warm",
+    air: "Slightly dry",
+  },
+  {
+    location: "Windhoek",
+    tempC: 23,
+    feelsLikeC: 23,
+    dewpointC: -16,
+    humidity: 7,
+    thermal: "Warm",
+    air: "Very dry",
+  },
+  {
+    location: "Algiers",
+    tempC: 23,
+    feelsLikeC: 25,
+    dewpointC: 13,
+    humidity: 47,
+    thermal: "Warm",
+    air: "Comfortable",
+  },
+  {
+    location: "New York",
+    tempC: 12,
+    feelsLikeC: 10,
+    dewpointC: -2,
+    humidity: 38,
+    thermal: "Cool",
+    air: "Dry",
+  },
+  {
+    location: "Los Angeles",
+    tempC: 17,
+    feelsLikeC: 17,
+    dewpointC: 15,
+    humidity: 84,
+    thermal: "Mild",
+    air: "Comfortable",
+  },
+  {
+    location: "Hammerfest",
+    tempC: 11,
+    feelsLikeC: 11,
+    dewpointC: 4,
+    humidity: 40,
+    thermal: "Cool",
+    air: "Slightly dry",
+  },
+  {
+    location: "Tripoli",
+    tempC: 22,
+    feelsLikeC: 25,
+    dewpointC: 14,
+    humidity: 60,
+    thermal: "Warm",
+    air: "Comfortable",
+  },
+  {
+    location: "Doha",
+    tempC: 40,
+    feelsLikeC: 40,
+    dewpointC: 8,
+    humidity: 10,
+    thermal: "Dangerously hot",
+    air: "Slightly dry",
+  },
+  {
+    location: "Kananga",
+    tempC: 24,
+    feelsLikeC: 26,
+    dewpointC: 21,
+    humidity: 81,
+    thermal: "Warm",
+    air: "Humid",
+  },
+  {
+    location: "Porto Velho",
+    tempC: 19,
+    feelsLikeC: 19,
+    dewpointC: 16,
+    humidity: 83,
+    thermal: "Mild",
+    air: "Slightly humid",
+  },
+  {
+    location: "Ha, Bhutan",
+    tempC: 14,
+    feelsLikeC: 13,
+    dewpointC: 8,
+    humidity: 69,
+    thermal: "Cool",
+    air: "Slightly dry",
+  },
+  {
+    location: "Lima",
+    tempC: 20,
+    feelsLikeC: 20,
+    dewpointC: 18,
+    humidity: 87,
+    thermal: "Mild",
+    air: "Slightly humid",
+  },
+  {
+    location: "Ushuaia",
+    tempC: 6,
+    feelsLikeC: 5,
+    dewpointC: 0,
+    humidity: 65,
+    thermal: "Chilly",
+    air: "Dry",
+  },
+  {
+    location: "Perth",
+    tempC: 21,
+    feelsLikeC: 21,
+    dewpointC: 11,
+    humidity: 31,
+    thermal: "Mild",
+    air: "Comfortable",
+  },
+  {
+    location: "Sichuan",
+    tempC: 28,
+    feelsLikeC: 28,
+    dewpointC: 12,
+    humidity: 37,
+    thermal: "Warm",
+    air: "Comfortable",
+  },
+  {
+    location: "Kuala Lumpur",
+    tempC: 32,
+    feelsLikeC: 47,
+    dewpointC: 25,
+    humidity: 71,
+    thermal: "Dangerously hot",
+    air: "Very humid",
+  },
 ];
 
 describe("airComfort — reference data", () => {
@@ -62,22 +270,22 @@ describe("airComfort — reference data", () => {
  * damp override.
  */
 const thermalBoundaries: Array<[number, ThermalLabel]> = [
-  [-6,    "Very cold"],
-  [-5,    "Cold"],
-  [3.99,  "Cold"],
-  [4,     "Chilly"],
-  [9.99,  "Chilly"],
-  [10,    "Cool"],
+  [-6, "Very cold"],
+  [-5, "Cold"],
+  [3.99, "Cold"],
+  [4, "Chilly"],
+  [9.99, "Chilly"],
+  [10, "Cool"],
   [15.99, "Cool"],
-  [16,    "Mild"],
+  [16, "Mild"],
   [21.99, "Mild"],
-  [22,    "Warm"],
+  [22, "Warm"],
   [28.99, "Warm"],
-  [29,    "Hot"],
+  [29, "Hot"],
   [34.99, "Hot"],
-  [35,    "Very hot"],
+  [35, "Very hot"],
   [39.99, "Very hot"],
-  [40,    "Dangerously hot"],
+  [40, "Dangerously hot"],
 ];
 
 describe("airComfort — thermal boundaries", () => {
@@ -93,18 +301,18 @@ describe("airComfort — thermal boundaries", () => {
 });
 
 const airBoundaries: Array<[number, AirLabel]> = [
-  [-5,    "Very dry"],
-  [-4,    "Dry"],
-  [3.99,  "Dry"],
-  [4,     "Slightly dry"],
-  [9.99,  "Slightly dry"],
-  [10,    "Comfortable"],
+  [-5, "Very dry"],
+  [-4, "Dry"],
+  [3.99, "Dry"],
+  [4, "Slightly dry"],
+  [9.99, "Slightly dry"],
+  [10, "Comfortable"],
   [15.99, "Comfortable"],
-  [16,    "Slightly humid"],
+  [16, "Slightly humid"],
   [20.99, "Slightly humid"],
-  [21,    "Humid"],
+  [21, "Humid"],
   [23.99, "Humid"],
-  [24,    "Very humid"],
+  [24, "Very humid"],
 ];
 
 describe("airComfort — air boundaries (no damp)", () => {
@@ -174,23 +382,20 @@ describe("airComfort — damp override", () => {
 
 describe("airComfort — sentence format", () => {
   it("composes thermal-first, lowercase rest", () => {
-    expect(
-      airComfort({ tempC: 20, feelsLikeC: 17, dewpointC: 12, humidity: 55 })
-        .sentence,
-    ).toBe("Mild and comfortable");
+    expect(airComfort({ tempC: 20, feelsLikeC: 17, dewpointC: 12, humidity: 55 }).sentence).toBe(
+      "Mild and comfortable",
+    );
   });
 
   it("renders the damp override naturally", () => {
-    expect(
-      airComfort({ tempC: 10, feelsLikeC: 8, dewpointC: 7, humidity: 85 })
-        .sentence,
-    ).toBe("Chilly and damp");
+    expect(airComfort({ tempC: 10, feelsLikeC: 8, dewpointC: 7, humidity: 85 }).sentence).toBe(
+      "Chilly and damp",
+    );
   });
 
   it("handles the multi-word extreme", () => {
-    expect(
-      airComfort({ tempC: 35, feelsLikeC: 47, dewpointC: 25, humidity: 71 })
-        .sentence,
-    ).toBe("Dangerously hot and very humid");
+    expect(airComfort({ tempC: 35, feelsLikeC: 47, dewpointC: 25, humidity: 71 }).sentence).toBe(
+      "Dangerously hot and very humid",
+    );
   });
 });

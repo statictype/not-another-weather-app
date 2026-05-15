@@ -96,7 +96,11 @@ export function SearchDropdown({
               />
             )}
             <div className="flex items-center gap-2.5 px-3 py-3">
-              <KeyboardIcon className="size-4 text-foreground/30" strokeWidth={1.75} aria-hidden="true" />
+              <KeyboardIcon
+                className="size-4 text-foreground/30"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
               <p className="text-xs font-medium text-foreground/40">
                 Keep typing for city suggestions…
               </p>
@@ -156,9 +160,7 @@ export function SearchDropdown({
             onLocationRequest();
           }}
           className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
-            isMobileOpen
-              ? " bg-foreground/[0.06] py-3.5 text-sm"
-              : " bg-foreground/[0.04] py-2.5"
+            isMobileOpen ? " bg-foreground/[0.06] py-3.5 text-sm" : " bg-foreground/[0.04] py-2.5"
           }`}
         >
           <LocateFixedIcon
@@ -175,9 +177,7 @@ export function SearchDropdown({
             onRandomSelect();
           }}
           className={`group flex flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium text-foreground/45 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground/70 active:scale-[0.97]${
-            isMobileOpen
-              ? " bg-foreground/[0.06] py-3.5 text-sm"
-              : " bg-foreground/[0.04] py-2.5"
+            isMobileOpen ? " bg-foreground/[0.06] py-3.5 text-sm" : " bg-foreground/[0.04] py-2.5"
           }`}
         >
           <ShuffleIcon

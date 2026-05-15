@@ -1,9 +1,4 @@
-import {
-  BubblesIcon,
-  DropletsIcon,
-  EyeIcon,
-  MilestoneIcon,
-} from "lucide-react";
+import { BubblesIcon, DropletsIcon, EyeIcon, MilestoneIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface AirComfortCardProps {
@@ -63,11 +58,7 @@ export function AirComfortCard({
         />
         <Metric
           icon={
-            <EyeIcon
-              className="size-4 text-foreground/55"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
+            <EyeIcon className="size-4 text-foreground/55" strokeWidth={1.5} aria-hidden="true" />
           }
           label="Visibility"
           value={`${Math.round(visibilityKm)} km`}
@@ -77,15 +68,7 @@ export function AirComfortCard({
   );
 }
 
-function Metric({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) {
+function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 py-2.5">
       <div className="flex items-center gap-2.5">

@@ -75,10 +75,7 @@ function HourlyStrip({ slots }: { slots: HourlyForecast[] }) {
         <ChevronLeftIcon className="size-4" strokeWidth={2} />
       </button>
 
-      <div
-        ref={ref}
-        className="scrollbar-none flex overflow-x-auto divide-x divide-foreground/6"
-      >
+      <div ref={ref} className="scrollbar-none flex overflow-x-auto divide-x divide-foreground/6">
         {slots.map((s) => (
           <Slot key={s.time} slot={s} />
         ))}
@@ -122,9 +119,7 @@ function Slot({ slot }: { slot: HourlyForecast }) {
       />
       <span className="font-display leading-none tracking-tight">
         <span className="text-lg">{max}°</span>
-        {!collapse && (
-          <span className="ml-0.5 text-xs text-foreground/50">{min}°</span>
-        )}
+        {!collapse && <span className="ml-0.5 text-xs text-foreground/50">{min}°</span>}
       </span>
       <span className="flex items-center gap-0.5 text-foreground/55">
         {noRain ? (

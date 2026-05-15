@@ -8,12 +8,7 @@ interface ExposureCardProps {
   isDay: boolean;
 }
 
-export function ExposureCard({
-  uv,
-  airQualityIndex,
-  pressureMb,
-  isDay,
-}: ExposureCardProps) {
+export function ExposureCard({ uv, airQualityIndex, pressureMb, isDay }: ExposureCardProps) {
   return (
     <section className="swap-in swap-d-5 bento-tile flex flex-col p-6 sm:col-span-12 xl:col-span-6">
       <div className="flex flex-1 flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
@@ -29,11 +24,7 @@ export function ExposureCard({
           <MetricRow
             label="Air Quality"
             value={airQualityIndex}
-            tag={
-              airQualityIndex == null
-                ? "Not available"
-                : aqiLabel(airQualityIndex)
-            }
+            tag={airQualityIndex == null ? "Not available" : aqiLabel(airQualityIndex)}
             scale={airQualityIndex == null ? null : aqiScale(airQualityIndex)}
             dim={airQualityIndex == null}
           />
@@ -68,12 +59,8 @@ function MetricRow({
         {label}
       </p>
       <div className="flex items-baseline gap-2">
-        <span className="font-display text-3xl leading-[0.85] tracking-tight">
-          {value ?? "—"}
-        </span>
-        <span className="font-display text-sm tracking-tight text-foreground/65">
-          {tag}
-        </span>
+        <span className="font-display text-3xl leading-[0.85] tracking-tight">{value ?? "—"}</span>
+        <span className="font-display text-sm tracking-tight text-foreground/65">{tag}</span>
       </div>
       <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-foreground/6">
         {scale && (
@@ -95,10 +82,7 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
   // sits centered under the apex where the gradient is green.
   const PRESSURE_MIN = 980;
   const PRESSURE_MAX = 1050;
-  const clamped = Math.max(
-    PRESSURE_MIN,
-    Math.min(PRESSURE_MAX, pressureMb),
-  );
+  const clamped = Math.max(PRESSURE_MIN, Math.min(PRESSURE_MAX, pressureMb));
   const pct = (clamped - PRESSURE_MIN) / (PRESSURE_MAX - PRESSURE_MIN);
 
   const CX = 110;
@@ -116,11 +100,7 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
         Pressure
       </p>
       <div className="relative mt-2 w-full">
-        <svg
-          viewBox="0 0 220 130"
-          className="block w-full"
-          aria-hidden="true"
-        >
+        <svg viewBox="0 0 220 130" className="block w-full" aria-hidden="true">
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0" stopColor="#1e3a8a" />
@@ -152,8 +132,7 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
             strokeLinecap="round"
             strokeDasharray={`${pct * ARC_LEN} ${ARC_LEN}`}
             style={{
-              transition:
-                "stroke-dasharray 700ms cubic-bezier(0.32,0.72,0,1)",
+              transition: "stroke-dasharray 700ms cubic-bezier(0.32,0.72,0,1)",
             }}
           />
         </svg>

@@ -128,19 +128,16 @@ beforeEach(() => {
   // on focus (different JSX subtree), which detaches the element `user.type`
   // is targeting and leaves the input empty; the mobile recent pills also
   // omit the "Load weather for X" aria-label these tests query by.
-  vi.stubGlobal(
-    "matchMedia",
-    (query: string) => ({
-      matches: query.includes("min-width: 1024px"),
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }),
-  );
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("min-width: 1024px"),
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
 
   server.use(
     http.get("/api/weather", ({ request }) => {
@@ -228,11 +225,9 @@ describe("Oasis (integration)", () => {
       { coords: { latitude: 51.52316, longitude: -0.12894 } },
     ];
     let readIdx = 0;
-    const getCurrentPosition = vi.fn(
-      (success: PositionCallback) => {
-        success(readings[readIdx++ % readings.length] as GeolocationPosition);
-      },
-    );
+    const getCurrentPosition = vi.fn((success: PositionCallback) => {
+      success(readings[readIdx++ % readings.length] as GeolocationPosition);
+    });
     Object.defineProperty(navigator, "geolocation", {
       configurable: true,
       value: { getCurrentPosition },
@@ -240,9 +235,7 @@ describe("Oasis (integration)", () => {
 
     // Any /api/weather call lands as London so each location-derived
     // query commits to history.
-    server.use(
-      http.get("/api/weather", () => HttpResponse.json(londonCurrent)),
-    );
+    server.use(http.get("/api/weather", () => HttpResponse.json(londonCurrent)));
 
     const user = userEvent.setup();
     renderAppAt("/");

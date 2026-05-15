@@ -23,16 +23,8 @@ export function AstroCard({ astro }: AstroCardProps) {
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="flex items-center gap-1.5">
-          <TabButton
-            active={view === "sun"}
-            onClick={() => setView("sun")}
-            label="Show sun times"
-          >
-            <SunIcon
-              className="size-[18px]"
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
+          <TabButton active={view === "sun"} onClick={() => setView("sun")} label="Show sun times">
+            <SunIcon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
           </TabButton>
           <TabButton
             active={view === "moon"}
@@ -40,25 +32,14 @@ export function AstroCard({ astro }: AstroCardProps) {
             label="Show moon times and phase"
           >
             {astro ? (
-              <MoonGlyph
-                illumination={astro.moonIllumination}
-                phase={astro.moonPhase}
-                size={20}
-              />
+              <MoonGlyph illumination={astro.moonIllumination} phase={astro.moonPhase} size={20} />
             ) : (
-              <MoonIcon
-                className="size-[18px]"
-                strokeWidth={1.75}
-                aria-hidden="true"
-              />
+              <MoonIcon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
             )}
           </TabButton>
         </div>
 
-        <div
-          key={`info-${view}`}
-          className="astro-fade min-w-0 pt-1 text-right"
-        >
+        <div key={`info-${view}`} className="astro-fade min-w-0 pt-1 text-right">
           {astro ? <SideInfo view={view} astro={astro} /> : <SideInfoSkeleton />}
         </div>
       </div>
@@ -67,12 +48,7 @@ export function AstroCard({ astro }: AstroCardProps) {
         {view === "sun" ? (
           <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} />
         ) : (
-          <ArcPanel
-            kind="moon"
-            rise={astro?.moonrise}
-            set={astro?.moonset}
-            astro={astro}
-          />
+          <ArcPanel kind="moon" rise={astro?.moonrise} set={astro?.moonset} astro={astro} />
         )}
       </div>
     </section>
@@ -136,10 +112,7 @@ function SideInfo({ view, astro }: { view: AstroView; astro: Astro }) {
 function SideInfoSkeleton() {
   return (
     <>
-      <div
-        className="ml-auto h-4 w-24 animate-pulse rounded bg-foreground/10"
-        aria-hidden="true"
-      />
+      <div className="ml-auto h-4 w-24 animate-pulse rounded bg-foreground/10" aria-hidden="true" />
       <div
         className="mt-1.5 ml-auto h-3 w-16 animate-pulse rounded bg-foreground/10"
         aria-hidden="true"
@@ -157,9 +130,7 @@ interface ArcPanelProps {
 
 function ArcPanel({ kind, rise, set, astro }: ArcPanelProps) {
   const labels =
-    kind === "sun"
-      ? { rise: "Sunrise", set: "Sunset" }
-      : { rise: "Moonrise", set: "Moonset" };
+    kind === "sun" ? { rise: "Sunrise", set: "Sunset" } : { rise: "Moonrise", set: "Moonset" };
 
   return (
     <div>
@@ -179,9 +150,7 @@ function ArcPanel({ kind, rise, set, astro }: ArcPanelProps) {
         </div>
         <div className="text-right">
           {set ? (
-            <p className="font-display text-base leading-none tracking-tight">
-              {formatClock(set)}
-            </p>
+            <p className="font-display text-base leading-none tracking-tight">{formatClock(set)}</p>
           ) : (
             <Skeleton />
           )}
@@ -194,67 +163,32 @@ function ArcPanel({ kind, rise, set, astro }: ArcPanelProps) {
   );
 }
 
-function Arc({
-  kind,
-  astro,
-}: {
-  kind: "sun" | "moon";
-  astro?: Astro | undefined;
-}) {
+function Arc({ kind, astro }: { kind: "sun" | "moon"; astro?: Astro | undefined }) {
   const uid = useId();
   const arcGradId = `${uid}-arc`;
   const sunDiscId = `${uid}-sun-disc`;
   const sunGlowId = `${uid}-sun-glow`;
   const moonLitId = `${uid}-moon-lit`;
-  const dotColor =
-    kind === "sun" ? "oklch(0.85 0.15 65)" : "oklch(0.85 0.04 250)";
+  const dotColor = kind === "sun" ? "oklch(0.85 0.15 65)" : "oklch(0.85 0.04 250)";
 
   return (
-    <svg
-      viewBox="0 0 320 116"
-      className="block aspect-[320/116] w-full"
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 320 116" className="block aspect-[320/116] w-full" aria-hidden="true">
       <defs>
         <linearGradient id={arcGradId} x1="0" y1="0" x2="1" y2="0">
           {kind === "sun" ? (
             <>
               <stop offset="0" stopColor="oklch(0.85 0.15 65)" stopOpacity="0" />
-              <stop
-                offset="0.18"
-                stopColor="oklch(0.85 0.15 65)"
-                stopOpacity="0.5"
-              />
-              <stop
-                offset="0.5"
-                stopColor="oklch(0.9 0.18 85)"
-                stopOpacity="1"
-              />
-              <stop
-                offset="0.82"
-                stopColor="oklch(0.85 0.15 65)"
-                stopOpacity="0.5"
-              />
+              <stop offset="0.18" stopColor="oklch(0.85 0.15 65)" stopOpacity="0.5" />
+              <stop offset="0.5" stopColor="oklch(0.9 0.18 85)" stopOpacity="1" />
+              <stop offset="0.82" stopColor="oklch(0.85 0.15 65)" stopOpacity="0.5" />
               <stop offset="1" stopColor="oklch(0.85 0.15 65)" stopOpacity="0" />
             </>
           ) : (
             <>
               <stop offset="0" stopColor="oklch(0.8 0.04 250)" stopOpacity="0" />
-              <stop
-                offset="0.18"
-                stopColor="oklch(0.8 0.04 250)"
-                stopOpacity="0.45"
-              />
-              <stop
-                offset="0.5"
-                stopColor="oklch(0.95 0.02 250)"
-                stopOpacity="1"
-              />
-              <stop
-                offset="0.82"
-                stopColor="oklch(0.8 0.04 250)"
-                stopOpacity="0.45"
-              />
+              <stop offset="0.18" stopColor="oklch(0.8 0.04 250)" stopOpacity="0.45" />
+              <stop offset="0.5" stopColor="oklch(0.95 0.02 250)" stopOpacity="1" />
+              <stop offset="0.82" stopColor="oklch(0.8 0.04 250)" stopOpacity="0.45" />
               <stop offset="1" stopColor="oklch(0.8 0.04 250)" stopOpacity="0" />
             </>
           )}
@@ -262,16 +196,8 @@ function Arc({
         {kind === "sun" && (
           <>
             <radialGradient id={sunGlowId} cx="0.5" cy="0.5">
-              <stop
-                offset="0"
-                stopColor="oklch(0.95 0.18 85)"
-                stopOpacity="0.5"
-              />
-              <stop
-                offset="0.55"
-                stopColor="oklch(0.92 0.17 80)"
-                stopOpacity="0.18"
-              />
+              <stop offset="0" stopColor="oklch(0.95 0.18 85)" stopOpacity="0.5" />
+              <stop offset="0.55" stopColor="oklch(0.92 0.17 80)" stopOpacity="0.18" />
               <stop offset="1" stopColor="oklch(0.95 0.18 85)" stopOpacity="0" />
             </radialGradient>
             <radialGradient id={sunDiscId} cx="0.4" cy="0.35">
@@ -349,14 +275,11 @@ function MoonBodyShapes({
   const k = Math.max(0, Math.min(100, illumination)) / 100;
   const phaseLower = phase.toLowerCase();
   const isWaxing =
-    phaseLower.includes("waxing") ||
-    phaseLower.includes("first") ||
-    phaseLower === "new moon";
+    phaseLower.includes("waxing") || phaseLower.includes("first") || phaseLower === "new moon";
   const isCrescent = k < 0.5;
   const termRx = Math.abs(1 - 2 * k) * r;
   const outerSweep = isWaxing ? 1 : 0;
-  const termSweep =
-    (isWaxing && isCrescent) || (!isWaxing && !isCrescent) ? 1 : 0;
+  const termSweep = (isWaxing && isCrescent) || (!isWaxing && !isCrescent) ? 1 : 0;
   const litPath = `M ${cx},${cy - r} A ${r},${r} 0 0 ${outerSweep} ${cx},${cy + r} A ${termRx},${r} 0 0 ${termSweep} ${cx},${cy - r} Z`;
 
   return (
@@ -419,10 +342,7 @@ function MoonGlyph({
 
 function Stars() {
   return (
-    <svg
-      className="pointer-events-none absolute inset-0 size-full opacity-50"
-      aria-hidden="true"
-    >
+    <svg className="pointer-events-none absolute inset-0 size-full opacity-50" aria-hidden="true">
       <circle cx="8%" cy="14%" r="0.8" fill="currentColor" opacity="0.35" />
       <circle cx="22%" cy="6%" r="0.5" fill="currentColor" opacity="0.3" />
       <circle cx="68%" cy="3%" r="0.7" fill="currentColor" opacity="0.28" />
@@ -435,12 +355,7 @@ function Stars() {
 }
 
 function Skeleton() {
-  return (
-    <div
-      className="h-4 w-14 animate-pulse rounded bg-foreground/10"
-      aria-hidden="true"
-    />
-  );
+  return <div className="h-4 w-14 animate-pulse rounded bg-foreground/10" aria-hidden="true" />;
 }
 
 function formatClock(t: string): string {

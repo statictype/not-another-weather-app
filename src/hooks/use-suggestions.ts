@@ -20,8 +20,7 @@ export function useSuggestions(input: string): UseSuggestionsResult {
   const enabled = normalized.length >= MIN_LENGTH;
 
   const rawNormalized = normalizeQuery(input) ?? "";
-  const isPending =
-    rawNormalized.length >= MIN_LENGTH && rawNormalized !== normalized;
+  const isPending = rawNormalized.length >= MIN_LENGTH && rawNormalized !== normalized;
 
   const result = useQuery<SuggestionItem[], WeatherClientError>({
     queryKey: ["search", normalized],

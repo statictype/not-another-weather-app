@@ -37,11 +37,7 @@ export function AirComfortMoodCard({
         {sentence}
       </p>
       <div className="font-display mt-1.5 flex items-center gap-2 text-base tracking-tight text-foreground/55">
-        <WindIcon
-          className="size-4 shrink-0"
-          strokeWidth={1.5}
-          aria-hidden="true"
-        />
+        <WindIcon className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
         <span>{beaufort(windKph)}</span>
       </div>
     </section>

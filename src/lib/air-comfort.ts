@@ -46,9 +46,7 @@ export function airComfort({
   humidity,
 }: AirComfortInput): AirComfort {
   const thermal = thermalLabel(feelsLikeC);
-  const air: AirLabel = isDamp(tempC, humidity)
-    ? "Damp"
-    : airLabel(dewpointC);
+  const air: AirLabel = isDamp(tempC, humidity) ? "Damp" : airLabel(dewpointC);
   return { thermal, air, sentence: `${thermal} and ${air.toLowerCase()}` };
 }
 
@@ -78,35 +76,29 @@ function isDamp(tempC: number, humidity: number): boolean {
   return tempC < 12 && humidity > 80;
 }
 
-export type AirComfortBucket =
-  | "red"
-  | "orange"
-  | "yellow"
-  | "green"
-  | "blue"
-  | "silver";
+export type AirComfortBucket = "red" | "orange" | "yellow" | "green" | "blue" | "silver";
 
 const THERMAL_BUCKET: Record<ThermalLabel, AirComfortBucket> = {
   "Dangerously hot": "red",
-  "Very hot":        "red",
-  "Hot":             "orange",
-  "Warm":            "yellow",
-  "Mild":            "green",
-  "Cool":            "blue",
-  "Chilly":          "blue",
-  "Cold":            "silver",
-  "Very cold":       "silver",
+  "Very hot": "red",
+  Hot: "orange",
+  Warm: "yellow",
+  Mild: "green",
+  Cool: "blue",
+  Chilly: "blue",
+  Cold: "silver",
+  "Very cold": "silver",
 };
 
 const AIR_HUMID_PCT: Record<AirLabel, number> = {
-  "Very dry":        0,
-  "Dry":            15,
-  "Slightly dry":   30,
-  "Comfortable":    50,
+  "Very dry": 0,
+  Dry: 15,
+  "Slightly dry": 30,
+  Comfortable: 50,
   "Slightly humid": 65,
-  "Humid":          80,
-  "Very humid":    100,
-  "Damp":           90,
+  Humid: 80,
+  "Very humid": 100,
+  Damp: 90,
 };
 
 export interface AirComfortStyle {

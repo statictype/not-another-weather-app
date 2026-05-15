@@ -84,7 +84,11 @@ export function RecentSection({
                     }}
                     className="flex min-w-0 items-center gap-2"
                   >
-                    <ClockIcon className="size-3.5 shrink-0 text-foreground/40" strokeWidth={2} aria-hidden="true" />
+                    <ClockIcon
+                      className="size-3.5 shrink-0 text-foreground/40"
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    />
                     <span className="truncate">{item.displayName}</span>
                   </button>
                   <motion.button
@@ -133,7 +137,11 @@ export function RecentSection({
                   aria-label={`Load weather for ${item.displayName}`}
                 >
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] transition-colors duration-150 group-hover:bg-foreground/[0.08]">
-                    <ClockIcon className="size-3.5 text-foreground/40" strokeWidth={2} aria-hidden="true" />
+                    <ClockIcon
+                      className="size-3.5 text-foreground/40"
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    />
                   </span>
                   <span className="font-display truncate text-sm font-normal tracking-tight text-foreground/80 transition-colors duration-150 group-hover:text-foreground">
                     {item.displayName}
