@@ -10,8 +10,11 @@
 
 export const WEATHER_ERRORS = {
   invalid_query: { status: 400, message: "Invalid query." },
-  not_found: { status: 404, message: "City not found." },
-  quota_exceeded: { status: 429, message: "Weather service quota exceeded." },
+  not_found: { status: 404, message: "No matching location found." },
+  quota_exceeded: {
+    status: 429,
+    message: "Weather service quota exceeded. Please try again later.",
+  },
   upstream: { status: 502, message: "Weather service is unavailable." },
   network: { status: 504, message: "Could not reach the weather service." },
 } as const satisfies Record<string, { status: number; message: string }>;

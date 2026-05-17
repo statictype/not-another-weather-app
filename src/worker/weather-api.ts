@@ -9,6 +9,7 @@ import type {
   WeatherLocation,
   WeatherYesterday,
 } from "./types";
+import { defaultMessage, type WeatherErrorKind } from "@/lib/errors";
 import { WeatherApiError } from "./errors";
 
 /* ───── Upstream schemas (private to this file) ──────────────────────
@@ -139,25 +140,27 @@ interface UpstreamError {
 }
 
 /**
- * WeatherAPI error codes we map explicitly. Anything else collapses to
- * the generic `upstream` kind so we never leak vendor-specific failure
- * modes (especially anything involving the API key) to the client.
+ * WeatherAPI.com vendor codes mapped to our taxonomy in `@/lib/errors`.
+ * Anything not listed collapses to the generic `upstream` kind so we
+ * never leak vendor-specific failure modes (especially anything
+ * involving the API key) to the client. The value type is constrained
+ * to `WeatherErrorKind`, so dropping a kind from `WEATHER_ERRORS` is a
+ * compile error here.
+ *
+ * Codes not in the table — 1002, 1003, 1005, 2006, 2008, 2009, 9999,
+ * etc. — fall through to `upstream`. The accompanying message comes
+ * from `defaultMessage(kind)` so the wording lives in one place.
  *
  * Reference: https://www.weatherapi.com/docs/#intro-error-codes
  */
+const UPSTREAM_CODE_TO_KIND: Record<number, WeatherErrorKind> = {
+  1006: "not_found",
+  2007: "quota_exceeded",
+};
+
 function mapUpstreamErrorCode(code: number): WeatherApiError {
-  switch (code) {
-    case 1006:
-      return new WeatherApiError("not_found", "No matching location found.");
-    case 2007:
-      return new WeatherApiError(
-        "quota_exceeded",
-        "Weather service quota exceeded. Please try again later.",
-      );
-    default:
-      // 1002, 1003, 1005, 2006, 2008, 2009, 9999, ... — collapse.
-      return new WeatherApiError("upstream", "Weather service is unavailable.");
-  }
+  const kind = UPSTREAM_CODE_TO_KIND[code] ?? "upstream";
+  return new WeatherApiError(kind, defaultMessage(kind));
 }
 
 /**
