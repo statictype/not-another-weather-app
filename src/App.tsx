@@ -16,6 +16,9 @@ import { pickRandomCity } from "@/lib/random-cities";
 
 export function App() {
   // ─── Search state ────────────────────────────────────────────────────
+  // The SearchBar owns its input value via `useSearchMenu`; we only mirror
+  // it here so `useSuggestions` can debounce off the current text. The
+  // hook fires `onValueChange` on every keystroke and on close-on-commit.
   const [inputValue, setInputValue] = useState("");
   // The URL's `?city=` param is the single source of truth for the
   // active city. The one-time bootstrap in main.tsx seeds it from
@@ -52,22 +55,15 @@ export function App() {
     });
   }, [query.isSuccess, query.data, query.isPlaceholderData, activeQuery, addHistory]);
 
-  // ─── SearchBar callbacks ─────────────────────────────────────────────
-  const handleValueChange = (next: string) => {
-    setInputValue(next);
-  };
-
   // ─── Suggestion / history selection (the only things that trigger a fetch) ──
   const handleSuggestionSelect = (item: SuggestionItem) => {
     const q = item.region
       ? `${item.name}, ${item.region}, ${item.country}`
       : `${item.name}, ${item.country}`;
-    setInputValue("");
     setSearchParam("city", q);
   };
 
   const handleHistorySelect = (item: HistoryItem) => {
-    setInputValue("");
     setSearchParam("city", item.query);
   };
 
@@ -85,7 +81,6 @@ export function App() {
         // overwhelmingly likely to reverse-geocode to the same place.
         const lat = position.coords.latitude.toFixed(3);
         const lon = position.coords.longitude.toFixed(3);
-        setInputValue("");
         setSearchParam("city", `${lat},${lon}`);
       },
       () => {
@@ -95,7 +90,6 @@ export function App() {
   }, []);
 
   const handleRandomSelect = useCallback(() => {
-    setInputValue("");
     setSearchParam("city", pickRandomCity());
   }, []);
 
@@ -121,11 +115,10 @@ export function App() {
           </h1>
           <div className="flex-1 min-w-0">
             <SearchBar
-              value={inputValue}
-              onValueChange={handleValueChange}
               recentItems={history}
               suggestions={suggestions.data}
               isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
+              onValueChange={setInputValue}
               onSuggestionSelect={handleSuggestionSelect}
               onRecentSelect={handleHistorySelect}
               onRecentRemove={removeWithUndo}

@@ -288,7 +288,10 @@ html, body { background: oklch(0.97 0.02 230); }
   border: 1px solid oklch(1 0 0 / 0.35);
   box-shadow:
     0 1px 0 0 oklch(1 0 0 / 0.3) inset;
-  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 .search-surface:focus-within {
   background: oklch(1 0 0 / 0.6);
@@ -310,6 +313,7 @@ html, body { background: oklch(0.97 0.02 230); }
     0 1px 0 0 oklch(1 0 0 / 0.05) inset,
     0 0 0 3px oklch(0.65 0.1 250 / 0.12);
 }
+
 
 .bento-tile {
   background:
@@ -447,25 +451,7 @@ html, body { background: oklch(0.97 0.02 230); }
   border-color: oklch(1 0 0 / 0.06) !important;
 }
 
-/* ── Search dropdown (mobile) ───────────────────────────────────── */
-.search-dropdown {
-  background: oklch(0.99 0.005 230);
-  border: 1px solid oklch(0.92 0.01 240);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.5) inset,
-    0 40px 80px -20px oklch(0.3 0.12 240 / 0.22),
-    0 16px 32px -8px oklch(0.3 0.12 240 / 0.12);
-}
-.night .search-dropdown {
-  background: oklch(0.18 0.015 255);
-  border: 1px solid oklch(1 0 0 / 0.08);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.04) inset,
-    0 40px 80px -20px oklch(0 0 0 / 0.6),
-    0 16px 32px -8px oklch(0 0 0 / 0.35);
-}
-
-/* ── Search dropdown (desktop) ──────────────────────────────────── */
+/* ── Search dropdown (shared glass — desktop dropdown + mobile menu panel) ── */
 .search-dropdown-desktop {
   background:
     linear-gradient(180deg, oklch(1 0 0 / 0.88), oklch(1 0 0 / 0.74));
@@ -542,13 +528,22 @@ html, body { background: oklch(0.97 0.02 230); }
 .swap-d-5 { animation-delay: 0.20s; }
 .swap-d-6 { animation-delay: 0.25s; }
 
+/* Mobile search backdrop. Covers the full viewport, with the input and
+ * Cancel button stacked above it via z-index. The opening animation
+ * fades it from 0 → 1 over ~200ms while the input slides leftward over
+ * the emoji — during that brief window the overlay is still
+ * translucent, so the emoji's yellow shines through the input's
+ * backdrop-filter. Once the overlay opacifies, the input reads as a
+ * uniform frosted pill on the tinted overlay (the old behaviour). The
+ * alpha is a touch lower than the original (0.85 vs 0.97) so the
+ * overlay registers as glass rather than fully opaque. */
 .mobile-search-overlay {
-  background: oklch(0.97 0.02 230 / 0.97);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  background: oklch(0.97 0.02 230 / 0.85);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
 }
 .night .mobile-search-overlay {
-  background: oklch(0.13 0.008 250 / 0.97);
+  background: oklch(0.13 0.008 250 / 0.85);
 }
 
 /* ── Carousel ──────────────────────────────────────────────────── */
@@ -583,23 +578,23 @@ html, body { background: oklch(0.97 0.02 230); }
   display: none;
 }
 
-.search-dropdown * {
+.search-dropdown-desktop * {
   scrollbar-width: thin;
   scrollbar-color: oklch(0.5 0 0 / 0.12) transparent;
 }
-.search-dropdown *::-webkit-scrollbar {
+.search-dropdown-desktop *::-webkit-scrollbar {
   width: 6px;
 }
-.search-dropdown *::-webkit-scrollbar-track {
+.search-dropdown-desktop *::-webkit-scrollbar-track {
   background: transparent;
 }
-.search-dropdown *::-webkit-scrollbar-thumb {
+.search-dropdown-desktop *::-webkit-scrollbar-thumb {
   background: oklch(0.5 0 0 / 0.12);
   border-radius: 3px;
 }
-.night .search-dropdown * {
+.night .search-dropdown-desktop * {
   scrollbar-color: oklch(1 0 0 / 0.12) transparent;
 }
-.night .search-dropdown *::-webkit-scrollbar-thumb {
+.night .search-dropdown-desktop *::-webkit-scrollbar-thumb {
   background: oklch(1 0 0 / 0.12);
 }

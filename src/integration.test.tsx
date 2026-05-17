@@ -259,11 +259,12 @@ describe("Oasis (integration)", () => {
     expect(recentButtons).toHaveLength(1);
   });
 
-  it("pressing Enter with no matching city shows validation and does not fetch", async () => {
-    // The desktop dropdown auto-focuses the top city match and Enter
-    // commits it — so to exercise the validation path the typed query
-    // must produce no matches. The MSW search handler returns [] for
-    // anything that isn't "london".
+  it("pressing Enter with no matching city is a silent no-op (no fetch, no alert)", async () => {
+    // The menu auto-focuses the top city row and Enter commits it.
+    // When there are no rows to commit (gibberish input with no recents
+    // and no suggestions), Enter does nothing — no validation prompt,
+    // no fetch. The inline "No cities found" hint already covers the
+    // empty-state communication. See RFC 011.
     const user = userEvent.setup();
     renderAppAt("/");
 
@@ -271,9 +272,10 @@ describe("Oasis (integration)", () => {
     await user.type(input, "xyzgibberish");
     await user.keyboard("{Enter}");
 
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent(/select a city from the list/i);
-    });
+    // The inline "No cities found" hint is shown in the dropdown; no
+    // role=alert flash.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await screen.findByText(/no cities found/i);
 
     // No weather card loaded — empty state heading still present.
     expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();

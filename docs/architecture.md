@@ -26,7 +26,14 @@ src/
 │   ├── use-reversible-history.ts # useHistory + useUndo + sonner toast, one call per action
 │   └── use-history/             # Reducer + in-module pub/sub over localStorage
 ├── components/
-│   ├── search-bar/        # Composite search input (dropdown, suggestions, recent, clear-all)
+│   ├── search-bar/        # Composite search input — single Input + useSearchMenu state machine + one Menu renderer
+│   │   ├── search-bar.tsx       # composition: form + Input (always in flow) + mobile-overlay backdrop
+│   │   ├── use-search-menu.ts   # state machine: value, isFocused, selectedKey, commit-then-close
+│   │   ├── menu-model.ts        # pure buildMenuModel(args) + types — the test surface for the branching ladder
+│   │   ├── menu.tsx             # one Menu component, CSS-driven across breakpoints (no variant prop)
+│   │   ├── constants.ts         # MIN_SUGGESTION_LENGTH
+│   │   ├── section-header.tsx   # shared label primitive
+│   │   └── clear-all-button.tsx # lazy-loaded alert-dialog confirmation
 │   ├── weather/           # The card grid — hero, hourly, forecast, astro, atmosphere, wind, etc.
 │   ├── weather-result.tsx # State-machine container (drives off `current` only)
 │   ├── empty-state.tsx
@@ -61,6 +68,7 @@ src/
 - **Autocomplete is the debounced surface, weather fetches are not.** Suggestions (`/api/search`) fire 300 ms after idle typing, gated at 3 chars. The actual weather fetch only fires when the URL changes — selecting a suggestion, picking from recent history, geolocation, or "surprise me". TanStack Query dedupes identical keys and `placeholderData: keepPreviousData` keeps the previous successful card on screen while a new fetch is in flight.
 - **History via `useSyncExternalStore`.** localStorage is React's textbook "external store." Every `useHistory()` consumer subscribes to the same in-module pub/sub, so deletions in one component re-render the others without prop drilling or Context. Cross-tab updates are wired through the native `storage` event. All four history transitions (`add` / `remove` / `clear` / `restore`) live as pure functions in `src/hooks/use-history/reducer.ts` — the hook is plumbing on top. See RFC 010.
 - **`useReversibleHistory` owns the remove + undo + toast story.** Composes `useHistory` + `useUndo` and the sonner toast call so App.tsx gets a single function per destructive action (`removeWithUndo`, `clearAllWithUndo`). The ordering invariant (mutate → stage → toast → wire) is sealed inside the hook; sonner is hard-wired because it's the project's only toast lib and this file is the seam for any swap. See RFC 010.
+- **Search bar — one Input, one state machine, one renderer.** `useSearchMenu` owns input value, focus, and selectedKey; `buildMenuModel` is the pure branching ladder (recents / keep-typing / suggestions / no-results / actions) tested in isolation; `<Menu>` renders the model with breakpoint-driven CSS — no `variant` prop. The input wrapper stays in document flow on every state so y-position is stable across focus/blur; the mobile overlay is a glass backdrop sitting _below_ the page header (emoji + input stay visible above it) plus a Cancel button that slides in with motion `layout`. The default focused row is the first city match on both platforms, so Enter always runs the obvious target (no "Select a city from the list" prompt). See RFC 011.
 
 ## Gotchas
 
