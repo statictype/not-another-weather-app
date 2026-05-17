@@ -1,5 +1,12 @@
 # RFC 005 — Split use-history.ts by responsibility
 
+> **Shipped as `src/hooks/use-history/`** (not `src/hooks/history/` as
+> proposed below). The directory took the same name as the hook to keep
+> the import path `@/hooks/use-history` resolving via its `index.ts`
+> with zero call-site changes. Internal file names were also renamed:
+> `use-history.ts` → `hook.ts` inside the directory. See RFC 010 for
+> the later deepening (pub/sub semantics, undo composition).
+
 ## Problem
 
 `src/hooks/use-history.ts` is 189 LOC and mixes three concerns in one file:
