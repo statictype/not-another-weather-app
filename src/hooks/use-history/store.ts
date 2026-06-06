@@ -1,18 +1,30 @@
 /**
  * Module-level store for search history.
  *
- * localStorage is external to React, so we maintain a tiny in-module
- * pub/sub for same-tab updates and rely on the browser's `storage`
- * event for cross-tab sync. This file has no React dependency — the
- * `useHistory` hook is a thin `useSyncExternalStore` wrapper on top.
+ * localStorage is external to React, so the `useHistory` hook is a thin
+ * `useSyncExternalStore` wrapper over this module. The subscriber fan-out and
+ * the cross-tab `storage` listener lifecycle come from `createSubscription`;
+ * this file owns the cached snapshot and the localStorage read/write.
  */
 
+import { createSubscription } from "@/lib/external-store";
 import { type HistoryItem, STORAGE_KEY } from "./types";
 
-type Listener = () => void;
-const listeners = new Set<Listener>();
-
 let cachedSnapshot: HistoryItem[] = readFromStorage();
+
+// A single `storage` listener (attached while there are subscribers) keeps the
+// cache fresh on cross-tab writes, then re-renders every subscriber.
+const subscription = createSubscription((onChange) => {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== STORAGE_KEY) return;
+    cachedSnapshot = readFromStorage();
+    onChange();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => window.removeEventListener("storage", onStorage);
+});
+
+export const subscribe = subscription.subscribe;
 
 function readFromStorage(): HistoryItem[] {
   if (typeof window === "undefined") return [];
@@ -47,28 +59,7 @@ export function writeToStorage(next: HistoryItem[]): void {
       // Quota exceeded or storage disabled — silently keep in-memory state.
     }
   }
-  for (const listener of listeners) listener();
-}
-
-export function subscribe(listener: Listener): () => void {
-  listeners.add(listener);
-
-  // Cross-tab updates: react to the browser's `storage` event.
-  const onStorage = (event: StorageEvent) => {
-    if (event.key !== STORAGE_KEY) return;
-    cachedSnapshot = readFromStorage();
-    for (const l of listeners) l();
-  };
-  if (typeof window !== "undefined") {
-    window.addEventListener("storage", onStorage);
-  }
-
-  return () => {
-    listeners.delete(listener);
-    if (typeof window !== "undefined") {
-      window.removeEventListener("storage", onStorage);
-    }
-  };
+  subscription.notify();
 }
 
 export function getSnapshot(): HistoryItem[] {
@@ -94,5 +85,5 @@ export function __resetHistoryStoreForTests(): void {
     window.localStorage.removeItem(STORAGE_KEY);
   }
   cachedSnapshot = [];
-  for (const listener of listeners) listener();
+  subscription.notify();
 }

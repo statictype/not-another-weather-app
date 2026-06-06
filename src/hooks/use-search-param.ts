@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { createSubscription } from "@/lib/external-store";
 
 /**
  * Subscribes to a single URL search param via `useSyncExternalStore`.
@@ -13,29 +14,10 @@ import { useSyncExternalStore } from "react";
  * See `docs/rfcs/007-url-driven-city.md`.
  */
 
-type Listener = () => void;
-const listeners = new Set<Listener>();
-
-function notify(): void {
-  for (const l of listeners) l();
-}
-
-function onPopstate(): void {
-  notify();
-}
-
-function subscribe(listener: Listener): () => void {
-  listeners.add(listener);
-  if (listeners.size === 1 && typeof window !== "undefined") {
-    window.addEventListener("popstate", onPopstate);
-  }
-  return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0 && typeof window !== "undefined") {
-      window.removeEventListener("popstate", onPopstate);
-    }
-  };
-}
+const urlSubscription = createSubscription((onChange) => {
+  window.addEventListener("popstate", onChange);
+  return () => window.removeEventListener("popstate", onChange);
+});
 
 function readSnapshot(name: string): string | null {
   if (typeof window === "undefined") return null;
@@ -44,7 +26,7 @@ function readSnapshot(name: string): string | null {
 
 export function useSearchParam(name: string): string | null {
   return useSyncExternalStore(
-    subscribe,
+    urlSubscription.subscribe,
     () => readSnapshot(name),
     () => null, // SSR snapshot — no URL params on the server
   );
@@ -68,5 +50,5 @@ export function setSearchParam(name: string, value: string | null): void {
     url.searchParams.set(name, value);
   }
   window.history.pushState(null, "", url.toString());
-  notify();
+  urlSubscription.notify();
 }
