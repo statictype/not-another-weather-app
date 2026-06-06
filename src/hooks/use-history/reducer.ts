@@ -1,11 +1,12 @@
+import { normalizeQuery } from "@/lib/query";
 import { type HistoryItem, MAX_HISTORY } from "./types";
 
 /**
  * Pure transitions for the history list.
  *
  * All four operations live here so the rules they share — the
- * `MAX_HISTORY` cap, the lowercase dedupe on add, the by-id dedupe on
- * restore — are centralized and the test surface is one module, not
+ * `MAX_HISTORY` cap, the canonical-query dedupe on add, the by-id dedupe
+ * on restore — are centralized and the test surface is one module, not
  * "the reducer plus three inline filters in the hook." The hook is
  * plumbing on top of these functions.
  */
@@ -22,18 +23,21 @@ function cap(items: HistoryItem[]): HistoryItem[] {
 }
 
 /**
- * Prepend a new item. Existing entries that match by case-insensitive
- * query are removed first so the new occurrence moves to the top with
- * a fresh id. Empty/whitespace queries are rejected without mutation.
+ * Prepend a new item. Existing entries that match by canonical query
+ * (`normalizeQuery` — the same rule the edge-cache and TanStack keys use,
+ * so History can't treat `New  York` and `New York` as distinct entries
+ * that the cache already collapses) are removed first, so the new
+ * occurrence moves to the top with a fresh id. Empty/whitespace queries
+ * normalize to `null` and are rejected without mutation.
  */
 export function addHistoryItem(
   state: HistoryItem[],
   next: Omit<HistoryItem, "id" | "addedAt">,
 ): HistoryItem[] {
-  const normalizedQuery = next.query.trim().toLowerCase();
+  const normalizedQuery = normalizeQuery(next.query);
   if (!normalizedQuery) return state;
 
-  const filtered = state.filter((item) => item.query.trim().toLowerCase() !== normalizedQuery);
+  const filtered = state.filter((item) => normalizeQuery(item.query) !== normalizedQuery);
   const newItem: HistoryItem = {
     id: generateId(),
     query: next.query.trim(),

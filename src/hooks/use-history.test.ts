@@ -39,6 +39,19 @@ describe("addHistoryItem (pure)", () => {
     expect(result.map((i) => i.query)).toEqual(["london", "Paris", "Berlin"]);
   });
 
+  it("dedupes on the canonical query, collapsing internal whitespace runs", () => {
+    // `normalizeQuery` collapses "New  York" and "New York" to one canonical
+    // form, so they share a single edge-cache entry — History must not treat
+    // them as two distinct items. (Plain trim().toLowerCase() would not.)
+    const seed: HistoryItem[] = [
+      { id: "a", query: "New  York", displayName: "New York, US", addedAt: 1 },
+    ];
+    const result = addHistoryItem(seed, { query: "New York", displayName: "New York, US" });
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).not.toBe("a");
+    expect(result[0]?.query).toBe("New York");
+  });
+
   it("caps the list at MAX_HISTORY entries, dropping the oldest", () => {
     const seed: HistoryItem[] = Array.from({ length: MAX_HISTORY }, (_, i) => ({
       id: `id-${i}`,
