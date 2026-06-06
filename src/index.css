@@ -350,21 +350,11 @@ html, body { background: oklch(0.97 0.02 230); }
 .night { --moon-dark: oklch(0.08 0.005 250); }
 
 /* ── Air-comfort tint anchors ─────────────────────────────────────── */
-/* Each bucket exposes --ac-dry and --ac-humid. The card mixes between
- * them in oklch using the air-axis humidity position. Night overrides
- * live in the .night block below. */
-.ac-red    { --ac-dry: #fad4d4; --ac-humid: #f59694; }
-.ac-orange { --ac-dry: #ffc09a; --ac-humid: #ffa168; }
-.ac-yellow { --ac-dry: #fff5d0; --ac-humid: #ffe080; }
-.ac-green  { --ac-dry: #def5de; --ac-humid: #91dc91; }
-.ac-blue   { --ac-dry: #b3edff; --ac-humid: #80e2ff; }
-.ac-silver { --ac-dry: #e6ebf3; --ac-humid: #ccd6e6; }
-
-/* Per-mode gradient depth: how much the top stop lifts toward white,
- * how much the bottom stop deepens toward black, and how much the
- * whole base color gets darkened in night mode for legibility. */
-:root  { --ac-lift: 14%; --ac-shadow: 3%;  --ac-base-darken: 0%;  }
-.night { --ac-lift: 4%;  --ac-shadow: 20%; --ac-base-darken: 38%; }
+/* The .ac-{bucket} --ac-dry/--ac-humid anchors and the per-mode
+ * --ac-lift/--ac-shadow/--ac-base-darken depth params are generated from the
+ * single source in src/lib/air-comfort-palette.ts and injected at startup via
+ * injectAirComfortPalette() (called in main.tsx). They are intentionally NOT
+ * defined here — retune the palette module instead. */
 
 /* ── Night overrides ─────────────────────────────────────────────── */
 /* Scoped under .night (applied on the App root when current is night). */
@@ -426,13 +416,8 @@ html, body { background: oklch(0.97 0.02 230); }
   border-color: oklch(1 0 0 / 0.04);
 }
 
-/* Air-comfort tint anchors — night palette */
-.night .ac-red    { --ac-dry: #1a0808; --ac-humid: #2e0a0a; }
-.night .ac-orange { --ac-dry: #1a0a00; --ac-humid: #2e1100; }
-.night .ac-yellow { --ac-dry: #1a1102; --ac-humid: #4d3205; }
-.night .ac-green  { --ac-dry: #001a11; --ac-humid: #003421; }
-.night .ac-blue   { --ac-dry: #00141a; --ac-humid: #003b4d; }
-.night .ac-silver { --ac-dry: #141517; --ac-humid: #3d4045; }
+/* Air-comfort night anchors are generated from src/lib/air-comfort-palette.ts
+ * (see the day-anchor note above) — not defined here. */
 
 /* Hero night: cooler deep blues */
 .hero-night {
@@ -597,4 +582,49 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 .night .search-dropdown-desktop *::-webkit-scrollbar-thumb {
   background: oklch(1 0 0 / 0.12);
+}
+
+/* HSB picker sliders (used on /moods). The track gradient is set inline per
+ * slider so H/S/B each preview their dimension; this class only handles the
+ * shared geometry and thumb styling. */
+.hsb-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 12px;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+.hsb-slider::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 999px;
+}
+.hsb-slider::-moz-range-track {
+  height: 12px;
+  border-radius: 999px;
+}
+.hsb-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -3px;
+  background: white;
+  border: 2px solid oklch(0.4 0 0);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.15);
+}
+.hsb-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: white;
+  border: 2px solid oklch(0.4 0 0);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.15);
+}
+.night .hsb-slider::-webkit-slider-thumb,
+.night .hsb-slider::-moz-range-thumb {
+  border-color: oklch(0.95 0 0);
 }

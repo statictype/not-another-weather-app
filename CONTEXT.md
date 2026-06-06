@@ -24,7 +24,7 @@ See RFC 007.
 trimmed, lowercased, internal whitespace collapsed. Produced by
 `normalizeQuery` in `src/lib/query.ts`. Used as both the edge-cache key
 on the worker and the TanStack Query key on the client, so the two
-sides cannot drift. `London` / `london` / `LONDON ` / ` london ` all
+sides cannot drift. `London` / `london` / `LONDON ` / `london` all
 resolve to one cache entry per tier.
 
 **Suggestion** — an autocomplete item from `/api/search`. Distinct from
@@ -121,6 +121,21 @@ humid`, plus the **damp override** below. See RFC 012.
 both), the air label becomes `Damp` regardless of dew point. Captures
 the cold-damp sensation that low absolute humidity readings would
 otherwise mask.
+
+**Air-comfort palette** — the single source of truth for the
+air-comfort _colors_, in `src/lib/air-comfort-palette.ts`: the
+per-bucket `--ac-dry`/`--ac-humid` anchors and the
+`--ac-lift`/`--ac-shadow`/`--ac-base-darken` depth params (day +
+night), plus the `thermal → bucket` (`THERMAL_BUCKET`) and `air →
+humidity %` (`AIR_HUMID_PCT`) mappings — all as plain data.
+`air-comfort.ts` owns the _labeling_ ladders and imports the mappings
+from here. The live cards still tint via CSS custom properties and the
+`.night` cascade, but those properties are **generated** from this
+module (`airComfortPaletteCss`) and injected once at startup
+(`injectAirComfortPalette`, in `main.tsx`) — they are no longer
+hand-written in `index.css`. The `/moods` editor reads the anchors
+directly instead of probing the DOM. Retune the palette here, not in
+CSS.
 
 **Search overlay** — the mobile presentation of the search menu: a
 glass backdrop below the page header, plus a sliding Cancel button.

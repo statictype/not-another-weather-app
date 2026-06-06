@@ -3,28 +3,22 @@
  *
  * Bands read as `≥ lower AND < upper` (lower-inclusive, upper-exclusive),
  * which is what the strictly-less-than ladders below encode.
+ *
+ * The label/bucket vocabulary and the color mappings live in
+ * `air-comfort-palette.ts`; this file owns the threshold ladders that turn a
+ * reading into labels, and re-exports the shared types so existing
+ * `@/lib/air-comfort` imports keep working.
  */
 
-export type ThermalLabel =
-  | "Very cold"
-  | "Cold"
-  | "Chilly"
-  | "Cool"
-  | "Mild"
-  | "Warm"
-  | "Hot"
-  | "Very hot"
-  | "Dangerously hot";
+import {
+  AIR_HUMID_PCT,
+  type AirComfortBucket,
+  type AirLabel,
+  type ThermalLabel,
+  THERMAL_BUCKET,
+} from "./air-comfort-palette";
 
-export type AirLabel =
-  | "Very dry"
-  | "Dry"
-  | "Slightly dry"
-  | "Comfortable"
-  | "Slightly humid"
-  | "Humid"
-  | "Very humid"
-  | "Damp";
+export type { AirComfortBucket, AirLabel, ThermalLabel };
 
 export interface AirComfortInput {
   tempC: number;
@@ -75,31 +69,6 @@ function airLabel(dewpointC: number): AirLabel {
 function isDamp(tempC: number, humidity: number): boolean {
   return tempC < 12 && humidity > 80;
 }
-
-export type AirComfortBucket = "red" | "orange" | "yellow" | "green" | "blue" | "silver";
-
-const THERMAL_BUCKET: Record<ThermalLabel, AirComfortBucket> = {
-  "Dangerously hot": "red",
-  "Very hot": "red",
-  Hot: "orange",
-  Warm: "yellow",
-  Mild: "green",
-  Cool: "blue",
-  Chilly: "blue",
-  Cold: "silver",
-  "Very cold": "silver",
-};
-
-const AIR_HUMID_PCT: Record<AirLabel, number> = {
-  "Very dry": 0,
-  Dry: 15,
-  "Slightly dry": 30,
-  Comfortable: 50,
-  "Slightly humid": 65,
-  Humid: 80,
-  "Very humid": 100,
-  Damp: 90,
-};
 
 export interface AirComfortStyle {
   bucketClass: string;

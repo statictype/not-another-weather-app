@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { airComfort, type AirLabel, type ThermalLabel } from "./air-comfort";
+import { airComfort, airComfortStyle, type AirLabel, type ThermalLabel } from "./air-comfort";
+import { AIR_HUMID_PCT, THERMAL_BUCKET } from "./air-comfort-palette";
 
 interface Row {
   location: string;
@@ -377,6 +378,54 @@ describe("airComfort — damp override", () => {
     });
     expect(result.thermal).toBe("Very cold");
     expect(result.air).toBe("Damp");
+  });
+});
+
+/**
+ * `airComfortStyle` only assembles strings, but the mapping it encodes
+ * (thermal → bucket, air → humidity position) is exactly where the palette
+ * and the labeler can drift. These assert the logic as values — the actual
+ * oklch resolution stays the browser's job.
+ */
+describe("airComfortStyle — bucket + humidity mapping", () => {
+  const thermals: ThermalLabel[] = [
+    "Very cold",
+    "Cold",
+    "Chilly",
+    "Cool",
+    "Mild",
+    "Warm",
+    "Hot",
+    "Very hot",
+    "Dangerously hot",
+  ];
+  it.each(thermals)("%s → its bucket class", (thermal) => {
+    expect(airComfortStyle({ thermal, air: "Comfortable" }).bucketClass).toBe(
+      `ac-${THERMAL_BUCKET[thermal]}`,
+    );
+  });
+
+  const airs: AirLabel[] = [
+    "Very dry",
+    "Dry",
+    "Slightly dry",
+    "Comfortable",
+    "Slightly humid",
+    "Humid",
+    "Very humid",
+    "Damp",
+  ];
+  it.each(airs)("%s positions the humid mix at its percentage", (air) => {
+    expect(airComfortStyle({ thermal: "Mild", air }).background).toContain(
+      `var(--ac-humid) ${AIR_HUMID_PCT[air]}%`,
+    );
+  });
+
+  it("tints through the palette custom properties, not hard-coded colors", () => {
+    const { background } = airComfortStyle({ thermal: "Hot", air: "Humid" });
+    for (const prop of ["--ac-dry", "--ac-humid", "--ac-base-darken", "--ac-lift", "--ac-shadow"]) {
+      expect(background).toContain(`var(${prop})`);
+    }
   });
 });
 
