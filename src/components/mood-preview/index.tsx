@@ -1,4 +1,4 @@
-import { type CSSProperties, useCallback, useMemo, useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { airComfortStyle } from "@/lib/air-comfort";
 import {
   AC_ANCHORS,
@@ -20,6 +20,24 @@ import {
   shiftHueHex,
 } from "@/lib/color";
 import { HsbPicker } from "./hsb-picker";
+import {
+  type CellKey,
+  type CellMap,
+  type EditorState,
+  loadEditorState,
+  type ModeMaps,
+  persistEditorState,
+} from "./persistence";
+import {
+  commit,
+  commitAll,
+  effective,
+  isModified,
+  modifiedCount as countModified,
+  revert,
+  setDraft,
+  type StagedMap,
+} from "./staged-map";
 
 const AIR_LABELS = [
   "Very dry",
@@ -33,76 +51,15 @@ const AIR_LABELS = [
 ] as const satisfies readonly AirLabel[];
 
 type Mode = AirComfortMode;
-type CellKey = `${AirComfortBucket}-${AirLabel}`;
-type CellMap = Partial<Record<CellKey, string>>;
-type RowHueMap = Partial<Record<AirComfortBucket, number>>;
 
-interface ModeData {
-  cells: CellMap;
-  rowHue: RowHueMap;
+function cellKey(bucket: AirComfortBucket, air: AirLabel): CellKey {
+  return `${bucket}-${air}`;
 }
 
-type Persisted = Record<Mode, ModeData>;
-
-const STORAGE_KEY = "oasis.mood-preview.v1";
-const MODES = ["day", "night"] as const satisfies readonly Mode[];
-
-function loadCommitted(): Persisted {
-  if (typeof localStorage === "undefined") return emptyPersisted();
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyPersisted();
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return emptyPersisted();
-    const obj = parsed as Record<string, unknown>;
-    return {
-      day: pickModeData(obj.day),
-      night: pickModeData(obj.night),
-    };
-  } catch {
-    return emptyPersisted();
-  }
-}
-
-function emptyPersisted(): Persisted {
-  return { day: { cells: {}, rowHue: {} }, night: { cells: {}, rowHue: {} } };
-}
-
-function pickModeData(value: unknown): ModeData {
-  if (!value || typeof value !== "object") return { cells: {}, rowHue: {} };
-  const obj = value as Record<string, unknown>;
-  if ("cells" in obj || "rowHue" in obj) {
-    return { cells: pickStringMap(obj.cells), rowHue: pickNumberMap(obj.rowHue) };
-  }
-  // Backwards-compat: pre-rowHue shape stored cells directly under `day`/`night`.
-  return { cells: pickStringMap(obj), rowHue: {} };
-}
-
-function pickStringMap(value: unknown): CellMap {
-  if (!value || typeof value !== "object") return {};
-  const out: CellMap = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "string") out[k as CellKey] = v;
-  }
-  return out;
-}
-
-function pickNumberMap(value: unknown): RowHueMap {
-  if (!value || typeof value !== "object") return {};
-  const out: RowHueMap = {};
-  for (const [k, v] of Object.entries(value)) {
-    if (typeof v === "number" && Number.isFinite(v)) out[k as AirComfortBucket] = v;
-  }
-  return out;
-}
-
-function persistCommitted(committed: Persisted) {
-  if (typeof localStorage === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(committed));
-  } catch {
-    // quota or disabled — silent ignore
-  }
+function hexToHsb(hex: string | undefined): HSB | null {
+  if (!hex) return null;
+  const rgb = hexToRgb(hex);
+  return rgb ? rgbToHsb(rgb) : null;
 }
 
 // Resolve the cell's rendered base color (dry/humid mix at the air-axis
@@ -124,167 +81,96 @@ function probeBaseColor(bucket: AirComfortBucket, air: AirLabel, mode: Mode): st
 
 export function MoodPreview() {
   const [mode, setMode] = useState<Mode>("day");
-  const [committed, setCommitted] = useState<Persisted>(loadCommitted);
-  // Draft holds user-edited cell values not yet committed. Probed values do
-  // NOT populate cell draft — they only feed the picker's initial position.
-  const [cellDraft, setCellDraft] = useState<Record<Mode, CellMap>>({ day: {}, night: {} });
-  const [rowDraft, setRowDraft] = useState<Record<Mode, RowHueMap>>({ day: {}, night: {} });
-  // Cache of probed cell defaults per (mode, key) — picker initialization only.
+  const [state, setState] = useState<EditorState>(loadEditorState);
+  // Probed picker seeds per (mode, key) — picker initialization only; not part
+  // of the staged store, so they never persist.
   const [probed, setProbed] = useState<Record<Mode, CellMap>>({ day: {}, night: {} });
   const [selected, setSelected] = useState<{ bucket: AirComfortBucket; air: AirLabel } | null>(
     null,
   );
 
-  const ensureProbed = useCallback((bucket: AirComfortBucket, air: AirLabel, m: Mode) => {
+  const cells = state[mode].cells;
+  const rows = state[mode].rows;
+
+  // Draft-only edits (slider drags, picker moves) just update state; a commit
+  // also persists the new committed slice. Row maps use a baseline of 0 (no
+  // rotation) so dragging back to default reads as unmodified.
+  function persist(next: EditorState) {
+    setState(next);
+    persistEditorState(next);
+  }
+
+  function withMode(m: Mode, maps: Partial<ModeMaps>): EditorState {
+    return { ...state, [m]: { ...state[m], ...maps } };
+  }
+
+  const modifiedCount =
+    countModified(state.day.cells) +
+    countModified(state.day.rows, 0) +
+    countModified(state.night.cells) +
+    countModified(state.night.rows, 0);
+
+  function ensureProbed(bucket: AirComfortBucket, air: AirLabel, m: Mode) {
     setProbed((prev) => {
       const key = cellKey(bucket, air);
       if (prev[m][key] !== undefined) return prev;
-      const value = probeBaseColor(bucket, air, m);
-      return { ...prev, [m]: { ...prev[m], [key]: value } };
+      return { ...prev, [m]: { ...prev[m], [key]: probeBaseColor(bucket, air, m) } };
     });
-  }, []);
+  }
 
-  const modifiedCount = useMemo(() => {
-    let count = 0;
-    for (const m of MODES) {
-      for (const [k, v] of Object.entries(cellDraft[m])) {
-        if (v !== undefined && v !== committed[m].cells[k as CellKey]) count++;
-      }
-      for (const [k, v] of Object.entries(rowDraft[m])) {
-        if (v !== undefined && v !== (committed[m].rowHue[k as AirComfortBucket] ?? 0)) count++;
-      }
-    }
-    return count;
-  }, [cellDraft, rowDraft, committed]);
+  function handleCellClick(bucket: AirComfortBucket, air: AirLabel) {
+    ensureProbed(bucket, air, mode);
+    setSelected({ bucket, air });
+  }
 
-  const handleCellClick = useCallback(
-    (bucket: AirComfortBucket, air: AirLabel) => {
-      ensureProbed(bucket, air, mode);
-      setSelected({ bucket, air });
-    },
-    [ensureProbed, mode],
-  );
-
-  const toggleMode = useCallback(() => {
+  function toggleMode() {
     const next: Mode = mode === "day" ? "night" : "day";
     setMode(next);
     if (selected) ensureProbed(selected.bucket, selected.air, next);
-  }, [mode, selected, ensureProbed]);
+  }
 
-  const handlePickerChange = useCallback(
-    (hsb: HSB) => {
-      if (!selected) return;
-      const hex = rgbToHex(hsbToRgb(hsb));
-      const key = cellKey(selected.bucket, selected.air);
-      setCellDraft((prev) => ({ ...prev, [mode]: { ...prev[mode], [key]: hex } }));
-    },
-    [selected, mode],
-  );
-
-  const handleRowHueChange = useCallback(
-    (bucket: AirComfortBucket, degrees: number) => {
-      setRowDraft((prev) => ({ ...prev, [mode]: { ...prev[mode], [bucket]: degrees } }));
-    },
-    [mode],
-  );
-
-  const handleCommit = useCallback(() => {
+  function handlePickerChange(hsb: HSB) {
     if (!selected) return;
-    const key = cellKey(selected.bucket, selected.air);
-    const value = cellDraft[mode][key];
-    if (value === undefined) return;
-    setCommitted((prev) => {
-      const next: Persisted = {
-        ...prev,
-        [mode]: { ...prev[mode], cells: { ...prev[mode].cells, [key]: value } },
-      };
-      persistCommitted(next);
-      return next;
-    });
-    setCellDraft((prev) => {
-      const nextMode = { ...prev[mode] };
-      delete nextMode[key];
-      return { ...prev, [mode]: nextMode };
-    });
-  }, [selected, cellDraft, mode]);
+    const hex = rgbToHex(hsbToRgb(hsb));
+    setState(
+      withMode(mode, { cells: setDraft(cells, cellKey(selected.bucket, selected.air), hex) }),
+    );
+  }
 
-  const handleCommitRow = useCallback(
-    (bucket: AirComfortBucket) => {
-      const value = rowDraft[mode][bucket];
-      if (value === undefined) return;
-      setCommitted((prev) => {
-        const next: Persisted = {
-          ...prev,
-          [mode]: { ...prev[mode], rowHue: { ...prev[mode].rowHue, [bucket]: value } },
-        };
-        persistCommitted(next);
-        return next;
-      });
-      setRowDraft((prev) => {
-        const nextMode = { ...prev[mode] };
-        delete nextMode[bucket];
-        return { ...prev, [mode]: nextMode };
-      });
-    },
-    [rowDraft, mode],
-  );
+  function handleRowHueChange(bucket: AirComfortBucket, degrees: number) {
+    setState(withMode(mode, { rows: setDraft(rows, bucket, degrees) }));
+  }
 
-  const handleRevertRow = useCallback(
-    (bucket: AirComfortBucket) => {
-      setRowDraft((prev) => {
-        const nextMode = { ...prev[mode] };
-        delete nextMode[bucket];
-        return { ...prev, [mode]: nextMode };
-      });
-    },
-    [mode],
-  );
-
-  const handleCommitAll = useCallback(() => {
-    setCommitted((prev) => {
-      const next: Persisted = {
-        day: { cells: { ...prev.day.cells }, rowHue: { ...prev.day.rowHue } },
-        night: { cells: { ...prev.night.cells }, rowHue: { ...prev.night.rowHue } },
-      };
-      for (const m of MODES) {
-        for (const [k, v] of Object.entries(cellDraft[m])) {
-          if (v !== undefined) next[m].cells[k as CellKey] = v;
-        }
-        for (const [k, v] of Object.entries(rowDraft[m])) {
-          if (v !== undefined) next[m].rowHue[k as AirComfortBucket] = v;
-        }
-      }
-      persistCommitted(next);
-      return next;
-    });
-    setCellDraft({ day: {}, night: {} });
-    setRowDraft({ day: {}, night: {} });
-  }, [cellDraft, rowDraft]);
-
-  const handleRevert = useCallback(() => {
+  function handleCommit() {
     if (!selected) return;
-    const key = cellKey(selected.bucket, selected.air);
-    setCellDraft((prev) => {
-      const nextMode = { ...prev[mode] };
-      delete nextMode[key];
-      return { ...prev, [mode]: nextMode };
-    });
-  }, [selected, mode]);
+    persist(withMode(mode, { cells: commit(cells, cellKey(selected.bucket, selected.air)) }));
+  }
 
-  const pickerHsb = useMemo<HSB | null>(() => {
-    if (!selected) return null;
-    const key = cellKey(selected.bucket, selected.air);
-    const hex = cellDraft[mode][key] ?? committed[mode].cells[key] ?? probed[mode][key];
-    if (!hex) return null;
-    const rgb = hexToRgb(hex);
-    return rgb ? rgbToHsb(rgb) : null;
-  }, [selected, cellDraft, committed, probed, mode]);
+  function handleRevert() {
+    if (!selected) return;
+    setState(withMode(mode, { cells: revert(cells, cellKey(selected.bucket, selected.air)) }));
+  }
+
+  function handleCommitRow(bucket: AirComfortBucket) {
+    persist(withMode(mode, { rows: commit(rows, bucket) }));
+  }
+
+  function handleRevertRow(bucket: AirComfortBucket) {
+    setState(withMode(mode, { rows: revert(rows, bucket) }));
+  }
+
+  function handleCommitAll() {
+    persist({
+      day: { cells: commitAll(state.day.cells), rows: commitAll(state.day.rows) },
+      night: { cells: commitAll(state.night.cells), rows: commitAll(state.night.rows) },
+    });
+  }
 
   const selectedKey = selected ? cellKey(selected.bucket, selected.air) : null;
-  const isSelectedModified =
-    selectedKey !== null &&
-    cellDraft[mode][selectedKey] !== undefined &&
-    cellDraft[mode][selectedKey] !== committed[mode].cells[selectedKey];
+  const isSelectedModified = selectedKey !== null && isModified(cells, selectedKey);
+  const pickerHsb = selectedKey
+    ? hexToHsb(effective(cells, selectedKey) ?? probed[mode][selectedKey])
+    : null;
 
   return (
     <div
@@ -341,9 +227,7 @@ export function MoodPreview() {
 
         <div className="space-y-10">
           {BUCKETS.map(({ bucket, thermals }) => {
-            const draftOffset = rowDraft[mode][bucket];
-            const committedOffset = committed[mode].rowHue[bucket] ?? 0;
-            const effectiveOffset = draftOffset ?? committedOffset;
+            const effectiveOffset = effective(rows, bucket) ?? 0;
             const a = AC_ANCHORS[mode][bucket];
             const rowAnchors =
               effectiveOffset !== 0
@@ -352,19 +236,17 @@ export function MoodPreview() {
                     humid: shiftHueHex(a.humid, effectiveOffset),
                   }
                 : null;
-            const isRowModified = draftOffset !== undefined && draftOffset !== committedOffset;
             return (
               <BucketRow
                 key={bucket}
                 bucket={bucket}
                 thermals={thermals}
-                draftMap={cellDraft[mode]}
-                committedMap={committed[mode].cells}
+                cells={cells}
                 selectedKey={selectedKey}
                 onCellClick={handleCellClick}
                 hueOffset={effectiveOffset}
                 rowAnchors={rowAnchors}
-                isRowModified={isRowModified}
+                isRowModified={isModified(rows, bucket, 0)}
                 onRowHueChange={handleRowHueChange}
                 onCommitRow={handleCommitRow}
                 onRevertRow={handleRevertRow}
@@ -423,15 +305,10 @@ export function MoodPreview() {
   );
 }
 
-function cellKey(bucket: AirComfortBucket, air: AirLabel): CellKey {
-  return `${bucket}-${air}`;
-}
-
 interface BucketRowProps {
   bucket: AirComfortBucket;
   thermals: readonly ThermalLabel[];
-  draftMap: CellMap;
-  committedMap: CellMap;
+  cells: StagedMap<CellKey, string>;
   selectedKey: CellKey | null;
   onCellClick: (bucket: AirComfortBucket, air: AirLabel) => void;
   hueOffset: number;
@@ -442,11 +319,13 @@ interface BucketRowProps {
   onRevertRow: (bucket: AirComfortBucket) => void;
 }
 
+const HUE_TRACK =
+  "linear-gradient(to right, hsl(0,100%,50%) 0%, hsl(60,100%,50%) 17%, hsl(120,100%,50%) 33%, hsl(180,100%,50%) 50%, hsl(240,100%,50%) 67%, hsl(300,100%,50%) 83%, hsl(360,100%,50%) 100%)";
+
 function BucketRow({
   bucket,
   thermals,
-  draftMap,
-  committedMap,
+  cells,
   selectedKey,
   onCellClick,
   hueOffset,
@@ -456,9 +335,6 @@ function BucketRow({
   onCommitRow,
   onRevertRow,
 }: BucketRowProps) {
-  const hueTrack =
-    "linear-gradient(to right, hsl(0,100%,50%) 0%, hsl(60,100%,50%) 17%, hsl(120,100%,50%) 33%, hsl(180,100%,50%) 50%, hsl(240,100%,50%) 67%, hsl(300,100%,50%) 83%, hsl(360,100%,50%) 100%)";
-
   return (
     <section>
       <header className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -479,7 +355,7 @@ function BucketRow({
               onRowHueChange(bucket, Number(e.target.value));
             }}
             className="hsb-slider w-40 sm:w-56"
-            style={{ background: hueTrack }}
+            style={{ background: HUE_TRACK }}
             aria-label={`${bucket} row hue offset`}
           />
           <span
@@ -519,20 +395,15 @@ function BucketRow({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         {AIR_LABELS.map((air) => {
           const key = cellKey(bucket, air);
-          const draftVal = draftMap[key];
-          const committedVal = committedMap[key];
-          const baseOverride = draftVal ?? committedVal;
-          const isSelected = selectedKey === key;
-          const isModified = draftVal !== undefined && draftVal !== committedVal;
           return (
             <MoodTile
               key={air}
               thermals={thermals}
               air={air}
-              baseOverride={baseOverride}
+              baseOverride={effective(cells, key)}
               rowAnchors={rowAnchors}
-              isSelected={isSelected}
-              isModified={isModified}
+              isSelected={selectedKey === key}
+              isModified={isModified(cells, key)}
               onClick={() => {
                 onCellClick(bucket, air);
               }}
