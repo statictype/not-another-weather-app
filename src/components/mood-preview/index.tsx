@@ -187,12 +187,10 @@ export function MoodPreview() {
       >
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
               Air comfort
             </p>
-            <h1 className="font-display mt-2 text-balance text-3xl tracking-tight sm:text-4xl">
-              Mood palette
-            </h1>
+            <h1 className="mt-2 text-balance text-3xl tracking-tight sm:text-4xl">Mood palette</h1>
             <p className="mt-2 max-w-prose text-sm text-foreground/60">
               Drag a row's hue slider to rotate that bucket's color family. Click any cell to tweak
               its base in HSB. Committed values persist to localStorage.
@@ -204,7 +202,7 @@ export function MoodPreview() {
               type="button"
               onClick={toggleMode}
               aria-pressed={mode === "night"}
-              className="font-display rounded-full border border-foreground/15 bg-foreground/5 px-4 py-2 text-sm font-medium tracking-tight transition hover:bg-foreground/10"
+              className="rounded-full border border-foreground/15 bg-foreground/5 px-4 py-2 text-sm font-medium tracking-tight transition hover:bg-foreground/10"
             >
               {mode === "night" ? "☾ Night" : "☀ Day"}
             </button>
@@ -212,13 +210,13 @@ export function MoodPreview() {
               type="button"
               onClick={handleCommitAll}
               disabled={modifiedCount === 0}
-              className="font-display rounded-full bg-foreground px-4 py-2 text-sm font-medium tracking-tight text-background transition hover:bg-foreground/85 disabled:cursor-not-allowed disabled:bg-foreground/20 disabled:text-foreground/40"
+              className="rounded-full bg-foreground px-4 py-2 text-sm font-medium tracking-tight text-background transition hover:bg-foreground/85 disabled:cursor-not-allowed disabled:bg-foreground/20 disabled:text-foreground/40"
             >
               Commit all{modifiedCount > 0 ? ` (${modifiedCount})` : ""}
             </button>
             <a
               href="/"
-              className="font-display rounded-full border border-foreground/15 px-4 py-2 text-sm font-medium tracking-tight transition hover:bg-foreground/5"
+              className="rounded-full border border-foreground/15 px-4 py-2 text-sm font-medium tracking-tight transition hover:bg-foreground/5"
             >
               ← Back
             </a>
@@ -260,10 +258,10 @@ export function MoodPreview() {
         <aside className="card-surface fixed bottom-4 left-4 right-4 z-30 max-h-[55vh] overflow-y-auto rounded-2xl border border-foreground/15 p-5 shadow-2xl lg:bottom-auto lg:left-auto lg:right-6 lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:w-80">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <p className="font-display text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/55">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/55">
                 Editing — {mode}
               </p>
-              <p className="font-display mt-1 text-base font-medium tracking-tight">
+              <p className="mt-1 text-base font-medium tracking-tight">
                 {selected.bucket} · {selected.air}
               </p>
             </div>
@@ -286,7 +284,7 @@ export function MoodPreview() {
               type="button"
               onClick={handleCommit}
               disabled={!isSelectedModified}
-              className="font-display flex-1 rounded-full bg-foreground px-4 py-2 text-sm font-medium tracking-tight text-background transition hover:bg-foreground/85 disabled:cursor-not-allowed disabled:bg-foreground/20 disabled:text-foreground/40"
+              className="flex-1 rounded-full bg-foreground px-4 py-2 text-sm font-medium tracking-tight text-background transition hover:bg-foreground/85 disabled:cursor-not-allowed disabled:bg-foreground/20 disabled:text-foreground/40"
             >
               Commit
             </button>
@@ -294,7 +292,7 @@ export function MoodPreview() {
               type="button"
               onClick={handleRevert}
               disabled={!isSelectedModified}
-              className="font-display rounded-full border border-foreground/15 px-4 py-2 text-sm font-medium tracking-tight transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full border border-foreground/15 px-4 py-2 text-sm font-medium tracking-tight transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Revert
             </button>
@@ -338,11 +336,11 @@ function BucketRow({
   return (
     <section>
       <header className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h2 className="font-display text-lg font-medium uppercase tracking-[0.18em]">{bucket}</h2>
+        <h2 className="text-lg font-medium uppercase tracking-[0.18em]">{bucket}</h2>
         <span className="text-xs text-foreground/55">{thermals.join(" · ")}</span>
 
         <div className="ml-auto flex items-center gap-2">
-          <span className="font-display text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+          <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/55">
             Hue
           </span>
           <input
@@ -373,7 +371,7 @@ function BucketRow({
                 onClick={() => {
                   onCommitRow(bucket);
                 }}
-                className="font-display rounded-full bg-foreground px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-background transition hover:bg-foreground/85"
+                className="rounded-full bg-foreground px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-background transition hover:bg-foreground/85"
               >
                 Commit
               </button>
@@ -382,7 +380,7 @@ function BucketRow({
                 onClick={() => {
                   onRevertRow(bucket);
                 }}
-                className="font-display rounded-full border border-foreground/15 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] transition hover:bg-foreground/5"
+                className="rounded-full border border-foreground/15 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] transition hover:bg-foreground/5"
                 aria-label="Revert row hue"
               >
                 Revert
@@ -457,10 +455,8 @@ function MoodTile({
       className={`${bucketClass} bento-tile relative flex min-h-[160px] flex-col overflow-hidden p-4 text-left transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50`}
       style={{ background, ...overrideStyle }}
     >
-      <p className="font-display text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/60">
-        {air}
-      </p>
-      <ul className="font-display mt-auto space-y-0.5 text-sm leading-snug tracking-tight">
+      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/60">{air}</p>
+      <ul className="mt-auto space-y-0.5 text-sm leading-snug tracking-tight">
         {thermals.map((t) => (
           <li key={t}>
             {t} and {air.toLowerCase()}

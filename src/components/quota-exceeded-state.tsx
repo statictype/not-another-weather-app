@@ -18,7 +18,7 @@ export function QuotaExceededState() {
           <GaugeIcon className="size-8 text-accent" aria-hidden="true" strokeWidth={1.5} />
         </div>
         <div className="space-y-2 max-w-md">
-          <h2 className="font-serif text-xl tracking-tight">Free tier exhausted</h2>
+          <h2 className="text-xl tracking-tight">Free tier exhausted</h2>
           <p className="text-muted-foreground text-balance">
             The free weather API quota for this demo has been used up for the month. It resets on
             the 1st.

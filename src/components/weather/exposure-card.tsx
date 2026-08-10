@@ -55,12 +55,10 @@ function MetricRow({
 }) {
   return (
     <div className={cn("flex flex-col gap-1.5", dim && "opacity-55")}>
-      <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-        {label}
-      </p>
+      <p className="label-section">{label}</p>
       <div className="flex items-baseline gap-2">
-        <span className="font-display text-3xl leading-[0.85] tracking-tight">{value ?? "—"}</span>
-        <span className="font-display text-sm tracking-tight text-foreground/65">{tag}</span>
+        <span className="text-3xl leading-[0.85] tracking-tight">{value ?? "—"}</span>
+        <span className="text-sm tracking-tight text-foreground/65">{tag}</span>
       </div>
       <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-foreground/6">
         {scale && (
@@ -96,9 +94,7 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
 
   return (
     <div className="relative flex shrink-0 flex-col items-center sm:w-[240px]">
-      <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-        Pressure
-      </p>
+      <p className="label-section">Pressure</p>
       <div className="relative mt-2 w-full">
         <svg viewBox="0 0 220 130" className="block w-full" aria-hidden="true">
           <defs>
@@ -138,16 +134,16 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
         </svg>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-2 flex flex-col items-center">
-          <p className="font-display text-3xl leading-none tracking-tight">
+          <p className="text-3xl leading-none tracking-tight">
             {Math.round(pressureMb)}
             <span className="ml-1.5 text-sm text-foreground/50">mb</span>
           </p>
-          <p className="font-display mt-1 text-xs tracking-tight text-foreground/65">
+          <p className="mt-1 text-xs tracking-tight text-foreground/65">
             {pressureLabel(pressureMb)}
           </p>
         </div>
 
-        <div className="mt-1 flex justify-between px-1 font-display text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/40">
+        <div className="label-sub mt-1 flex justify-between px-1">
           <span>{PRESSURE_MIN}</span>
           <span>{PRESSURE_MAX}</span>
         </div>

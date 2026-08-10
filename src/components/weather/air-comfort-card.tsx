@@ -18,9 +18,7 @@ export function AirComfortCard({
 }: AirComfortCardProps) {
   return (
     <section className="swap-in swap-d-4 tile-wind bento-tile relative overflow-hidden p-6 sm:col-span-6 xl:col-span-3">
-      <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-        Air
-      </p>
+      <p className="label-section">Air</p>
 
       <dl className="mt-4 divide-y divide-foreground/10">
         <Metric
@@ -73,11 +71,9 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
     <div className="flex items-center justify-between gap-3 py-2.5">
       <div className="flex items-center gap-2.5">
         {icon}
-        <dt className="font-display text-[11px] font-medium uppercase tracking-[0.16em] text-foreground/60">
-          {label}
-        </dt>
+        <dt className="label-sub">{label}</dt>
       </div>
-      <dd className="font-display text-sm tracking-tight">{value}</dd>
+      <dd className="text-sm tracking-tight">{value}</dd>
     </div>
   );
 }

@@ -88,21 +88,15 @@ function SideInfo({ view, astro }: { view: AstroView; astro: Astro }) {
   if (view === "moon") {
     return (
       <>
-        <p className="font-display truncate text-sm leading-tight tracking-tight">
-          {astro.moonPhase}
-        </p>
-        <p className="font-display mt-0.5 text-xs text-foreground/55">
-          {astro.moonIllumination}% illuminated
-        </p>
+        <p className="truncate text-sm leading-tight tracking-tight">{astro.moonPhase}</p>
+        <p className="mt-0.5 text-xs text-foreground/55">{astro.moonIllumination}% illuminated</p>
       </>
     );
   }
   return (
     <>
-      <p className="font-display text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/45">
-        Daylight
-      </p>
-      <p className="font-display mt-0.5 text-sm leading-tight tracking-tight">
+      <p className="label-sub">Daylight</p>
+      <p className="mt-0.5 text-sm leading-tight tracking-tight">
         {computeDayLength(astro.sunrise, astro.sunset)}
       </p>
     </>
@@ -138,25 +132,19 @@ function ArcPanel({ kind, rise, set, astro }: ArcPanelProps) {
       <div className="mt-2 flex items-end justify-between">
         <div>
           {rise ? (
-            <p className="font-display text-base leading-none tracking-tight">
-              {formatClock(rise)}
-            </p>
+            <p className="text-base leading-none tracking-tight">{formatClock(rise)}</p>
           ) : (
             <Skeleton />
           )}
-          <p className="font-display mt-1 text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/45">
-            {labels.rise}
-          </p>
+          <p className="label-sub mt-1">{labels.rise}</p>
         </div>
         <div className="text-right">
           {set ? (
-            <p className="font-display text-base leading-none tracking-tight">{formatClock(set)}</p>
+            <p className="text-base leading-none tracking-tight">{formatClock(set)}</p>
           ) : (
             <Skeleton />
           )}
-          <p className="font-display mt-1 text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/45">
-            {labels.set}
-          </p>
+          <p className="label-sub mt-1">{labels.set}</p>
         </div>
       </div>
     </div>

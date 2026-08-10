@@ -137,6 +137,16 @@ hand-written in `index.css`. The `/moods` editor reads the anchors
 directly instead of probing the DOM. Retune the palette here, not in
 CSS.
 
+**Label vocabulary** — the two small-uppercase label classes in
+`src/index.css`: `.label-section` (tile headers — "Air", "Hourly",
+"Local time") and `.label-sub` (subordinate labels inside a tile —
+"Sunrise", "Dew", the pressure axis endpoints). They replaced 8
+near-identical inline variants that had drifted across 3 sizes, 5
+tracking values, and 6 opacities. Hierarchy comes from the size step
+only: both sit at 70% foreground because anything fainter fails WCAG AA
+against the day tile gradients (40–60% measures 2.3–4.1:1). Add a label
+by using one of these two, not by writing a new inline treatment.
+
 **Search overlay** — the mobile presentation of the search menu: a
 glass backdrop below the page header, plus a sliding Cancel button.
 Same `<Menu>` component renders the desktop dropdown — CSS-driven, no

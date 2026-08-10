@@ -136,7 +136,7 @@ interface SliderRowProps {
 function SliderRow({ label, ariaLabel, value, max, suffix, track, onChange }: SliderRowProps) {
   return (
     <div className="grid grid-cols-[1.25rem_1fr_2.75rem] items-center gap-2">
-      <span className="font-display text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/55">
+      <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-foreground/55">
         {label}
       </span>
       <input

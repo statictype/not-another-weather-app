@@ -55,16 +55,14 @@ function DayRow({ day, label }: { day: ForecastDay; label: string }) {
         aria-hidden="true"
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="font-display text-xs font-medium uppercase tracking-[0.18em] text-foreground/55">
-          {label}
-        </span>
-        <span className="font-display mt-1 text-3xl leading-none tracking-tight">
+        <span className="label-section">{label}</span>
+        <span className="mt-1 text-3xl leading-none tracking-tight">
           {Math.round(day.maxC)}°
-          <span className="font-display ml-1 text-base font-light text-foreground/45">
+          <span className="ml-1 text-base font-light text-foreground/45">
             / {Math.round(day.minC)}°
           </span>
         </span>
-        <span className="font-display mt-1 truncate text-sm font-light text-foreground/55">
+        <span className="mt-1 truncate text-sm font-light text-foreground/55">
           {day.conditionText}
         </span>
       </div>

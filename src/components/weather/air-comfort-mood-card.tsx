@@ -29,14 +29,10 @@ export function AirComfortMoodCard({
       className={`${bucketClass} swap-in swap-d-2 bento-tile relative flex flex-col overflow-hidden p-6`}
       style={{ background }}
     >
-      <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-        Air comfort
-      </p>
+      <p className="label-section">Air comfort</p>
 
-      <p className="font-display mt-4 text-balance text-2xl leading-tight tracking-tight">
-        {sentence}
-      </p>
-      <div className="font-display mt-1.5 flex items-center gap-2 text-base tracking-tight text-foreground/55">
+      <p className="mt-4 text-balance text-2xl leading-tight tracking-tight">{sentence}</p>
+      <div className="mt-1.5 flex items-center gap-2 text-base tracking-tight text-foreground/55">
         <WindIcon className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
         <span>{beaufort(windKph)}</span>
       </div>

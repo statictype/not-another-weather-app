@@ -15,9 +15,7 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
 
   return (
     <section className="swap-in swap-d-3 bento-tile flex flex-col p-6">
-      <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-        Hourly
-      </p>
+      <p className="label-section">Hourly</p>
       <div className="mt-4">
         {slots ? (
           <HourlyStrip slots={slots} />
@@ -107,9 +105,7 @@ function Slot({ slot }: { slot: HourlyForecast }) {
 
   return (
     <div className="flex w-20 shrink-0 flex-col items-center gap-1.5">
-      <span className="font-display text-xs font-medium uppercase tracking-wider text-foreground/60">
-        {label}
-      </span>
+      <span className="label-section">{label}</span>
       <ConditionIcon
         text={slot.conditionText}
         isDay={slot.isDay}
@@ -117,7 +113,7 @@ function Slot({ slot }: { slot: HourlyForecast }) {
         strokeWidth={1.5}
         aria-hidden="true"
       />
-      <span className="font-display leading-none tracking-tight">
+      <span className="leading-none tracking-tight">
         <span className="text-lg">{max}°</span>
         {!collapse && <span className="ml-0.5 text-xs text-foreground/50">{min}°</span>}
       </span>
@@ -135,7 +131,7 @@ function Slot({ slot }: { slot: HourlyForecast }) {
               strokeWidth={2}
               aria-hidden="true"
             />
-            <span className="font-display text-xs">{slot.chanceOfRain}%</span>
+            <span className="text-xs">{slot.chanceOfRain}%</span>
           </>
         )}
       </span>

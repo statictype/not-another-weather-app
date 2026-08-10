@@ -187,7 +187,7 @@ export function SearchBar({
               spellCheck={false}
               placeholder="Search a city…"
               {...inputProps}
-              className="font-display h-auto flex-1 border-0 bg-transparent p-0 text-lg font-normal tracking-tight shadow-none placeholder:text-foreground/30 focus-visible:ring-0 lg:text-xl"
+              className="h-auto flex-1 border-0 bg-transparent p-0 text-lg font-normal tracking-tight shadow-none placeholder:text-foreground/30 focus-visible:ring-0 lg:text-xl"
             />
           </motion.div>
 

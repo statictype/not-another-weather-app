@@ -202,7 +202,7 @@ function RecentRow({
         </span>
         <span
           className={cn(
-            "font-display flex-1 truncate text-[15px] font-medium tracking-tight transition-colors duration-150",
+            "flex-1 truncate text-[15px] font-medium tracking-tight transition-colors duration-150",
             focused ? "text-foreground" : "text-foreground/80",
           )}
         >
@@ -268,7 +268,7 @@ function SuggestionRow({
         <span className="flex min-w-0 flex-1 flex-col">
           <span
             className={cn(
-              "font-display truncate text-[15px] font-medium tracking-tight transition-colors duration-150",
+              "truncate text-[15px] font-medium tracking-tight transition-colors duration-150",
               focused ? "text-foreground" : "text-foreground/80",
             )}
           >
@@ -344,9 +344,7 @@ function ActionButton({
           strokeWidth={1.75}
           aria-hidden="true"
         />
-        <span className="font-display text-[13px] font-medium tracking-tight text-foreground/65">
-          {label}
-        </span>
+        <span className="text-[13px] font-medium tracking-tight text-foreground/65">{label}</span>
       </button>
     </li>
   );
