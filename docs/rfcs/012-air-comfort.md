@@ -115,12 +115,25 @@ src/components/weather/air-comfort-card.tsx       # raw metrics (no labeler)
 
 ```ts
 type ThermalLabel =
-  | "Very cold" | "Cold" | "Chilly" | "Cool" | "Mild"
-  | "Warm" | "Hot" | "Very hot" | "Dangerously hot";
+  | "Very cold"
+  | "Cold"
+  | "Chilly"
+  | "Cool"
+  | "Mild"
+  | "Warm"
+  | "Hot"
+  | "Very hot"
+  | "Dangerously hot";
 
 type AirLabel =
-  | "Very dry" | "Dry" | "Slightly dry" | "Comfortable"
-  | "Slightly humid" | "Humid" | "Very humid" | "Damp";
+  | "Very dry"
+  | "Dry"
+  | "Slightly dry"
+  | "Comfortable"
+  | "Slightly humid"
+  | "Humid"
+  | "Very humid"
+  | "Damp";
 
 interface AirComfortInput {
   tempC: number;
@@ -135,8 +148,10 @@ interface AirComfort {
 }
 
 function airComfort(input: AirComfortInput): AirComfort;
-function airComfortStyle(args: { thermal: ThermalLabel; air: AirLabel }):
-  { bucketClass: string; background: string };
+function airComfortStyle(args: { thermal: ThermalLabel; air: AirLabel }): {
+  bucketClass: string;
+  background: string;
+};
 ```
 
 The mood card consumes `{ thermal, air, sentence }` plus the style
@@ -151,7 +166,7 @@ labeling logic, card = presentation.
   from the Reference Data section below, asserting `{ thermal, air }`.
 - **Boundary rows:** one test per band edge, exercising both sides.
   Thermal edges at -5, 4, 10, 16, 22, 29, 35, 40 (and -6 for `Very
-  cold`); air edges at -4, 4, 10, 16, 21, 24 (and -5 for `Very dry`).
+cold`); air edges at -4, 4, 10, 16, 21, 24 (and -5 for `Very dry`).
 - **Damp threshold:** `tempC ∈ {11.99, 12}`, `humidity ∈ {80, 80.01}` —
   pins the strict operators on both inputs.
 - **Sentence format:** spot-checks that `{ Mild, Comfortable }` →

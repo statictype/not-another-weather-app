@@ -14,7 +14,7 @@ export function hsbToRgb({ h, s, b }: HSB): RGB {
   const sat = s / 100;
   const val = b / 100;
   const c = val * sat;
-  const hp = ((h % 360) + 360) % 360 / 60;
+  const hp = (((h % 360) + 360) % 360) / 60;
   const x = c * (1 - Math.abs((hp % 2) - 1));
   let r1 = 0;
   let g1 = 0;
@@ -78,7 +78,9 @@ export function shiftHueHex(hex: string, deltaDegrees: number): string {
 
 export function rgbToHex({ r, g, b }: RGB): string {
   const toHex = (n: number) =>
-    Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
+    Math.max(0, Math.min(255, Math.round(n)))
+      .toString(16)
+      .padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
