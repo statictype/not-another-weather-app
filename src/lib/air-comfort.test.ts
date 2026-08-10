@@ -12,11 +12,7 @@ interface Row {
   air: AirLabel;
 }
 
-/**
- * Every row is the canonical "Reference Data" table from file.md.
- * If any of these fail, either the spec table or this implementation drifted —
- * stop and decide which is correct before patching the test.
- */
+/** The Reference Data table from RFC 012. A failure means spec or labeler drifted. */
 const referenceRows: Row[] = [
   {
     location: "Cairo",
@@ -265,11 +261,7 @@ describe("airComfort — reference data", () => {
   );
 });
 
-/**
- * Probe each band edge: lower-inclusive (≥), upper-exclusive (<).
- * Air-axis tests pin temp/humidity to neutral values that can't trigger the
- * damp override.
- */
+/** Both sides of every band edge. Air rows pin temp/humidity clear of the damp override. */
 const thermalBoundaries: Array<[number, ThermalLabel]> = [
   [-6, "Very cold"],
   [-5, "Cold"],
@@ -381,12 +373,7 @@ describe("airComfort — damp override", () => {
   });
 });
 
-/**
- * `airComfortStyle` only assembles strings, but the mapping it encodes
- * (thermal → bucket, air → humidity position) is exactly where the palette
- * and the labeler can drift. These assert the logic as values — the actual
- * oklch resolution stays the browser's job.
- */
+/** The oklch resolution stays the browser's job; these assert the mapping as values. */
 describe("airComfortStyle — bucket + humidity mapping", () => {
   const thermals: ThermalLabel[] = [
     "Very cold",
@@ -445,6 +432,47 @@ describe("airComfort — sentence format", () => {
   it("handles the multi-word extreme", () => {
     expect(airComfort({ tempC: 35, feelsLikeC: 47, dewpointC: 25, humidity: 71 }).sentence).toBe(
       "Dangerously hot and very humid",
+    );
+  });
+});
+
+/** One row per `ThermalLabel`, so every `COMFORT_JOIN` entry runs. Rows below Cool can't occur. */
+const comfortSentences: Array<[ThermalLabel, number, string]> = [
+  ["Very cold", -10, "Very cold"],
+  ["Cold", 0, "Cold"],
+  ["Chilly", 8, "Chilly"],
+  ["Cool", 13, "Cool but comfortable"],
+  ["Mild", 18, "Mild and comfortable"],
+  ["Warm", 25, "Warm and comfortable"],
+  ["Hot", 31, "Hot but comfortable"],
+  ["Very hot", 37, "Very hot"],
+  ["Dangerously hot", 41, "Dangerously hot"],
+];
+
+describe("airComfort — comfortable is licensed by the thermal band", () => {
+  it.each(comfortSentences)("%s at dew 12 → %s", (thermal, feelsLikeC, expected) => {
+    const result = airComfort({ tempC: 30, feelsLikeC, dewpointC: 12, humidity: 40 });
+    expect(result.thermal).toBe(thermal);
+    expect(result.air).toBe("Comfortable");
+    expect(result.sentence).toBe(expected);
+  });
+
+  const hotCutoff: Array<[number, string]> = [
+    [29, "Hot but comfortable"],
+    [31.99, "Hot but comfortable"],
+    [32, "Hot"],
+    [34.99, "Hot"],
+  ];
+
+  it.each(hotCutoff)("feels-like %s concedes only below 32 → %s", (feelsLikeC, expected) => {
+    expect(airComfort({ tempC: 35, feelsLikeC, dewpointC: 12, humidity: 40 }).sentence).toBe(
+      expected,
+    );
+  });
+
+  it("leaves other air labels untouched above the hot cutoff", () => {
+    expect(airComfort({ tempC: 35, feelsLikeC: 33, dewpointC: 22, humidity: 55 }).sentence).toBe(
+      "Hot and humid",
     );
   });
 });

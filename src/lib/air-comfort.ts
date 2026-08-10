@@ -1,13 +1,6 @@
 /**
- * Two-axis air comfort labels — see plan.md and file.md.
- *
- * Bands read as `≥ lower AND < upper` (lower-inclusive, upper-exclusive),
- * which is what the strictly-less-than ladders below encode.
- *
- * The label/bucket vocabulary and the color mappings live in
- * `air-comfort-palette.ts`; this file owns the threshold ladders that turn a
- * reading into labels, and re-exports the shared types so existing
- * `@/lib/air-comfort` imports keep working.
+ * Two-axis air comfort labels (RFC 012). Bands are lower-inclusive,
+ * upper-exclusive; vocabulary and colors live in `air-comfort-palette.ts`.
  */
 
 import {
@@ -41,7 +34,7 @@ export function airComfort({
 }: AirComfortInput): AirComfort {
   const thermal = thermalLabel(feelsLikeC);
   const air: AirLabel = isDamp(tempC, humidity) ? "Damp" : airLabel(dewpointC);
-  return { thermal, air, sentence: `${thermal} and ${air.toLowerCase()}` };
+  return { thermal, air, sentence: sentence(thermal, air, feelsLikeC) };
 }
 
 function thermalLabel(feelsLikeC: number): ThermalLabel {
@@ -68,6 +61,32 @@ function airLabel(dewpointC: number): AirLabel {
 
 function isDamp(tempC: number, humidity: number): boolean {
   return tempC < 12 && humidity > 80;
+}
+
+/** Joins the labels when air is `Comfortable`; `null` drops the air clause. */
+type ComfortJoin = "and" | "but" | null | { join: "but"; maxFeelsLikeC: number };
+
+const COMFORT_JOIN: Record<ThermalLabel, ComfortJoin> = {
+  "Dangerously hot": null,
+  "Very hot": null,
+  Hot: { join: "but", maxFeelsLikeC: 32 },
+  Warm: "and",
+  Mild: "and",
+  Cool: "but",
+  Chilly: null,
+  Cold: null,
+  "Very cold": null,
+};
+
+function resolveJoin(rule: ComfortJoin, feelsLikeC: number): "and" | "but" | null {
+  if (rule === null || typeof rule === "string") return rule;
+  return feelsLikeC < rule.maxFeelsLikeC ? rule.join : null;
+}
+
+function sentence(thermal: ThermalLabel, air: AirLabel, feelsLikeC: number): string {
+  const join = air === "Comfortable" ? resolveJoin(COMFORT_JOIN[thermal], feelsLikeC) : "and";
+  if (join === null) return thermal;
+  return `${thermal} ${join} ${air.toLowerCase()}`;
 }
 
 export interface AirComfortStyle {
