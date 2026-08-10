@@ -33,8 +33,10 @@ Two things a neighboring weather app could not truthfully copy:
 - **Two-axis air comfort.** Conditions are described as a sentence built from
   thermal (feels-like temperature, 9 labels) × air (dew point, 7 labels, plus a
   damp override at `tempC < 12 AND humidity > 80`), rendered on an OKLCH
-  gradient whose color is derived from those same labels. See RFC 012 and
-  `src/lib/air-comfort.ts`.
+  gradient whose color is derived from those same labels. `Comfortable` is the
+  one evaluative word and is spoken only where the thermal band allows it —
+  `Warm and comfortable`, `Hot but comfortable`, and at the extremes the
+  thermal label alone. See RFC 012 and `src/lib/air-comfort.ts`.
 - **A URL that is the state.** `?city=…` is the single source of truth for the
   active city. Every view is linkable and shareable; there is no internal
   "current city" that the address bar lags behind. See RFC 007.
@@ -130,7 +132,8 @@ author.
    fallbacks, no invented data.
 4. **Describe the weather, don't just report it.** The two-axis comfort sentence
    and its derived color are the product's point of view; raw numbers stay
-   available alongside, never instead.
+   available alongside, never instead. The sentence says only what the reading
+   supports: it never calls 40 °C comfortable.
 5. **One source of truth per concept.** Tiers, DTOs, error kinds, query
    normalization, and the air-comfort palette are each named once and propagated
    by TypeScript. Design work that duplicates one of them is wrong even if it

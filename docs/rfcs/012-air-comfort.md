@@ -6,9 +6,7 @@ The hero shows a feels-like temperature and the metrics tile shows raw
 dewpoint and humidity numbers, but neither captures the **felt** quality
 of the air the way "Warm and slightly humid" does. We want a short,
 accessible mood summary alongside the hero — no comfort score, no
-evocative-but-obscure vocabulary, no UI that pretends to be opinionated
-about whether _you_ are comfortable (comfort depends on wind, sun,
-clothing, activity, preference; a score can't honestly capture that).
+evocative-but-obscure vocabulary.
 
 ## Two-axis model
 
@@ -61,6 +59,9 @@ direction.
 | -4 to 4        | Dry            |
 | < -4           | Very dry       |
 
+`Comfortable` is classified like any other band, but is not always
+spoken — see "Speaking `Comfortable`" below.
+
 ## Damp override
 
 When `tempC < 12 AND humidity > 80` (strict operators on both sides),
@@ -69,10 +70,50 @@ sensation that low absolute humidity readings would otherwise mask
 (a 7°C dew point is technically "Slightly dry" by the table, but at
 10°C with 82% RH it reads as damp, not dry).
 
+## Speaking `Comfortable`
+
+`Comfortable` is the only evaluative word in either vocabulary — it
+describes the person, not the air. The sentence speaks it only where the
+thermal label allows a human to be comfortable. Which conjunction joins
+the two labels, or whether the air clause appears at all, is a function
+of the thermal label:
+
+| Thermal         | Join  | Sentence at dew 10 to 16 |
+| --------------- | ----- | ------------------------ |
+| Dangerously hot | —     | `Dangerously hot`        |
+| Very hot        | —     | `Very hot`               |
+| Hot (< 32)      | `but` | `Hot but comfortable`    |
+| Hot (≥ 32)      | —     | `Hot`                    |
+| Warm            | `and` | `Warm and comfortable`   |
+| Mild            | `and` | `Mild and comfortable`   |
+| Cool            | `but` | `Cool but comfortable`   |
+| Chilly          | —     | `Chilly`                 |
+| Cold            | —     | `Cold`                   |
+| Very cold       | —     | `Very cold`              |
+
+A dash drops the air clause; the sentence is then the thermal label
+alone. The reading itself is unchanged — `air` is still `Comfortable`,
+and the card's color still reads 50% on the dry→humid scale.
+
+`Hot` spans 29 to 35, wide enough that its two halves differ: the
+concession holds below 32 and is dropped at or above it. This is the
+only numeric guard in the rule; every other row is a function of the
+label alone.
+
+Every air label other than `Comfortable` always joins with `and`,
+including at the thermal extremes (`Dangerously hot and very humid`,
+`Very cold and damp`).
+
+The rule lives in `COMFORT_JOIN` in `src/lib/air-comfort.ts`, an
+exhaustive `Record<ThermalLabel, …>`. It is keyed by thermal label, not
+by color bucket: `Cool` and `Chilly` share the `blue` bucket but take
+different rules.
+
 ## Edge cases
 
-- "Dangerously hot" and "Very cold" do **not** suppress the air label.
-  Both labels are always rendered.
+- Both labels are rendered except where `Comfortable` is unlicensed (see
+  above); the sentence is then the thermal label alone. No other air
+  label is ever suppressed, at any thermal extreme.
 - The thermal label is computed from feels-like temperature; the air
   label is computed from actual temperature, dew point, and RH (RH only
   for the damp check).
@@ -85,9 +126,11 @@ sensation that low absolute humidity readings would otherwise mask
 `AirComfortMoodCard` (`src/components/weather/air-comfort-mood-card.tsx`):
 
 - Section header: `Air comfort`.
-- Body: single sentence `${Thermal} and ${air|damp}` — thermal
-  capitalized, rest lowercase. Examples: `Warm and slightly humid`,
-  `Chilly and damp`, `Mild and comfortable`, `Dangerously hot and very humid`.
+- Body: single sentence `${Thermal} ${and|but} ${air|damp}` — thermal
+  capitalized, rest lowercase — or the thermal label alone where
+  `Comfortable` is unlicensed. Examples: `Warm and slightly humid`,
+  `Chilly and damp`, `Mild and comfortable`, `Dangerously hot and very humid`,
+  `Cool but comfortable`, `Hot but comfortable`, `Dangerously hot`.
 - Footer: a Beaufort wind label (`Calm` / `Light air` / ... / `Hurricane`).
 - Background: muted OKLCH gradient.
   - **Hue from thermal axis**: cold = blue, mild = green, hot =
@@ -147,12 +190,19 @@ interface AirComfort {
   sentence: string;
 }
 
+type ComfortJoin = "and" | "but" | null | { join: "but"; maxFeelsLikeC: number };
+const COMFORT_JOIN: Record<ThermalLabel, ComfortJoin>;
+
 function airComfort(input: AirComfortInput): AirComfort;
 function airComfortStyle(args: { thermal: ThermalLabel; air: AirLabel }): {
   bucketClass: string;
   background: string;
 };
 ```
+
+`air` is always the classified band, including the `Comfortable` readings
+the sentence does not speak; `sentence` is the only field that applies
+`COMFORT_JOIN`.
 
 The mood card consumes `{ thermal, air, sentence }` plus the style
 helper's `{ bucketClass, background }`. Separation of concerns: lib =
@@ -171,6 +221,13 @@ cold`); air edges at -4, 4, 10, 16, 21, 24 (and -5 for `Very dry`).
   pins the strict operators on both inputs.
 - **Sentence format:** spot-checks that `{ Mild, Comfortable }` →
   `"Mild and comfortable"` and the `Damp` override → `"Chilly and damp"`.
+- **Comfortable licensing:** one row per `ThermalLabel` at dew 12,
+  asserting the exact sentence, so every `COMFORT_JOIN` entry is
+  executed. The four rows below `Cool` use physically impossible inputs
+  (a 10–16 °C dew point requires a temperature of at least 10 °C) and
+  cover the table, not the weather. Plus the hot cutoff at feels-like
+  ∈ {29, 31.99, 32, 34.99}, and one row pinning that the cutoff does not
+  touch other air labels (`{ Hot @33, Humid }` → `"Hot and humid"`).
 
 ## Reference data
 
@@ -208,6 +265,12 @@ lists the inputs and the expected output labels.
 
 ## Notes on canonical labels
 
+- `Comfortable` was originally spoken in every pairing, which produced
+  `"Dangerously hot and comfortable"` — a sentence that asserts something
+  false about the reading. The band and its color position were kept; the
+  sentence rule now licenses the word per thermal label (see "Speaking
+  `Comfortable`"). The 26 reference rows were unaffected: all six
+  `Comfortable` rows are `Mild` or `Warm`.
 - The shipping label set drops the trailing noun on `Comfortable` (the
   spec draft had `Comfortable air`). In the single-sentence form
   ("Mild and comfortable") the noun is redundant.
