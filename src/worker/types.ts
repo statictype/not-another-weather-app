@@ -14,7 +14,6 @@ export interface Env {
 }
 
 import type { WeatherErrorKind } from "@/lib/errors";
-export type { WeatherErrorKind };
 
 export type {
   Astro,

@@ -1,6 +1,7 @@
-import { statusForKind, WeatherApiError } from "./errors";
 import { normalizeQuery } from "./cache";
-import type { Env, ErrorResponse, WeatherErrorKind } from "./types";
+import { WeatherApiError } from "./errors";
+import { errorResponse } from "./respond";
+import type { Env } from "./types";
 import { fetchSearch } from "./weather-api";
 
 /**
@@ -28,9 +29,4 @@ export async function handleSearch(request: Request, env: Env): Promise<Response
     console.error("[oasis] unexpected search handler error", err);
     return errorResponse("upstream", "An unexpected error occurred.");
   }
-}
-
-function errorResponse(kind: WeatherErrorKind, message: string): Response {
-  const body: ErrorResponse = { error: { kind, message } };
-  return Response.json(body, { status: statusForKind(kind) });
 }
