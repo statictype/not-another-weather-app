@@ -4,6 +4,7 @@
  */
 
 import {
+  AC_ANCHORS,
   AIR_HUMID_PCT,
   type AirComfortBucket,
   type AirLabel,
@@ -111,4 +112,35 @@ export function airComfortStyle({
       ${base} 45%,
       color-mix(in oklch, ${base}, black var(--ac-shadow)) 100%)`,
   };
+}
+
+/**
+ * The comfort color as ink rather than as a surface.
+ *
+ * `airComfortStyle` reads `--ac-dry` / `--ac-humid`, which the `.night`
+ * cascade swaps for near-black anchors — correct for a card fill, invisible
+ * as a mark: measured 1.00-1.04:1 against the night hero. The day anchors
+ * measure 8.6-14.4:1 there, so a mark uses them in both modes and reads the
+ * literal hexes instead of the mode-dependent variables.
+ */
+export function airComfortInk({ thermal, air }: { thermal: ThermalLabel; air: AirLabel }): string {
+  const { dry, humid } = AC_ANCHORS.day[THERMAL_BUCKET[thermal]];
+  return `color-mix(in oklch, ${dry}, ${humid} ${AIR_HUMID_PCT[air]}%)`;
+}
+
+/** Beaufort-scale description of a wind speed in km/h. */
+export function beaufort(kph: number): string {
+  if (kph < 1) return "Calm";
+  if (kph < 6) return "Light air";
+  if (kph < 12) return "Light breeze";
+  if (kph < 20) return "Gentle breeze";
+  if (kph < 29) return "Moderate breeze";
+  if (kph < 39) return "Fresh breeze";
+  if (kph < 50) return "Strong breeze";
+  if (kph < 62) return "Near gale";
+  if (kph < 75) return "Gale";
+  if (kph < 89) return "Strong gale";
+  if (kph < 103) return "Storm";
+  if (kph < 118) return "Violent storm";
+  return "Hurricane";
 }

@@ -17,7 +17,7 @@ export function AirComfortCard({
   visibilityKm,
 }: AirComfortCardProps) {
   return (
-    <section className="swap-in swap-d-4 tile-wind bento-tile relative overflow-hidden p-6 sm:col-span-6 xl:col-span-3">
+    <section className="swap-in swap-d-5 tile-wind bento-tile relative overflow-hidden p-6 sm:col-span-6 xl:order-5 xl:col-span-3">
       <p className="label-section">Air</p>
 
       <dl className="mt-4 divide-y divide-foreground/10">

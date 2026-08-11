@@ -28,7 +28,7 @@ export function ForecastCard({ forecast, yesterday }: ForecastCardProps) {
   }
 
   return (
-    <section className="swap-in swap-d-6 bento-tile flex flex-col p-7 sm:col-span-12">
+    <section className="swap-in swap-d-3 bento-tile flex flex-col p-7 sm:col-span-12 xl:order-7">
       <div className="mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-0 sm:gap-y-6 sm:[&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(odd)]:border-foreground/6 md:grid-cols-4 md:gap-0 md:[&>*]:border-r md:[&>*]:border-foreground/6 md:[&>*:last-child]:border-r-0">
         {days.map((entry) =>
           "skeleton" in entry ? (

@@ -15,7 +15,7 @@ export function AstroCard({ astro }: AstroCardProps) {
   return (
     <section
       className={cn(
-        "swap-in swap-d-3 bento-tile relative overflow-hidden p-6 sm:col-span-6 xl:col-span-3",
+        "swap-in swap-d-5 bento-tile relative overflow-hidden p-6 sm:col-span-6 xl:order-4 xl:col-span-3",
         view === "sun" ? "tile-astro" : "tile-astro-moon",
       )}
     >

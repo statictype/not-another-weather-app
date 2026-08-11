@@ -12,7 +12,7 @@ export function TimeCard({ tz }: TimeCardProps) {
   }, []);
 
   return (
-    <section className="swap-in swap-d-2 bento-tile flex flex-col justify-center p-6">
+    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center p-6 sm:col-span-12 xl:order-2 xl:col-span-4">
       <p className="label-section">Local time</p>
       <p className="mt-4 text-4xl leading-none tracking-tight xl:text-3xl 2xl:text-4xl">
         {formatTime(now, tz)}

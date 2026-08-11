@@ -10,7 +10,7 @@ interface ExposureCardProps {
 
 export function ExposureCard({ uv, airQualityIndex, pressureMb, isDay }: ExposureCardProps) {
   return (
-    <section className="swap-in swap-d-5 bento-tile flex flex-col p-6 sm:col-span-12 xl:col-span-6">
+    <section className="swap-in swap-d-6 bento-tile flex flex-col p-6 sm:col-span-12 xl:order-6 xl:col-span-6">
       <div className="flex flex-1 flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
         <div className="flex flex-1 flex-col gap-4">
           <MetricRow

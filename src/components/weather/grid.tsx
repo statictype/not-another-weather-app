@@ -2,7 +2,6 @@ import type { WeatherCurrent } from "@/api/types";
 import { cn } from "@/lib/utils";
 import { useWeatherForecast, useWeatherYesterday } from "@/hooks/use-weather";
 import { AirComfortCard } from "./air-comfort-card";
-import { AirComfortMoodCard } from "./air-comfort-mood-card";
 import { AstroCard } from "./astro-card";
 import { ExposureCard } from "./exposure-card";
 import { ForecastCard } from "./forecast-card";
@@ -16,6 +15,11 @@ interface WeatherGridProps {
   isStale: boolean;
 }
 
+/**
+ * Document order is the small-screen reading order: the answer, then the
+ * next hours, then the next days. `xl:order-*` restores the desktop
+ * composition, where the hero spans two rows beside a stacked right column.
+ */
 export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
   const forecast = useWeatherForecast(query);
   const yesterday = useWeatherYesterday(query);
@@ -31,22 +35,10 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         isStale && "opacity-60",
       )}
     >
-      {/* Row 1: Hero (8) + Air Comfort mood / Time / Hourly stacked (4) */}
       <HeroCard location={c.location} current={c.current} today={forecast.data?.today} />
-      <div className="col-span-1 flex flex-col gap-5 sm:col-span-12 sm:gap-6 xl:col-span-4">
-        <AirComfortMoodCard
-          tempC={c.current.tempC}
-          feelsLikeC={c.current.feelsLikeC}
-          dewpointC={c.current.dewpointC}
-          humidity={c.current.humidity}
-          windKph={c.current.windKph}
-        />
-        <TimeCard tz={c.location.tz} />
-        <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
-      </div>
-
-      {/* Row 2: Astro (3) + Air (3) + Pressure/UV/AQI (6) */}
-      <AstroCard astro={forecast.data?.astro} />
+      <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
+      <ForecastCard forecast={forecast.data?.forecast} yesterday={yesterday.data?.yesterday} />
+      <TimeCard tz={c.location.tz} />
       <AirComfortCard
         dewpointC={c.current.dewpointC}
         humidity={c.current.humidity}
@@ -54,15 +46,13 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         windDir={c.current.windDir}
         visibilityKm={c.current.visibilityKm}
       />
+      <AstroCard astro={forecast.data?.astro} />
       <ExposureCard
         uv={c.current.uv}
         airQualityIndex={forecast.data?.airQualityIndex ?? null}
         pressureMb={c.current.pressureMb}
         isDay={c.current.timeOfDay === "day"}
       />
-
-      {/* Row 3: Forecast (12) */}
-      <ForecastCard forecast={forecast.data?.forecast} yesterday={yesterday.data?.yesterday} />
     </div>
   );
 }
