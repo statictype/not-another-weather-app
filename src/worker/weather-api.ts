@@ -4,12 +4,14 @@ import type {
   CurrentConditions,
   ForecastDay,
   HourlyForecast,
+  WeatherAlert,
   WeatherCurrent,
   WeatherForecast,
   WeatherLocation,
   WeatherYesterday,
 } from "./types";
 import { defaultMessage, type WeatherErrorKind } from "@/lib/errors";
+import { normalizeSeverity, sortAndCapAlerts } from "./alerts";
 import { WeatherApiError } from "./errors";
 
 /* ───── Upstream schemas (private to this file) ──────────────────────
@@ -67,6 +69,11 @@ const UpstreamHourSchema = z.object({
   is_day: z.union([z.literal(0), z.literal(1)]),
   condition: z.object({ text: z.string(), code: z.number() }),
   chance_of_rain: z.number(),
+  chance_of_snow: z.number().nullish(),
+  will_it_rain: z.number().nullish(),
+  will_it_snow: z.number().nullish(),
+  precip_mm: z.number().nullish(),
+  snow_cm: z.number().nullish(),
   cloud: z.number(),
 });
 
@@ -77,6 +84,11 @@ const UpstreamForecastDaySchema = z.object({
     maxtemp_c: z.number(),
     avgtemp_c: z.number(),
     daily_chance_of_rain: z.number(),
+    daily_will_it_rain: z.number().nullish(),
+    daily_chance_of_snow: z.number().nullish(),
+    daily_will_it_snow: z.number().nullish(),
+    totalprecip_mm: z.number().nullish(),
+    totalsnow_cm: z.number().nullish(),
     condition: z.object({ text: z.string(), code: z.number() }),
   }),
   astro: z.object({
@@ -90,6 +102,25 @@ const UpstreamForecastDaySchema = z.object({
   hour: z.array(UpstreamHourSchema).optional(),
 });
 
+/**
+ * Every field is nullish: providers populate this block inconsistently and
+ * an alert missing an `instruction` is still worth showing. `severity` is
+ * an unconstrained string here — `normalizeSeverity` closes it.
+ *
+ * `msgtype`, `category`, `certainty`, `urgency` and `note` are deliberately
+ * not consumed; they are constant or meaningless to a reader.
+ */
+const UpstreamAlertSchema = z.object({
+  event: z.string().nullish(),
+  headline: z.string().nullish(),
+  severity: z.string().nullish(),
+  areas: z.string().nullish(),
+  effective: z.string().nullish(),
+  expires: z.string().nullish(),
+  desc: z.string().nullish(),
+  instruction: z.string().nullish(),
+});
+
 const UpstreamForecastResponseSchema = z.object({
   location: UpstreamLocationSchema,
   /**
@@ -101,6 +132,15 @@ const UpstreamForecastResponseSchema = z.object({
   forecast: z.object({
     forecastday: z.array(UpstreamForecastDaySchema),
   }),
+  /**
+   * Absent entirely on `alerts=no` and on plans without alert access;
+   * `alert` is `[]` when the plan supplies them but the area has none.
+   */
+  alerts: z
+    .object({
+      alert: z.array(UpstreamAlertSchema).nullish(),
+    })
+    .nullish(),
 });
 
 type UpstreamLocation = z.infer<typeof UpstreamLocationSchema>;
@@ -242,7 +282,7 @@ export async function fetchForecast3(
   url.searchParams.set("q", query);
   url.searchParams.set("days", "3");
   url.searchParams.set("aqi", "yes");
-  url.searchParams.set("alerts", "no");
+  url.searchParams.set("alerts", "yes");
 
   const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
   const today = raw.forecast.forecastday[0];
@@ -258,11 +298,17 @@ export async function fetchForecast3(
       minC: round1(today.day.mintemp_c),
       maxC: round1(today.day.maxtemp_c),
       chanceOfRain: today.day.daily_chance_of_rain,
+      willItRain: isTrue(today.day.daily_will_it_rain),
+      chanceOfSnow: today.day.daily_chance_of_snow ?? 0,
+      willItSnow: isTrue(today.day.daily_will_it_snow),
+      totalPrecipMm: round1(today.day.totalprecip_mm ?? 0),
+      totalSnowCm: round1(today.day.totalsnow_cm ?? 0),
     },
     airQualityIndex: typeof epa === "number" ? epa : null,
     forecast: raw.forecast.forecastday.map(shapeForecastDay),
     astro: shapeAstro(today.astro),
     hourly,
+    alerts: sortAndCapAlerts((raw.alerts?.alert ?? []).map(shapeAlert)),
   };
 }
 
@@ -344,7 +390,25 @@ function shapeHourly(h: z.infer<typeof UpstreamHourSchema>): HourlyForecast {
     conditionCode: h.condition.code,
     isDay: h.is_day === 1,
     chanceOfRain: h.chance_of_rain,
+    chanceOfSnow: h.chance_of_snow ?? 0,
+    willItRain: isTrue(h.will_it_rain),
+    willItSnow: isTrue(h.will_it_snow),
+    precipMm: round1(h.precip_mm ?? 0),
+    snowCm: round1(h.snow_cm ?? 0),
     cloud: h.cloud,
+  };
+}
+
+function shapeAlert(a: z.infer<typeof UpstreamAlertSchema>): WeatherAlert {
+  return {
+    event: a.event ?? "",
+    headline: a.headline ?? "",
+    severity: normalizeSeverity(a.severity ?? ""),
+    areas: a.areas ?? "",
+    effective: a.effective ?? "",
+    expires: a.expires ?? "",
+    desc: a.desc ?? "",
+    instruction: a.instruction ?? "",
   };
 }
 
@@ -364,6 +428,11 @@ function shapeAstro(raw: UpstreamForecastDay["astro"]): Astro {
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10;
+}
+
+/** Upstream spells its booleans as 0 / 1, and omits them on some plans. */
+function isTrue(flag: number | null | undefined): boolean {
+  return flag === 1;
 }
 
 export async function fetchSearch(

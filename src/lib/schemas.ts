@@ -60,6 +60,12 @@ export const HourlyForecastSchema = z.object({
   conditionCode: z.number(),
   isDay: z.boolean(),
   chanceOfRain: z.number(),
+  chanceOfSnow: z.number(),
+  /** Upstream's own call on whether precipitation lands, not a threshold on the chance. */
+  willItRain: z.boolean(),
+  willItSnow: z.boolean(),
+  precipMm: z.number(),
+  snowCm: z.number(),
   cloud: z.number(),
 });
 export type HourlyForecast = z.infer<typeof HourlyForecastSchema>;
@@ -95,18 +101,53 @@ export const WeatherCurrentSchema = z.object({
 });
 export type WeatherCurrent = z.infer<typeof WeatherCurrentSchema>;
 
+/**
+ * Alert severity, normalized worker-side into a closed union. Upstream
+ * emits an unconstrained string — the vendor aggregates national providers
+ * and enumerates no values — so `src/worker/alerts.ts` maps the observed
+ * vocabularies onto these five and ranks them. Ordered worst-first; the
+ * worker sorts by this order, so the client can render `alerts[0]` as the
+ * top alert without owning a rank table.
+ */
+export const ALERT_SEVERITIES = ["extreme", "severe", "moderate", "minor", "unknown"] as const;
+export type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
+
+export const WeatherAlertSchema = z.object({
+  event: z.string(),
+  headline: z.string(),
+  severity: z.enum(ALERT_SEVERITIES),
+  areas: z.string(),
+  /** ISO 8601 with offset, as emitted upstream. */
+  effective: z.string(),
+  expires: z.string(),
+  desc: z.string(),
+  instruction: z.string(),
+});
+export type WeatherAlert = z.infer<typeof WeatherAlertSchema>;
+
 /** Response shape for `GET /api/weather/forecast`. */
 export const WeatherForecastSchema = z.object({
   today: z.object({
     minC: z.number(),
     maxC: z.number(),
     chanceOfRain: z.number(),
+    willItRain: z.boolean(),
+    chanceOfSnow: z.number(),
+    willItSnow: z.boolean(),
+    totalPrecipMm: z.number(),
+    totalSnowCm: z.number(),
   }),
   /** US EPA index, 1–6. `null` when upstream omits the air-quality block. */
   airQualityIndex: z.number().nullable(),
   forecast: z.array(ForecastDaySchema),
   astro: AstroSchema,
   hourly: z.array(HourlyForecastSchema),
+  /**
+   * Worst-first, capped at `MAX_ALERTS`. Empty when upstream returns none
+   * or the plan does not supply them — never `null`, so the client has one
+   * shape to render.
+   */
+  alerts: z.array(WeatherAlertSchema),
 });
 export type WeatherForecast = z.infer<typeof WeatherForecastSchema>;
 

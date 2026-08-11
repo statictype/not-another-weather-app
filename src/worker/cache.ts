@@ -20,7 +20,7 @@ export const CACHE_TTL_FORECAST = 3600; // 1 h
 export const CACHE_TTL_YESTERDAY = 86400; // 24 h
 
 const CACHE_KEY_HOST = "https://oasis-cache.local";
-const CACHE_VERSION = "5";
+const CACHE_VERSION = "6";
 
 /**
  * Build a synthetic Request to use as the Cache API key. The host is

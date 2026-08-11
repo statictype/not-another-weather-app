@@ -59,7 +59,16 @@ const londonCurrent: WeatherCurrent = {
 };
 
 const londonForecast: WeatherForecast = {
-  today: { minC: 8, maxC: 15.5, chanceOfRain: 20 },
+  today: {
+    minC: 8,
+    maxC: 15.5,
+    chanceOfRain: 20,
+    willItRain: false,
+    chanceOfSnow: 0,
+    willItSnow: false,
+    totalPrecipMm: 0,
+    totalSnowCm: 0,
+  },
   airQualityIndex: 2,
   forecast: [
     {
@@ -82,6 +91,7 @@ const londonForecast: WeatherForecast = {
     moonIllumination: 72,
   },
   hourly: [],
+  alerts: [],
 };
 
 const londonYesterday: WeatherYesterday = { yesterday: null };

@@ -16,10 +16,12 @@ export interface Env {
 import type { WeatherErrorKind } from "@/lib/errors";
 
 export type {
+  AlertSeverity,
   Astro,
   CurrentConditions,
   ForecastDay,
   HourlyForecast,
+  WeatherAlert,
   WeatherCurrent,
   WeatherForecast,
   WeatherLocation,

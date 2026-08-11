@@ -57,6 +57,21 @@ const upstreamAstro = {
   moon_illumination: 72,
 };
 
+const upstreamHour = {
+  time: "2026-04-07 15:00",
+  temp_c: 13.2,
+  feelslike_c: 12.0,
+  is_day: 1,
+  condition: { text: "Light rain", code: 1063 },
+  chance_of_rain: 80,
+  chance_of_snow: 10,
+  will_it_rain: 1,
+  will_it_snow: 0,
+  precip_mm: 2.44,
+  snow_cm: 0,
+  cloud: 90,
+};
+
 const upstreamForecastFixture = {
   location: upstreamLocation,
   forecast: {
@@ -68,9 +83,15 @@ const upstreamForecastFixture = {
           maxtemp_c: 15.5,
           avgtemp_c: 11.7,
           daily_chance_of_rain: 20,
+          daily_will_it_rain: 1,
+          daily_chance_of_snow: 15,
+          daily_will_it_snow: 0,
+          totalprecip_mm: 4.26,
+          totalsnow_cm: 0,
           condition: { text: "Partly cloudy", code: 1003 },
         },
         astro: upstreamAstro,
+        hour: [upstreamHour],
       },
       {
         date: "2026-04-08",
@@ -96,6 +117,17 @@ const upstreamForecastFixture = {
       },
     ],
   },
+};
+
+const upstreamAlert = {
+  event: "Wind Warning",
+  headline: "Wind Warning issued for Greater London",
+  severity: "Severe",
+  areas: "Greater London",
+  effective: "2026-04-07T06:00:00+01:00",
+  expires: "2026-04-07T21:00:00+01:00",
+  desc: "Gusts of 60-70 mph expected.",
+  instruction: "Secure loose objects.",
 };
 
 const upstreamYesterdayFixture = {
@@ -265,10 +297,215 @@ describe("Worker /api/weather/forecast", () => {
       forecast: Array<{ date: string }>;
       astro: { sunrise: string };
     };
-    expect(body.today).toEqual({ minC: 8, maxC: 15.5, chanceOfRain: 20 });
+    expect(body.today).toEqual({
+      minC: 8,
+      maxC: 15.5,
+      chanceOfRain: 20,
+      willItRain: true,
+      chanceOfSnow: 15,
+      willItSnow: false,
+      totalPrecipMm: 4.3,
+      totalSnowCm: 0,
+    });
     expect(body.forecast).toHaveLength(3);
     expect(body.forecast[0]?.date).toBe("2026-04-07");
     expect(body.astro.sunrise).toBe("06:32 AM");
+  });
+
+  it("requests alerts from upstream", async () => {
+    let seenPath = "";
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({
+        path: (p) => {
+          if (!p.startsWith("/v1/forecast.json")) return false;
+          seenPath = p;
+          return true;
+        },
+      })
+      .reply(200, upstreamForecastFixture);
+
+    await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastAlertsParam");
+    const params = new URLSearchParams(seenPath.slice(seenPath.indexOf("?")));
+    expect(params.get("alerts")).toBe("yes");
+    expect(params.get("aqi")).toBe("yes");
+    expect(params.get("days")).toBe("3");
+  });
+
+  it("shapes the hourly precipitation fields", async () => {
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, upstreamForecastFixture);
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastHourlyPrecip");
+    const body = (await res.json()) as { hourly: Array<Record<string, unknown>> };
+    expect(body.hourly[0]).toMatchObject({
+      time: "2026-04-07 15:00",
+      chanceOfRain: 80,
+      chanceOfSnow: 10,
+      willItRain: true,
+      willItSnow: false,
+      precipMm: 2.4,
+      snowCm: 0,
+    });
+  });
+
+  it("defaults the new fields to 0 / false when upstream omits them", async () => {
+    const sparse = structuredClone(upstreamForecastFixture) as unknown as {
+      forecast: {
+        forecastday: Array<{
+          day: Record<string, unknown>;
+          hour?: Array<Record<string, unknown>>;
+        }>;
+      };
+    };
+    const day0 = sparse.forecast.forecastday[0];
+    if (!day0) throw new Error("fixture has three days");
+    for (const key of [
+      "daily_will_it_rain",
+      "daily_chance_of_snow",
+      "daily_will_it_snow",
+      "totalprecip_mm",
+      "totalsnow_cm",
+    ]) {
+      delete day0.day[key];
+    }
+    for (const key of ["chance_of_snow", "will_it_rain", "will_it_snow", "precip_mm", "snow_cm"]) {
+      delete day0.hour?.[0]?.[key];
+    }
+
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, sparse);
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastSparseFields");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      today: Record<string, unknown>;
+      hourly: Array<Record<string, unknown>>;
+    };
+    expect(body.today).toMatchObject({
+      willItRain: false,
+      chanceOfSnow: 0,
+      willItSnow: false,
+      totalPrecipMm: 0,
+      totalSnowCm: 0,
+    });
+    expect(body.hourly[0]).toMatchObject({
+      chanceOfSnow: 0,
+      willItRain: false,
+      willItSnow: false,
+      precipMm: 0,
+      snowCm: 0,
+    });
+  });
+
+  it("returns an empty alerts array when upstream omits the block entirely", async () => {
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, upstreamForecastFixture);
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastNoAlertBlock");
+    const body = (await res.json()) as { alerts: unknown[] };
+    expect(body.alerts).toEqual([]);
+  });
+
+  it("returns an empty alerts array when the block is present but empty", async () => {
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, { ...upstreamForecastFixture, alerts: { alert: [] } });
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastEmptyAlerts");
+    const body = (await res.json()) as { alerts: unknown[] };
+    expect(body.alerts).toEqual([]);
+  });
+
+  it("normalizes alert severity and sorts worst-first", async () => {
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, {
+        ...upstreamForecastFixture,
+        alerts: {
+          alert: [
+            { ...upstreamAlert, event: "Fog", severity: "" },
+            { ...upstreamAlert, event: "Wind", severity: "orange" },
+            { ...upstreamAlert, event: "Flood", severity: "Extreme" },
+          ],
+        },
+      });
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastAlertSort");
+    const body = (await res.json()) as {
+      alerts: Array<{ event: string; severity: string }>;
+    };
+    expect(body.alerts.map((a) => [a.event, a.severity])).toEqual([
+      ["Flood", "extreme"],
+      ["Wind", "severe"],
+      ["Fog", "unknown"],
+    ]);
+  });
+
+  it("caps alerts at five and drops the fields a reader cannot act on", async () => {
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, {
+        ...upstreamForecastFixture,
+        alerts: {
+          alert: Array.from({ length: 7 }, (_, i) => ({
+            ...upstreamAlert,
+            event: `Alert ${i}`,
+            msgtype: "Alert",
+            category: "Met",
+            certainty: "Likely",
+            urgency: "Expected",
+            note: "",
+          })),
+        },
+      });
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastAlertCap");
+    const body = (await res.json()) as { alerts: Array<Record<string, unknown>> };
+    expect(body.alerts).toHaveLength(5);
+    expect(Object.keys(body.alerts[0] ?? {}).sort()).toEqual([
+      "areas",
+      "desc",
+      "effective",
+      "event",
+      "expires",
+      "headline",
+      "instruction",
+      "severity",
+    ]);
+  });
+
+  it("fills missing alert strings rather than rejecting the response", async () => {
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
+      .reply(200, {
+        ...upstreamForecastFixture,
+        alerts: { alert: [{ event: "Bare", severity: "Minor" }] },
+      });
+
+    const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastAlertSparse");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { alerts: Array<Record<string, unknown>> };
+    expect(body.alerts[0]).toEqual({
+      event: "Bare",
+      headline: "",
+      severity: "minor",
+      areas: "",
+      effective: "",
+      expires: "",
+      desc: "",
+      instruction: "",
+    });
   });
 
   it("caches forecast responses independently from current", async () => {
