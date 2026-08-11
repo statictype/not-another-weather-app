@@ -198,7 +198,10 @@ Scoped under `.night` on the app root. Same roles, inverted.
 ### Tertiary — the hero
 
 The hero does not use the token palette. It carries the only two saturated
-fields in the product.
+fields in the product, apart from the alerts tile at `extreme`, which takes
+`--alert-fill` across its whole surface. That was the point of the change: at
+the top severity the warning outranks the view, and nothing quieter than a
+filled field says so beside a hero this size.
 
 - **Day hero**: a top-right linear gradient, `blue-700 → sky-800 → sky-800`,
   with two blurred radial bloom shapes over it (`white/10` upper right,
@@ -215,9 +218,46 @@ said the same thing in English. Do not reintroduce hue as a data channel — not
 for comfort, not for temperature, not for AQI. Binding.
 
 **The One Hue Family Rule.** Every surface, border, text, and shadow color in
-the system lands between 195° and 280° in OKLCH. `signal-red`
-(`{colors.signal-red}`, 25°) is the sole exception and is reserved for
-destructive confirmation.
+the system lands between 195° and 280° in OKLCH. The warm ramp around 27–35°
+is the sole exception, and it is licensed for exactly two things:
+destructive confirmation (`signal-red`, `{colors.signal-red}`) and
+severe-weather alerts (the `--alert-*` ramp). Nothing else may reach for a
+warm hue. Amended August 2026 when alerts shipped; the previous wording named
+destructive confirmation alone.
+
+**The Alert Ramp.** Severity is drawn at three intensities, not five:
+`--alert-fill` (filled, `extreme`), `--alert-wash` + `--alert-ink` (tinted,
+`severe`), and `--alert-ink-muted` (muted text, `moderate`). `minor` and
+`unknown` stay neutral and take no warm color at all. The icon shape
+separates the two severities that share a step — `OctagonAlertIcon` for
+`extreme`, `TriangleAlertIcon` for `severe` and `moderate`, `InfoIcon` below
+them. This does not reopen The Colorless Encoding Rule: the event text names
+the hazard and the severity word is printed as a chip in the modal and spoken
+on the plate, so the color repeats a reading rather than carrying one. Both
+cascades are declared in `src/index.css` and measured — 5.20–5.86:1 in day,
+6.71–8.84:1 in night, against the composited tile grounds.
+
+On the card the ramp is the tile's own field, not a badge sitting on glass:
+`.tile-alert-fill` for `extreme`, `.tile-alert-tint` for `severe`, and
+`.tile-alert-plain` for `moderate` and below, which take no warm hue and get a
+neutral `foreground` rim instead so they still read as their own surface.
+
+**A wash is not a tint at tile scale.** `--alert-wash` is 9% and was
+calibrated for a badge on white glass; spread across a whole tile beside the
+plain tiles it disappears. The tinted step therefore has its own stops —
+`--alert-tile-near` / `--alert-tile-far`, built like `.tile-wind`'s gradient
+and held light enough that `--alert-ink` still clears AA over the darker one
+(5.13:1 near, 4.95:1 far in day; 7.81:1 and 9.12:1 in night). `--alert-wash`
+keeps its original job on the modal chips.
+
+Hover moves along the ramp rather than fading the surface: `extreme` steps to
+`--alert-ink` (day 0.55 → 0.52 lightness, night 0.70 → 0.80, so contrast with
+`--alert-fill-ink` rises either way — 5.20 → 5.89:1 and 6.71 → 9.02:1). The
+tinted and plain steps move their rim only, and the hazard name underlines at
+every severity. Deepening the tint on hover was measured first and rejected:
+4.34:1 in day, 4.67:1 in night. Element opacity is out for the same reason —
+it composites ink and field together toward the page behind and costs contrast
+in a state WCAG still applies to.
 
 **The 70% Floor Rule.** Text composited over a glass tile is never faded below
 70% alpha of `foreground`. At 70% it measures 5.3–5.5:1 over the day tile
@@ -293,8 +333,17 @@ cannot introduce a scrollbar.
 
 **The weather grid.** One column on mobile, twelve columns from `sm` up, with
 `auto-rows-[minmax(150px,auto)]` and `gap-5` rising to `gap-6`. The hero takes
-`col-span-8 row-span-2` at `xl` beside a stacked right column; other tiles take
-3, 4, 6, or 12 columns.
+`col-span-8` at `xl` beside a 4-wide right column; other tiles take 3, 4, 6, or
+12 columns.
+
+**The right column** holds the alerts tile above the Now tile — what is urgent,
+then what is current. It is the one place two tiles share a grid cell: a
+wrapper carries `contents` below `xl`, so both stay direct grid children and
+document order is still the mobile reading order, and becomes
+`xl:flex xl:flex-col` at `xl`, where it is the single 4-wide cell they stack
+inside. The Now tile takes `xl:flex-1` so the pair fills the hero's height. The
+alerts tile is absent whenever there are no alerts, and the column collapses
+back to the Now tile alone — the only tile in the system that can disappear.
 
 **Document order is the mobile reading order** — the answer, then the next
 hours, then the next days. Desktop composition is restored with `xl:order-*`
@@ -387,8 +436,13 @@ variant.
   with a `oklch(1 0 0 / 0.06)` rim.
 - **Variants:** `.tile-wind` (teal-petrol, `200–220°`), `.tile-astro` (indigo
   with a warm low-right sun bloom), `.tile-astro-moon` (the same geometry with
-  the bloom shifted to near-white). Astro tiles transition their background over
+  the bloom shifted to near-white), `.tile-alert-fill`, `.tile-alert-tint` and
+  `.tile-alert-plain` (alerts only). Astro tiles transition their background over
   `0.4s ease` when the sun/moon state changes.
+- **A variant is declared in `index.css`, never as a utility.** `.bento-tile`
+  sets `background` and `border` in an unlayered rule, so a `bg-*` or
+  `border-*` utility loses to it whatever the source order. A tile's field
+  belongs beside the other variants.
 - **Internal padding:** `1.5rem` or `1.75rem`.
 - **Anatomy:** a `.label-section` header, then content at `mt-4`. Metric lists
   are `<dl>` with `divide-y divide-foreground/10`.
@@ -396,11 +450,41 @@ variant.
 ### Hero
 
 Not a tile. Full-bleed saturated gradient, white text, `2rem` radius,
-`1.75rem → 3rem` padding, `col-span-8 row-span-2` at `xl`. Day mode adds two
+`1.75rem → 3rem` padding, `col-span-8` at `xl`. Its height is set by the right
+column beside it: 334 px with the Now tile alone, and taller when an alerts
+tile stacks above it — the alert plate sets its own hazard name in one or two
+lines of headline type, so that second figure is not a constant. Day mode adds two
 blurred bloom circles (`size-80`, `blur-3xl`) bleeding past the corners; night
 mode drops them and uses a diagonal white sheen instead. Text is pure white at
 full opacity — the day gradient clears 4.5:1 for white, but not for faded
 white.
+
+### Alert Tile
+
+A `.bento-tile` that is itself the button opening the alerts modal — the only
+tile in the system that is a control, and the only one that can be absent.
+There is no pane around a plate around a row: one surface, and the severity
+ramp is that surface's field.
+
+- **Shape:** the tile's own `1.75rem` radius and `p-6` padding. It is a tile,
+  and it sits in the grid as one.
+- **Fill:** the severity's step from The Alert Ramp — filled, tinted, or a
+  neutral rim. Every step gives the tile a surface of its own; none of them
+  leaves it looking like the plain tiles around it.
+- **Contents:** a `24px` icon at `1.5` stroke, then the hazard name at
+  headline size (`text-lg → text-xl`, light, `line-clamp-2`), then the end of
+  the window at body-small (`Until 9:00 pm`, the city's time, the date added
+  only when the end is not today there). A `+N` count sits at the far right
+  when more alerts follow; the rest of them are in the modal.
+- **Hover** underlines the hazard name at every severity. `extreme` also steps
+  its field along the ramp; the tinted and plain steps move their rim, because
+  deepening their field costs contrast (see The Alert Ramp).
+- **No section label.** The hazard is named at headline size across the whole
+  tile, so a `.label-section` above it would repeat what the tile already is.
+  It is the one tile in the system without one.
+- **Vertical centring** rather than top alignment: the grid's
+  `minmax(150px,auto)` row floor is taller than the content, so below `xl` the
+  tile would otherwise hold it against the top edge over a void.
 
 ### Search Surface
 

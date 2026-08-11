@@ -276,10 +276,98 @@ html, body { background: oklch(0.97 0.02 230); }
   transition: background 0.4s ease;
 }
 
+/* Alert tile — the alerts card is the plate itself, with no pane around it,
+ * so the severity ramp is the tile's own field rather than a badge sitting on
+ * glass. Three steps, matching the ramp: filled for `extreme`, a warm-tinted
+ * field for `severe`, and a visible neutral rim for `moderate` and below,
+ * which take no warm hue at all and would otherwise be indistinguishable from
+ * the plain tiles beside them.
+ *
+ * Declared here beside .tile-wind and .tile-astro because .bento-tile sets
+ * `background` and `border` unlayered: a Tailwind bg-* or border-* utility
+ * loses to it regardless of order, so a tile's field belongs in this block.
+ *
+ * Hover never moves the field's luminance on the tinted and plain steps — the
+ * rim carries it, with the underline on the hazard name. Deepening the tint
+ * instead measured 4.34:1 in day and 4.67:1 in night, both worse than the
+ * resting state and one of them below AA. */
+.tile-alert-fill {
+  background: var(--alert-fill);
+  border-color: oklch(1 0 0 / 0.14);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.25) inset,
+    0 12px 30px -18px oklch(0.4 0.15 240 / 0.25);
+  transition: background 0.2s ease;
+}
+/* Along the ramp, never a fade: day steps 0.55 → 0.52 lightness and night
+ * steps 0.70 → 0.80, so contrast with --alert-fill-ink rises in both —
+ * 5.20 → 5.89:1 in day, 6.71 → 9.02:1 in night. */
+.tile-alert-fill:hover {
+  background: var(--alert-ink);
+}
+
+.tile-alert-tint {
+  background: linear-gradient(160deg, var(--alert-tile-near), var(--alert-tile-far));
+  border-color: var(--alert-rim);
+  transition: border-color 0.2s ease;
+}
+.tile-alert-tint:hover {
+  border-color: var(--alert-rim-strong);
+}
+
+.tile-alert-plain {
+  border-color: color-mix(in oklab, var(--foreground) 14%, transparent);
+  transition: border-color 0.2s ease;
+}
+.tile-alert-plain:hover {
+  border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
+}
+
 /* Moon dark-side fill — adapts per mode so the unlit hemisphere
  * has clear contrast against the card background. */
 :root  { --moon-dark: oklch(0.36 0.05 265); }
 .night { --moon-dark: oklch(0.08 0.005 250); }
+
+/* ── Alert ramp ───────────────────────────────────────────────────
+ * The one warm hue in the system, at three intensities. It is the
+ * exception the One Hue Family Rule names: signal-red is licensed for
+ * destructive confirmation and for severe-weather alerts, and nothing
+ * else. Colour is never the only carrier — the icon shape and the
+ * severity word say it too.
+ *
+ * Measured against the composited tile grounds, small-text pairs:
+ *   day    fill/ink 5.20:1 · severe 5.86:1 · moderate 5.38:1
+ *   night  fill/ink 6.71:1 · severe 8.84:1 · moderate 8.58:1
+ * axe cannot resolve a background behind backdrop-filter and skips
+ * these nodes, so a regression here will not show up in Lighthouse. */
+:root {
+  --alert-fill: oklch(0.55 0.21 27);
+  --alert-fill-ink: oklch(0.99 0.01 40);
+  --alert-ink: oklch(0.52 0.20 27);
+  --alert-ink-muted: oklch(0.53 0.13 35);
+  --alert-wash: oklch(0.55 0.21 27 / 0.09);
+  --alert-rim: oklch(0.55 0.21 27 / 0.22);
+  --alert-rim-strong: oklch(0.55 0.21 27 / 0.45);
+  /* The tinted tile's own field. --alert-wash was calibrated for a badge on
+   * white glass; the same 9% across a whole tile is invisible next to the
+   * plain tiles beside it. These are the tile-scale stops, built like
+   * .tile-wind's, and held light enough that --alert-ink still clears AA
+   * over the darker one: 5.13:1 near, 4.95:1 far. */
+  --alert-tile-near: oklch(0.96 0.055 30 / 0.92);
+  --alert-tile-far: oklch(0.935 0.085 30 / 0.62);
+}
+.night {
+  --alert-fill: oklch(0.70 0.19 28);
+  --alert-fill-ink: oklch(0.16 0.03 30);
+  --alert-ink: oklch(0.80 0.16 32);
+  --alert-ink-muted: oklch(0.76 0.10 35);
+  --alert-wash: oklch(0.70 0.19 28 / 0.14);
+  --alert-rim: oklch(0.70 0.19 28 / 0.30);
+  --alert-rim-strong: oklch(0.70 0.19 28 / 0.50);
+  /* 7.81:1 near, 9.12:1 far against --alert-ink. */
+  --alert-tile-near: oklch(0.24 0.06 28 / 0.95);
+  --alert-tile-far: oklch(0.16 0.05 30 / 0.70);
+}
 
 /* ── Night overrides ─────────────────────────────────────────────── */
 /* Scoped under .night (applied on the App root when current is night). */
@@ -328,6 +416,34 @@ html, body { background: oklch(0.97 0.02 230); }
     radial-gradient(55% 70% at 78% 0%, oklch(0.32 0.06 270 / 0.6), transparent 65%),
     linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
+/* Alert tile night. Every value here already switches cascade through the
+ * --alert-* tokens, so these rules exist for specificity alone: `.night
+ * .bento-tile` is two classes and comes first, and would otherwise put the
+ * night glass gradient back over all three alert steps. Same reason
+ * `.night .tile-wind` exists. Only the fill's rim and shadow differ. */
+.night .tile-alert-fill {
+  background: var(--alert-fill);
+  border-color: oklch(1 0 0 / 0.1);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.12) inset,
+    0 12px 30px -18px oklch(0 0 0 / 0.6);
+}
+.night .tile-alert-fill:hover {
+  background: var(--alert-ink);
+}
+.night .tile-alert-tint {
+  background: linear-gradient(160deg, var(--alert-tile-near), var(--alert-tile-far));
+  border-color: var(--alert-rim);
+}
+.night .tile-alert-tint:hover {
+  border-color: var(--alert-rim-strong);
+}
+.night .tile-alert-plain {
+  border-color: color-mix(in oklab, var(--foreground) 14%, transparent);
+}
+.night .tile-alert-plain:hover {
+  border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
+}
 
 /* Hero night: cooler deep blues */
 .hero-night {
@@ -347,7 +463,8 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 /* ── Search dropdown (shared glass — desktop dropdown + mobile menu panel) ── */
-.search-dropdown-desktop {
+.search-dropdown-desktop,
+.glass-panel {
   background:
     linear-gradient(180deg, oklch(1 0 0 / 0.88), oklch(1 0 0 / 0.74));
   backdrop-filter: blur(28px) saturate(160%);
@@ -358,7 +475,12 @@ html, body { background: oklch(0.97 0.02 230); }
     0 40px 80px -24px oklch(0.3 0.12 240 / 0.28),
     0 16px 32px -10px oklch(0.3 0.12 240 / 0.14);
 }
-.night .search-dropdown-desktop {
+/* `.night.glass-panel` is not a typo: a Radix portal mounts on <body>,
+ * outside the .night root, so a portalled panel carries the class itself
+ * instead of inheriting it. */
+.night .search-dropdown-desktop,
+.night .glass-panel,
+.night.glass-panel {
   background:
     linear-gradient(180deg, oklch(0.22 0.018 252 / 0.9), oklch(0.16 0.022 258 / 0.8));
   border: 1px solid oklch(1 0 0 / 0.1);
@@ -445,17 +567,21 @@ html, body { background: oklch(0.97 0.02 230); }
   display: none;
 }
 
-.search-dropdown-desktop * {
+.search-dropdown-desktop *,
+.glass-panel * {
   scrollbar-width: thin;
   scrollbar-color: oklch(0.5 0 0 / 0.12) transparent;
 }
-.search-dropdown-desktop *::-webkit-scrollbar {
+.search-dropdown-desktop *::-webkit-scrollbar,
+.glass-panel *::-webkit-scrollbar {
   width: 6px;
 }
-.search-dropdown-desktop *::-webkit-scrollbar-track {
+.search-dropdown-desktop *::-webkit-scrollbar-track,
+.glass-panel *::-webkit-scrollbar-track {
   background: transparent;
 }
-.search-dropdown-desktop *::-webkit-scrollbar-thumb {
+.search-dropdown-desktop *::-webkit-scrollbar-thumb,
+.glass-panel *::-webkit-scrollbar-thumb {
   background: oklch(0.5 0 0 / 0.12);
   border-radius: 3px;
 }
@@ -464,4 +590,17 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 .night .search-dropdown-desktop *::-webkit-scrollbar-thumb {
   background: oklch(1 0 0 / 0.12);
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────
+ * PRODUCT.md marks prefers-reduced-motion a hard requirement and the app
+ * did not honour it anywhere. This closes the gap for the motion this
+ * feature introduces — the alert modal's fade/zoom entrance, which comes
+ * from the vendored dialog primitive. The sky crossfade, the tile swap-in
+ * and the astro fade are older and are not in scope here. */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="dialog-overlay"],
+  [data-slot="dialog-content"] {
+    animation: none !important;
+  }
 }

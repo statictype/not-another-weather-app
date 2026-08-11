@@ -2,6 +2,8 @@ import type { WeatherCurrent } from "@/api/types";
 import { cn } from "@/lib/utils";
 import { useWeatherForecast, useWeatherYesterday } from "@/hooks/use-weather";
 import { AirComfortCard } from "./air-comfort-card";
+import { AlertsCard } from "./alerts-card";
+import { demoAlerts } from "./alerts-demo";
 import { AstroCard } from "./astro-card";
 import { ExposureCard } from "./exposure-card";
 import { ForecastCard } from "./forecast-card";
@@ -36,12 +38,24 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
       )}
     >
       <HeroCard location={c.location} current={c.current} />
-      <NowCard
-        tempC={c.current.tempC}
-        feelsLikeC={c.current.feelsLikeC}
-        windKph={c.current.windKph}
-        chanceOfRain={forecast.data?.today.chanceOfRain}
-      />
+
+      {/* The right column beside the hero: what is urgent, then what is
+          current. `contents` keeps both tiles as direct grid children below
+          `xl`, so document order stays the mobile reading order; at `xl` the
+          wrapper becomes the one 4-wide grid cell they stack inside. */}
+      <div className="contents xl:order-2 xl:col-span-4 xl:flex xl:flex-col xl:gap-6">
+        <AlertsCard
+          alerts={demoAlerts() ?? forecast.data?.alerts}
+          tz={c.location.tz}
+          isNight={c.current.timeOfDay === "night"}
+        />
+        <NowCard
+          tempC={c.current.tempC}
+          feelsLikeC={c.current.feelsLikeC}
+          windKph={c.current.windKph}
+          chanceOfRain={forecast.data?.today.chanceOfRain}
+        />
+      </div>
       <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
       <ForecastCard forecast={forecast.data?.forecast} yesterday={yesterday.data?.yesterday} />
       <AirComfortCard

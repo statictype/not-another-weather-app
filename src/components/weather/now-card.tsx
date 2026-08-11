@@ -20,7 +20,7 @@ interface NowCardProps {
  */
 export function NowCard({ tempC, feelsLikeC, windKph, chanceOfRain }: NowCardProps) {
   return (
-    <section className="swap-in swap-d-2 bento-tile flex flex-col justify-center p-6 sm:col-span-12 xl:order-2 xl:col-span-4">
+    <section className="swap-in swap-d-2 bento-tile flex flex-col justify-center p-6 sm:col-span-12 xl:flex-1">
       <p className="label-section">Now</p>
 
       <dl className="mt-4 divide-y divide-foreground/10">
