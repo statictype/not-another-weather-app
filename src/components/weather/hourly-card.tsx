@@ -115,12 +115,12 @@ function Slot({ slot }: { slot: HourlyForecast }) {
       />
       <span className="leading-none tracking-tight">
         <span className="text-lg">{max}°</span>
-        {!collapse && <span className="ml-0.5 text-xs text-foreground/50">{min}°</span>}
+        {!collapse && <span className="ml-0.5 text-xs text-foreground/70">{min}°</span>}
       </span>
-      <span className="flex items-center gap-0.5 text-foreground/55">
+      <span className="flex items-center gap-0.5 text-foreground/70">
         {noRain ? (
           <DropletOffIcon
-            className="size-3.5 shrink-0 text-foreground/[0.18] md:size-4.5"
+            className="size-3.5 shrink-0 text-foreground/55 md:size-4.5"
             strokeWidth={2}
             aria-hidden="true"
           />

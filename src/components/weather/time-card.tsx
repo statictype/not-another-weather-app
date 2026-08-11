@@ -17,7 +17,7 @@ export function TimeCard({ tz }: TimeCardProps) {
       <p className="mt-4 text-4xl leading-none tracking-tight xl:text-3xl 2xl:text-4xl">
         {formatTime(now, tz)}
       </p>
-      <p className="mt-1.5 text-sm font-light text-foreground/45">{formatDate(now, tz)}</p>
+      <p className="mt-1.5 text-sm font-light text-foreground/70">{formatDate(now, tz)}</p>
     </section>
   );
 }

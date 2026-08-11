@@ -183,7 +183,7 @@ export function SearchBar({
             className="search-surface flex flex-1 items-center gap-3 rounded-[1.75rem] px-5 py-3 lg:gap-3.5 lg:py-3.5"
           >
             <SearchIcon
-              className="size-[18px] shrink-0 text-foreground/30 [.night_&]:text-foreground/35 lg:size-5"
+              className="size-[18px] shrink-0 text-foreground/55 [.night_&]:text-foreground/60 lg:size-5"
               strokeWidth={2.25}
               aria-hidden="true"
             />
@@ -197,7 +197,7 @@ export function SearchBar({
               placeholder="Search a city…"
               {...inputProps}
               aria-describedby={errorMessage ? errorId : undefined}
-              className="h-auto flex-1 border-0 bg-transparent p-0 text-lg font-normal tracking-tight shadow-none placeholder:text-foreground/30 focus-visible:ring-0 lg:text-xl"
+              className="h-auto flex-1 border-0 bg-transparent p-0 text-lg font-normal tracking-tight shadow-none placeholder:text-foreground/70 focus-visible:ring-0 lg:text-xl"
             />
           </motion.div>
 
@@ -210,7 +210,7 @@ export function SearchBar({
                   e.preventDefault();
                   cancel();
                 }}
-                className="shrink-0 overflow-hidden whitespace-nowrap text-sm font-medium text-foreground/55 active:text-foreground/75"
+                className="shrink-0 overflow-hidden whitespace-nowrap text-sm font-medium text-foreground/70 active:text-foreground/85"
                 initial={{ opacity: 0, width: 0, marginLeft: 0 }}
                 animate={{
                   opacity: 1,

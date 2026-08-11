@@ -145,8 +145,8 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
   if (section.kind === "empty-results") {
     return (
       <div className="px-3 py-4">
-        <p className="text-sm font-medium text-foreground/55">No cities found</p>
-        <p className="mt-0.5 text-xs text-foreground/35">Try a different spelling</p>
+        <p className="text-sm font-medium text-foreground/70">No cities found</p>
+        <p className="mt-0.5 text-xs text-foreground/70">Try a different spelling</p>
       </div>
     );
   }
@@ -154,7 +154,7 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
   // keep-typing
   return (
     <div className="px-3 py-2">
-      <p className="text-xs font-medium text-foreground/40">Keep typing for city suggestions…</p>
+      <p className="text-xs font-medium text-foreground/70">Keep typing for city suggestions…</p>
     </div>
   );
 }
@@ -198,7 +198,7 @@ function RecentRow({
         aria-label={`Load weather for ${item.displayName}`}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] transition-colors duration-150 group-hover:bg-foreground/[0.08]">
-          <ClockIcon className="size-3.5 text-foreground/40" strokeWidth={2} aria-hidden="true" />
+          <ClockIcon className="size-3.5 text-foreground/55" strokeWidth={2} aria-hidden="true" />
         </span>
         <span
           className={cn(
@@ -217,7 +217,7 @@ function RecentRow({
           onRemove(item);
         }}
         className={cn(
-          "absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/40 transition-all duration-150 hover:bg-foreground/[0.08] hover:text-foreground/70 focus-visible:outline-none active:scale-90",
+          "absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/55 transition-all duration-150 hover:bg-foreground/[0.08] hover:text-foreground/70 focus-visible:outline-none active:scale-90",
           // Mobile: always visible (no hover affordance on touch).
           // Desktop: hover-to-reveal, plus visible when the row is focused.
           "opacity-100 lg:opacity-0 lg:group-hover:opacity-100",
@@ -260,7 +260,7 @@ function SuggestionRow({
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 transition-colors duration-150 group-hover:bg-sky-500/[0.15] [.night_&]:bg-foreground/[0.06] [.night_&]:group-hover:bg-foreground/[0.1]">
           <MapPinIcon
-            className="size-3.5 text-sky-600/70 [.night_&]:text-foreground/45"
+            className="size-3.5 text-sky-700/80 [.night_&]:text-foreground/60"
             strokeWidth={2}
             aria-hidden="true"
           />
@@ -274,7 +274,7 @@ function SuggestionRow({
           >
             {item.name}
           </span>
-          {rest && <span className="truncate text-xs text-foreground/45">{rest}</span>}
+          {rest && <span className="truncate text-xs text-foreground/70">{rest}</span>}
         </span>
       </motion.button>
     </li>
@@ -338,13 +338,13 @@ function ActionButton({
       >
         <Icon
           className={cn(
-            "size-4 shrink-0 text-foreground/45 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-180",
+            "size-4 shrink-0 text-foreground/55 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-180",
             focused && "rotate-180",
           )}
           strokeWidth={1.75}
           aria-hidden="true"
         />
-        <span className="text-[13px] font-medium tracking-tight text-foreground/65">{label}</span>
+        <span className="text-[13px] font-medium tracking-tight text-foreground/70">{label}</span>
       </button>
     </li>
   );

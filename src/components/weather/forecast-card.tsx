@@ -58,11 +58,11 @@ function DayRow({ day, label }: { day: ForecastDay; label: string }) {
         <span className="label-section">{label}</span>
         <span className="mt-1 text-3xl leading-none tracking-tight">
           {Math.round(day.maxC)}°
-          <span className="ml-1 text-base font-light text-foreground/45">
+          <span className="ml-1 text-base font-light text-foreground/70">
             / {Math.round(day.minC)}°
           </span>
         </span>
-        <span className="mt-1 truncate text-sm font-light text-foreground/55">
+        <span className="mt-1 truncate text-sm font-light text-foreground/70">
           {day.conditionText}
         </span>
       </div>

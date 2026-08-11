@@ -76,7 +76,7 @@ function TabButton({
         "flex size-9 items-center justify-center rounded-full transition-colors",
         active
           ? "bg-foreground/10 text-foreground"
-          : "text-foreground/40 hover:bg-foreground/5 hover:text-foreground/70",
+          : "text-foreground/55 hover:bg-foreground/5 hover:text-foreground",
       )}
     >
       {children}
@@ -89,7 +89,7 @@ function SideInfo({ view, astro }: { view: AstroView; astro: Astro }) {
     return (
       <>
         <p className="truncate text-sm leading-tight tracking-tight">{astro.moonPhase}</p>
-        <p className="mt-0.5 text-xs text-foreground/55">{astro.moonIllumination}% illuminated</p>
+        <p className="mt-0.5 text-xs text-foreground/70">{astro.moonIllumination}% illuminated</p>
       </>
     );
   }

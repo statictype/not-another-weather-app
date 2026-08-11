@@ -23,10 +23,10 @@ export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
       </div>
       <div className="space-y-2">
         <h2 className="font-light text-3xl tracking-tight">{title}</h2>
-        <p className="text-foreground/60 mx-auto max-w-md text-balance">{description}</p>
+        <p className="text-foreground/70 mx-auto max-w-md text-balance">{description}</p>
       </div>
       {onRetry && (
-        <Button onClick={onRetry} className="rounded-full bg-sky-500 px-6 hover:bg-sky-600">
+        <Button onClick={onRetry} className="rounded-full bg-sky-700 px-6 hover:bg-sky-800">
           <RotateCwIcon className="size-4" aria-hidden="true" />
           Try again
         </Button>

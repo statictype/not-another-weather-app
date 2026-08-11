@@ -32,7 +32,7 @@ export function AirComfortMoodCard({
       <p className="label-section">Air comfort</p>
 
       <p className="mt-4 text-balance text-2xl leading-tight tracking-tight">{sentence}</p>
-      <div className="mt-1.5 flex items-center gap-2 text-base tracking-tight text-foreground/55">
+      <div className="mt-1.5 flex items-center gap-2 text-base tracking-tight text-foreground/70">
         <WindIcon className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
         <span>{beaufort(windKph)}</span>
       </div>
