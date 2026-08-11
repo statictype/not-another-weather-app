@@ -456,6 +456,25 @@ html, body { background: oklch(0.97 0.02 230); }
     linear-gradient(135deg, #00060f 0%, #01132b 100%);
 }
 
+/* Hero precipitation chips.
+ *
+ * Day is a rim and nothing else. The hero has no headroom for a lighter
+ * field: white over the day gradient measures 5.05–5.35:1 where the strip
+ * sits, and compositing white at 8% alpha over that ground takes it to
+ * 4.12:1 — under AA at body size. A rim leaves the ground untouched, and it
+ * is the system's own depth mechanic anyway (see The Edge-Lit Rule).
+ *
+ * Night inverts the problem. #00060f–#01132b has all the headroom there is
+ * (white measures 18:1 over it), and a bare white rim on near-black reads
+ * faint, so the chip takes a 5% fill and a quieter rim. */
+.hero-chip {
+  border-color: oklch(1 0 0 / 0.3);
+}
+.night .hero-chip {
+  border-color: oklch(1 0 0 / 0.16);
+  background: oklch(1 0 0 / 0.05);
+}
+
 /* Tighter dividers and borders in dark tiles */
 .night .divide-foreground\/6 > :not([hidden]) ~ :not([hidden]),
 .night .border-foreground\/6 {
@@ -597,10 +616,17 @@ html, body { background: oklch(0.97 0.02 230); }
  * did not honour it anywhere. This closes the gap for the motion this
  * feature introduces — the alert modal's fade/zoom entrance, which comes
  * from the vendored dialog primitive. The sky crossfade, the tile swap-in
- * and the astro fade are older and are not in scope here. */
+ * and the astro fade are older and are not in scope here.
+ *
+ * The skeleton pulse is covered too. It is not new — the hourly strip and the
+ * forecast row already shimmer — but the hero's precipitation strip adds
+ * another instance, and DESIGN.md asks new motion to close the gap rather
+ * than widen it. Stilling it leaves a static placeholder bar, which is the
+ * standard reduced-motion treatment for a skeleton. */
 @media (prefers-reduced-motion: reduce) {
   [data-slot="dialog-overlay"],
-  [data-slot="dialog-content"] {
+  [data-slot="dialog-content"],
+  .animate-pulse {
     animation: none !important;
   }
 }

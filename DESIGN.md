@@ -459,6 +459,32 @@ mode drops them and uses a diagonal white sheen instead. Text is pure white at
 full opacity — the day gradient clears 4.5:1 for white, but not for faded
 white.
 
+The two blocks — place on the left, sky on the right — are a row from `sm` up
+and stack below it. Side by side at 390 px the left block resolves to 117 px:
+the city name overflows it and the clock breaks across three lines. Stacked,
+the composition runs place → sky down the diagonal instead of across it.
+
+### Hero Chip
+
+The one reading in the hero, and the only element in the system defined by its
+rim alone. `.hero-chip` plus `h-8`, `0.75rem` radius, `px-3`, an icon at
+`14px` / stroke 2, then the value at body-small. No label text — the icon is
+the label, which is what keeps it a different family from the metric lists the
+hero evicted rather than a fourth typographic rung.
+
+- **Day:** a `1px` rim at `oklch(1 0 0 / 0.3)` and no fill. The hero has no
+  headroom for a lighter field — white over the day gradient measures
+  5.05–5.35:1 where the strip sits, and a white fill at 8% alpha takes it to
+  4.12:1, under AA at body size. A rim leaves the ground untouched and is the
+  system's own depth mechanic anyway.
+- **Night:** the rim drops to `0.16` and the chip takes an `oklch(1 0 0 /
+0.05)` fill. Near-black has all the headroom there is (16.8:1 inside the
+  chip, measured) and a bare rim on it reads faint.
+
+A strip of chips is a single fixed-height row that never wraps, so it measures
+the same before its data arrives, with one chip, and with two — it sits inside
+the LCP element, where a mounted-on-arrival element would be a layout shift.
+
 ### Alert Tile
 
 A `.bento-tile` that is itself the button opening the alerts modal — the only

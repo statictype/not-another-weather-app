@@ -37,7 +37,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         isStale && "opacity-60",
       )}
     >
-      <HeroCard location={c.location} current={c.current} />
+      <HeroCard location={c.location} current={c.current} today={forecast.data?.today} />
 
       {/* The right column beside the hero: what is urgent, then what is
           current. `contents` keeps both tiles as direct grid children below
@@ -53,7 +53,6 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
           tempC={c.current.tempC}
           feelsLikeC={c.current.feelsLikeC}
           windKph={c.current.windKph}
-          chanceOfRain={forecast.data?.today.chanceOfRain}
         />
       </div>
       <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />

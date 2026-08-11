@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
-import type { CurrentConditions, WeatherLocation } from "@/api/types";
+import type { CurrentConditions, WeatherForecast, WeatherLocation } from "@/api/types";
 import { airComfort } from "@/lib/air-comfort";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
+import { PrecipStrip } from "./precip-strip";
 
 interface HeroCardProps {
   location: WeatherLocation;
   current: CurrentConditions;
+  /**
+   * The one thing here that does not come from the `current` tier. Undefined
+   * until `forecast` lands; `PrecipStrip` holds its own height meanwhile.
+   */
+  today: WeatherForecast["today"] | undefined;
 }
 
 /**
@@ -19,6 +25,9 @@ interface HeroCardProps {
  *   SPOKEN   what the sky is doing, and how it feels — the two sentences
  *   CLOCK    the location's local time
  *   label    the country, in the same caps the tiles use
+ *
+ * The precipitation chips are the one reading in the hero, and they are a
+ * fourth register rather than a fourth rung — see `PrecipStrip`.
  */
 const PEAK =
   "font-light leading-[1.05] tracking-tight text-[2.125rem] sm:text-[2.5rem] md:text-[3rem] xl:text-[3.5rem]";
@@ -28,7 +37,7 @@ const SPOKEN = "font-light leading-tight text-lg md:text-xl xl:text-2xl";
 
 const CLOCK = "font-light text-base md:text-lg";
 
-export function HeroCard({ location, current }: HeroCardProps) {
+export function HeroCard({ location, current, today }: HeroCardProps) {
   const isDay = current.timeOfDay === "day";
   const { sentence } = airComfort({
     tempC: current.tempC,
@@ -60,8 +69,14 @@ export function HeroCard({ location, current }: HeroCardProps) {
       <div className="relative flex h-full flex-col">
         {/* Place on the left, what the sky is doing on the right. The icon is
             the first thing the eye lands on, so it carries the condition and
-            the words underneath it only confirm the reading. */}
-        <div className="flex items-start justify-between gap-5 sm:gap-10">
+            the words underneath it only confirm the reading.
+
+            The two stack below `sm`. Side by side at 390 px the left column
+            resolves to 117 px: the city name overflows it, the clock breaks
+            across three lines, and a chip strip would not fit at all. Stacked,
+            each block gets the full width and the composition runs place →
+            sky down the diagonal instead of across it. */}
+        <div className="flex flex-col gap-7 sm:flex-row sm:items-start sm:justify-between sm:gap-10">
           <div className="min-w-0">
             {/* The country reads as a kicker on the city, so it sits tight to
                 it — `leading-none` strips the label's inherited leading, which
@@ -77,6 +92,7 @@ export function HeroCard({ location, current }: HeroCardProps) {
               </span>
               {formatDate(now, location.tz)}
             </p>
+            <PrecipStrip today={today} className="mt-4 md:mt-5" />
           </div>
 
           <div className="flex min-w-0 shrink-0 flex-col items-end gap-2 text-right">

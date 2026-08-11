@@ -1,4 +1,4 @@
-import { PersonStandingIcon, ThermometerIcon, UmbrellaIcon, WindIcon } from "lucide-react";
+import { PersonStandingIcon, ThermometerIcon, WindIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { beaufort } from "@/lib/air-comfort";
 
@@ -6,19 +6,23 @@ interface NowCardProps {
   tempC: number;
   feelsLikeC: number;
   windKph: number;
-  /** Undefined until the forecast tier lands — the rain row shimmers meanwhile. */
-  chanceOfRain: number | undefined;
 }
 
 /**
- * The four readings that used to sit in the hero's foot. They moved out so the
- * hero carries only what it says in words; the numbers behind those words live
+ * The readings that used to sit in the hero's foot. They moved out so the hero
+ * carries only what it says in words; the numbers behind those words live
  * here, beside it.
+ *
+ * Three of them, all instantaneous. `Chance of rain` was the fourth and is
+ * gone: it is `day.daily_chance_of_rain`, a whole-day figure, and it sat under
+ * a heading that says `Now` between two readings that are genuinely current.
+ * It is in the hero's left column now, with the rest of the day's scope — see
+ * `PrecipStrip`.
  *
  * Same label/value idiom as the Air tile — icon and `.label-sub` on the left,
  * the reading right-aligned — so the two read as one family.
  */
-export function NowCard({ tempC, feelsLikeC, windKph, chanceOfRain }: NowCardProps) {
+export function NowCard({ tempC, feelsLikeC, windKph }: NowCardProps) {
   return (
     <section className="swap-in swap-d-2 bento-tile flex flex-col justify-center p-6 sm:col-span-12 xl:flex-1">
       <p className="label-section">Now</p>
@@ -53,34 +57,24 @@ export function NowCard({ tempC, feelsLikeC, windKph, chanceOfRain }: NowCardPro
           label="Wind"
           value={beaufort(windKph)}
         />
-        <Metric
-          icon={
-            <UmbrellaIcon
-              className="size-4 text-foreground/55"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          }
-          label="Chance of rain"
-          value={chanceOfRain === undefined ? null : `${chanceOfRain}%`}
-        />
       </dl>
     </section>
   );
 }
 
-function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string | null }) {
+/**
+ * No shimmer branch: every reading here comes from the `current` tier, so all
+ * three are present on first paint. The one that arrived late left with the
+ * rain row.
+ */
+function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-2.5">
         {icon}
         <dt className="label-sub">{label}</dt>
       </div>
-      {value === null ? (
-        <dd className="h-4 w-12 animate-pulse rounded bg-foreground/10" aria-hidden="true" />
-      ) : (
-        <dd className="text-base tracking-tight">{value}</dd>
-      )}
+      <dd className="text-base tracking-tight">{value}</dd>
     </div>
   );
 }
