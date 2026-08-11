@@ -118,6 +118,8 @@ export function App() {
               recentItems={history}
               suggestions={suggestions.data}
               isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
+              error={query.error}
+              activeQuery={activeQuery}
               onValueChange={setInputValue}
               onSuggestionSelect={handleSuggestionSelect}
               onRecentSelect={handleHistorySelect}

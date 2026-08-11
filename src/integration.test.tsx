@@ -272,13 +272,41 @@ describe("Oasis (integration)", () => {
     await user.type(input, "xyzgibberish");
     await user.keyboard("{Enter}");
 
-    // The inline "No cities found" hint is shown in the dropdown; no
-    // role=alert flash.
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    // The inline "No cities found" hint is shown in the dropdown; the
+    // input's alert region stays empty (nothing was ever fetched).
+    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
     await screen.findByText(/no cities found/i);
 
     // No weather card loaded — empty state heading still present.
     expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
+  });
+
+  it("names the failed city under the search input when the lookup 404s", async () => {
+    renderAppAt("/?city=Llanfairpwllgwyngyll");
+
+    const alert = screen.getByRole("alert");
+    await waitFor(() => {
+      expect(alert).toHaveTextContent(/no weather for “Llanfairpwllgwyngyll”/i);
+    });
+    expect(screen.getByLabelText(/city/i)).toHaveAttribute("aria-describedby", alert.id);
+  });
+
+  it("clears the input error once a real city lands", async () => {
+    const user = userEvent.setup();
+    renderAppAt("/?city=Nowhereville");
+
+    const alert = screen.getByRole("alert");
+    await waitFor(() => expect(alert).toHaveTextContent(/try a different spelling/i));
+
+    const input = screen.getByLabelText(/city/i);
+    await user.type(input, "London");
+    await user.click(await screen.findByRole("button", { name: /search weather for london/i }));
+
+    await screen.findAllByText(/feels like 11/i);
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+    });
+    expect(screen.getByLabelText(/city/i)).not.toHaveAttribute("aria-describedby");
   });
 
   it("paints the hero before forecast before yesterday", async () => {

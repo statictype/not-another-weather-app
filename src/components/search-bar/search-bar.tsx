@@ -2,16 +2,21 @@ import { SearchIcon } from "lucide-react";
 import { useEffect, useId } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { SuggestionItem } from "@/api/types";
+import type { WeatherClientError } from "@/api/weather";
 import { Input } from "@/components/ui/input";
 import type { HistoryItem } from "@/hooks/use-history";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Menu } from "./menu";
+import { SearchError } from "./search-error";
+import { searchErrorMessage } from "./search-error-model";
 import { useSearchMenu } from "./use-search-menu";
 
 interface SearchBarProps {
   recentItems: HistoryItem[];
   suggestions: SuggestionItem[];
   isSuggestionsLoading: boolean;
+  error: WeatherClientError | null;
+  activeQuery: string | null;
   /** Fires whenever the search input value changes. App.tsx reads this to drive autocomplete. */
   onValueChange: (next: string) => void;
   onSuggestionSelect: (item: SuggestionItem) => void;
@@ -68,6 +73,8 @@ export function SearchBar({
   recentItems,
   suggestions,
   isSuggestionsLoading,
+  error,
+  activeQuery,
   onValueChange,
   onSuggestionSelect,
   onRecentSelect,
@@ -77,6 +84,8 @@ export function SearchBar({
   onRandomSelect,
 }: SearchBarProps) {
   const inputId = useId();
+  const errorId = `${inputId}-error`;
+  const errorMessage = searchErrorMessage(error, activeQuery);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const isMd = useMediaQuery("(min-width: 768px)");
   const isSm = useMediaQuery("(min-width: 640px)");
@@ -187,6 +196,7 @@ export function SearchBar({
               spellCheck={false}
               placeholder="Search a city…"
               {...inputProps}
+              aria-describedby={errorMessage ? errorId : undefined}
               className="h-auto flex-1 border-0 bg-transparent p-0 text-lg font-normal tracking-tight shadow-none placeholder:text-foreground/30 focus-visible:ring-0 lg:text-xl"
             />
           </motion.div>
@@ -220,6 +230,8 @@ export function SearchBar({
             )}
           </AnimatePresence>
         </div>
+
+        <SearchError id={errorId} message={errorMessage} />
 
         {/* Menu — positioned as an absolute dropdown on desktop, fixed
             full-area below the header on mobile-overlay. Same content

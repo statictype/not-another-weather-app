@@ -19,9 +19,9 @@ interface WeatherResultProps {
  * tiers fire inside `WeatherGrid` and stream in independently.
  *
  * Error policy:
- *  - `not_found` and `invalid_query` are *input* errors. The SearchBar
- *    surfaces them under the input. This component keeps showing the
- *    previous successful result (if any) or the empty state.
+ *  - `not_found` and `invalid_query` are *input* errors, surfaced under
+ *    the input by `search-bar/search-error.tsx`. This component falls
+ *    through to the empty state.
  *  - `quota_exceeded` is a global degradation that supersedes whatever
  *    was on screen — full takeover.
  *  - `network` / `upstream` take over with a retry CTA whenever there
