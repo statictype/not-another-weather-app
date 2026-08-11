@@ -281,13 +281,6 @@ html, body { background: oklch(0.97 0.02 230); }
 :root  { --moon-dark: oklch(0.36 0.05 265); }
 .night { --moon-dark: oklch(0.08 0.005 250); }
 
-/* ── Air-comfort tint anchors ─────────────────────────────────────── */
-/* The .ac-{bucket} --ac-dry/--ac-humid anchors and the per-mode
- * --ac-lift/--ac-shadow/--ac-base-darken depth params are generated from the
- * single source in src/lib/air-comfort-palette.ts and injected at startup via
- * injectAirComfortPalette() (called in main.tsx). They are intentionally NOT
- * defined here — retune the palette module instead. */
-
 /* ── Night overrides ─────────────────────────────────────────────── */
 /* Scoped under .night (applied on the App root when current is night). */
 .night {
@@ -335,9 +328,6 @@ html, body { background: oklch(0.97 0.02 230); }
     radial-gradient(55% 70% at 78% 0%, oklch(0.32 0.06 270 / 0.6), transparent 65%),
     linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
-
-/* Air-comfort night anchors are generated from src/lib/air-comfort-palette.ts
- * (see the day-anchor note above) — not defined here. */
 
 /* Hero night: cooler deep blues */
 .hero-night {
@@ -474,49 +464,4 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 .night .search-dropdown-desktop *::-webkit-scrollbar-thumb {
   background: oklch(1 0 0 / 0.12);
-}
-
-/* HSB picker sliders (used on /moods). The track gradient is set inline per
- * slider so H/S/B each preview their dimension; this class only handles the
- * shared geometry and thumb styling. */
-.hsb-slider {
-  appearance: none;
-  -webkit-appearance: none;
-  height: 12px;
-  border-radius: 999px;
-  outline: none;
-  cursor: pointer;
-}
-.hsb-slider::-webkit-slider-runnable-track {
-  height: 12px;
-  border-radius: 999px;
-}
-.hsb-slider::-moz-range-track {
-  height: 12px;
-  border-radius: 999px;
-}
-.hsb-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  margin-top: -3px;
-  background: white;
-  border: 2px solid oklch(0.4 0 0);
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.15);
-}
-.hsb-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  background: white;
-  border: 2px solid oklch(0.4 0 0);
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.15);
-}
-.night .hsb-slider::-webkit-slider-thumb,
-.night .hsb-slider::-moz-range-thumb {
-  border-color: oklch(0.95 0 0);
 }

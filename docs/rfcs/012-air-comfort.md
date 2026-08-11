@@ -92,8 +92,7 @@ of the thermal label:
 | Very cold       | —     | `Very cold`              |
 
 A dash drops the air clause; the sentence is then the thermal label
-alone. The reading itself is unchanged — `air` is still `Comfortable`,
-and the card's color still reads 50% on the dry→humid scale.
+alone. The reading itself is unchanged — `air` is still `Comfortable`.
 
 `Hot` spans 29 to 35, wide enough that its two halves differ: the
 concession holds below 32 and is dropped at or above it. This is the
@@ -105,9 +104,7 @@ including at the thermal extremes (`Dangerously hot and very humid`,
 `Very cold and damp`).
 
 The rule lives in `COMFORT_JOIN` in `src/lib/air-comfort.ts`, an
-exhaustive `Record<ThermalLabel, …>`. It is keyed by thermal label, not
-by color bucket: `Cool` and `Chilly` share the `blue` bucket but take
-different rules.
+exhaustive `Record<ThermalLabel, …>`, keyed by thermal label.
 
 ## Edge cases
 
@@ -117,41 +114,57 @@ different rules.
 - The thermal label is computed from feels-like temperature; the air
   label is computed from actual temperature, dew point, and RH (RH only
   for the damp check).
-- `Damp` rides the humid end of the mood-card chroma scale (it is humid
-  air); paired with a cold thermal hue this lands visually as
-  "saturated cool morning".
+- `Damp` is classified as humid air; it carries no separate presentation.
+
+## The color axis, withdrawn
+
+The two axes originally drove a muted OKLCH gradient as well as the
+sentence: hue from the thermal axis (9 labels bucketed into
+`red | orange | yellow | green | blue | silver`), chroma from the air
+axis (dry = low, humid = high, `Damp` at 90%). The anchors were
+single-sourced in `src/lib/air-comfort-palette.ts`, generated into
+`.ac-{bucket}` custom properties, injected at startup, and tuned through
+a `/moods` editor.
+
+All of it is removed. Six hue buckets read as decoration rather than as
+information — nothing in the interface taught the reader that orange
+meant `Hot`, and the sentence next to it already said so in words. The
+tint also had to be authored twice, once per mode, and the night anchors
+were dark enough (measured 1.00–1.04:1 against the night hero) that the
+color carried no signal there at all.
+
+What remains is the labeling: two axes, one sentence. Mood is intended
+to return as a background treatment on the hero, driven by condition and
+time of day rather than by the comfort buckets.
 
 ## Presentation
 
-`AirComfortMoodCard` (`src/components/weather/air-comfort-mood-card.tsx`):
+`HeroCard` (`src/components/weather/hero-card.tsx`):
 
-- Section header: `Air comfort`.
 - Body: single sentence `${Thermal} ${and|but} ${air|damp}` — thermal
   capitalized, rest lowercase — or the thermal label alone where
   `Comfortable` is unlicensed. Examples: `Warm and slightly humid`,
   `Chilly and damp`, `Mild and comfortable`, `Dangerously hot and very humid`,
   `Cool but comfortable`, `Hot but comfortable`, `Dangerously hot`.
-- Footer: a Beaufort wind label (`Calm` / `Light air` / ... / `Hurricane`).
-- Background: muted OKLCH gradient.
-  - **Hue from thermal axis**: cold = blue, mild = green, hot =
-    orange/red. Linear-ish hue ramp across the 9 thermal labels,
-    bucketed into `red | orange | yellow | green | blue | silver`.
-  - **Chroma from air axis**: dry = grayish (low chroma), humid =
-    vibrant (high chroma). `Damp` maps to 90% on the humid scale.
+- The sentence is one of three co-equal elements — with the city name
+  and the temperature — sharing the hero's `PEAK` type scale. It is not
+  a subtitle to the temperature and must not be sized below it.
+- Footer: a Beaufort wind label (`Calm` / `Light air` / ... / `Hurricane`)
+  and the day's rain chance.
 
 `AirComfortCard` (`src/components/weather/air-comfort-card.tsx`) is a
-separate metrics tile that ships next to the mood card. It renders raw
-numbers (Dew, Humidity, Wind, Visibility) and does **not** consume the
-two-axis labeler. The two cards have overlapping inputs but distinct
-affordances; do not merge them.
+separate metrics tile. It renders the raw numbers behind the sentence
+(Dew, Humidity, Cloud, Wind, Visibility) and does **not** consume the
+two-axis labeler. Overlapping inputs, distinct affordances; do not merge
+them.
 
 ## Code organization
 
 ```
-src/lib/air-comfort.ts                       # pure labeler + style helper
+src/lib/air-comfort.ts                       # pure labeler — labels + sentence
 src/lib/air-comfort.test.ts                  # 26 reference rows + boundary rows
-src/components/weather/air-comfort-mood-card.tsx  # sentence + tint + Beaufort
-src/components/weather/air-comfort-card.tsx       # raw metrics (no labeler)
+src/components/weather/hero-card.tsx         # sentence, at peak weight
+src/components/weather/air-comfort-card.tsx  # raw metrics (no labeler)
 ```
 
 ### Function shape
@@ -194,19 +207,15 @@ type ComfortJoin = "and" | "but" | null | { join: "but"; maxFeelsLikeC: number }
 const COMFORT_JOIN: Record<ThermalLabel, ComfortJoin>;
 
 function airComfort(input: AirComfortInput): AirComfort;
-function airComfortStyle(args: { thermal: ThermalLabel; air: AirLabel }): {
-  bucketClass: string;
-  background: string;
-};
 ```
 
 `air` is always the classified band, including the `Comfortable` readings
 the sentence does not speak; `sentence` is the only field that applies
 `COMFORT_JOIN`.
 
-The mood card consumes `{ thermal, air, sentence }` plus the style
-helper's `{ bucketClass, background }`. Separation of concerns: lib =
-labeling logic, card = presentation.
+The hero consumes `sentence`. `thermal` and `air` stay on the return type
+because the bands are the reading; nothing renders them directly today.
+Separation of concerns: lib = labeling logic, card = presentation.
 
 ## Tests
 
@@ -267,8 +276,8 @@ lists the inputs and the expected output labels.
 
 - `Comfortable` was originally spoken in every pairing, which produced
   `"Dangerously hot and comfortable"` — a sentence that asserts something
-  false about the reading. The band and its color position were kept; the
-  sentence rule now licenses the word per thermal label (see "Speaking
+  false about the reading. The band was kept; the sentence rule now
+  licenses the word per thermal label (see "Speaking
   `Comfortable`"). The 26 reference rows were unaffected: all six
   `Comfortable` rows are `Mild` or `Warm`.
 - The shipping label set drops the trailing noun on `Comfortable` (the
@@ -280,7 +289,7 @@ lists the inputs and the expected output labels.
 
 ## Out of scope
 
-- Hourly/daily forecast variants of the mood label — upstream does not
-  return dew point on the forecast tier, so the labeler cannot run.
-- Surfacing the thermal label on the hero — the hero owns the
-  feels-like number; duplicating the bucket would be noise.
+- Hourly/daily forecast variants of the comfort label — upstream does
+  not return dew point on the forecast tier, so the labeler cannot run.
+- Surfacing the thermal label separately from the sentence — the hero
+  already carries both the sentence and the feels-like number.

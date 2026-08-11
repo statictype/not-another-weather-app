@@ -1,18 +1,33 @@
 /**
  * Two-axis air comfort labels (RFC 012). Bands are lower-inclusive,
- * upper-exclusive; vocabulary and colors live in `air-comfort-palette.ts`.
+ * upper-exclusive. This module is the whole vocabulary: the labels, the
+ * sentence that joins them, and nothing else.
+ *
+ * There is deliberately no color here. The two axes used to drive an OKLCH
+ * tint per card, single-sourced in `air-comfort-palette.ts` and tuned through
+ * a `/moods` editor; both are gone. Comfort is expressed in words.
  */
 
-import {
-  AC_ANCHORS,
-  AIR_HUMID_PCT,
-  type AirComfortBucket,
-  type AirLabel,
-  type ThermalLabel,
-  THERMAL_BUCKET,
-} from "./air-comfort-palette";
+export type ThermalLabel =
+  | "Very cold"
+  | "Cold"
+  | "Chilly"
+  | "Cool"
+  | "Mild"
+  | "Warm"
+  | "Hot"
+  | "Very hot"
+  | "Dangerously hot";
 
-export type { AirComfortBucket, AirLabel, ThermalLabel };
+export type AirLabel =
+  | "Very dry"
+  | "Dry"
+  | "Slightly dry"
+  | "Comfortable"
+  | "Slightly humid"
+  | "Humid"
+  | "Very humid"
+  | "Damp";
 
 export interface AirComfortInput {
   tempC: number;
@@ -88,44 +103,6 @@ function sentence(thermal: ThermalLabel, air: AirLabel, feelsLikeC: number): str
   const join = air === "Comfortable" ? resolveJoin(COMFORT_JOIN[thermal], feelsLikeC) : "and";
   if (join === null) return thermal;
   return `${thermal} ${join} ${air.toLowerCase()}`;
-}
-
-export interface AirComfortStyle {
-  bucketClass: string;
-  background: string;
-}
-
-export function airComfortStyle({
-  thermal,
-  air,
-}: {
-  thermal: ThermalLabel;
-  air: AirLabel;
-}): AirComfortStyle {
-  const bucket = THERMAL_BUCKET[thermal];
-  const pct = AIR_HUMID_PCT[air];
-  const base = `color-mix(in oklch, color-mix(in oklch, var(--ac-dry), var(--ac-humid) ${pct}%), black var(--ac-base-darken))`;
-  return {
-    bucketClass: `ac-${bucket}`,
-    background: `linear-gradient(160deg,
-      color-mix(in oklch, ${base}, white var(--ac-lift)) 0%,
-      ${base} 45%,
-      color-mix(in oklch, ${base}, black var(--ac-shadow)) 100%)`,
-  };
-}
-
-/**
- * The comfort color as ink rather than as a surface.
- *
- * `airComfortStyle` reads `--ac-dry` / `--ac-humid`, which the `.night`
- * cascade swaps for near-black anchors — correct for a card fill, invisible
- * as a mark: measured 1.00-1.04:1 against the night hero. The day anchors
- * measure 8.6-14.4:1 there, so a mark uses them in both modes and reads the
- * literal hexes instead of the mode-dependent variables.
- */
-export function airComfortInk({ thermal, air }: { thermal: ThermalLabel; air: AirLabel }): string {
-  const { dry, humid } = AC_ANCHORS.day[THERMAL_BUCKET[thermal]];
-  return `color-mix(in oklch, ${dry}, ${humid} ${AIR_HUMID_PCT[air]}%)`;
 }
 
 /** Beaufort-scale description of a wind speed in km/h. */

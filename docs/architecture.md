@@ -37,9 +37,8 @@ src/
 │   │   └── clear-all-button.tsx # lazy-loaded alert-dialog confirmation
 │   ├── weather/           # The card grid — composed in grid.tsx
 │   │   ├── grid.tsx                  # row layout + calls useWeatherForecast / useWeatherYesterday
-│   │   ├── hero-card.tsx             # LCP card — feels-like, condition, location
-│   │   ├── air-comfort-mood-card.tsx # "Warm and slightly humid" + OKLCH mood tint (uses air-comfort.ts)
-│   │   ├── air-comfort-card.tsx      # raw metrics tile — dew, humidity, wind, visibility
+│   │   ├── hero-card.tsx             # LCP card — city, temperature, comfort sentence (uses air-comfort.ts)
+│   │   ├── air-comfort-card.tsx      # raw metrics tile — dew, humidity, cloud, wind, visibility
 │   │   ├── exposure-card.tsx         # pressure + UV + AQI combined tile
 │   │   ├── astro-card.tsx            # sunrise / sunset / moon phase
 │   │   ├── forecast-card.tsx         # 3-day forecast + optional yesterday column
@@ -58,7 +57,7 @@ src/
 │   ├── tiers.ts           # WeatherTier union + route paths — wire-spanning identity for the three tiers
 │   ├── query.ts           # normalizeQuery — shared by worker cache key + frontend query key
 │   ├── query-client.ts    # TanStack Query config + retry policy
-│   ├── air-comfort.ts     # Two-axis (thermal × air) labeler — drives AirComfortMoodCard (RFC 012)
+│   ├── air-comfort.ts     # Two-axis (thermal × air) labeler — drives the hero sentence (RFC 012)
 │   ├── random-cities.ts   # Pool for the "surprise me" button
 │   └── utils.ts           # cn() helper
 ├── test/                  # MSW server + setup (frontend project only)

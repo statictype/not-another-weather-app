@@ -14,7 +14,7 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
   const slots = hourly ? pickSlots(hourly, tz) : undefined;
 
   return (
-    <section className="swap-in swap-d-2 bento-tile flex flex-col p-6 sm:col-span-12 xl:order-3 xl:col-span-4">
+    <section className="swap-in swap-d-3 bento-tile flex flex-col p-6 sm:col-span-12 xl:order-3 xl:col-span-12">
       <p className="label-section">Hourly</p>
       <div className="mt-4">
         {slots ? (

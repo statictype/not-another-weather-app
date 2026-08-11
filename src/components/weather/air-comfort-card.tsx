@@ -1,17 +1,23 @@
-import { BubblesIcon, DropletsIcon, EyeIcon, MilestoneIcon } from "lucide-react";
+import { BubblesIcon, CloudIcon, DropletsIcon, EyeIcon, MilestoneIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface AirComfortCardProps {
   dewpointC: number;
   humidity: number;
+  cloud: number;
   windKph: number;
   windDir: string;
   visibilityKm: number;
 }
 
+/**
+ * The numbers behind the hero's sentence. The hero says "Gentle breeze" and
+ * leaves cloud cover out entirely; the reading itself lives here.
+ */
 export function AirComfortCard({
   dewpointC,
   humidity,
+  cloud,
   windKph,
   windDir,
   visibilityKm,
@@ -42,6 +48,13 @@ export function AirComfortCard({
           }
           label="Humidity"
           value={`${humidity}%`}
+        />
+        <Metric
+          icon={
+            <CloudIcon className="size-4 text-foreground/55" strokeWidth={1.5} aria-hidden="true" />
+          }
+          label="Cloud"
+          value={`${cloud}%`}
         />
         <Metric
           icon={

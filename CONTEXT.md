@@ -97,17 +97,23 @@ retry-skip lives in the `CLIENT_TIERS` row in `src/hooks/use-weather.ts`.
 
 ## UI surfaces
 
-**Mood card** — `AirComfortMoodCard`
-(`src/components/weather/air-comfort-mood-card.tsx`). Renders the
-semantic sentence (`"Warm and slightly humid"`) + Beaufort wind label
-on an OKLCH gradient. Consumes the two-axis labeler in
-`src/lib/air-comfort.ts`.
+**Hero** — `HeroCard` (`src/components/weather/hero-card.tsx`). Carries
+the whole answer: city, temperature, and the comfort sentence
+(`"Warm and slightly humid"`) at one shared type scale, plus the
+condition icon + text a rung below and a Beaufort wind / rain-chance
+footer. Consumes the two-axis labeler in `src/lib/air-comfort.ts`.
+
+**Peak scale** — the single type scale the hero's three co-equal
+elements share, declared once as `PEAK` in `hero-card.tsx`. City,
+temperature, and comfort sentence are the only things that may use it;
+sizing any of them independently is what collapses the hierarchy.
+Lower rungs step down by size, never by opacity.
 
 **Metrics card** — `AirComfortCard`
 (`src/components/weather/air-comfort-card.tsx`). Renders the raw
-numbers — dew, humidity, wind, visibility. Does **not** consume the
-two-axis labeler. Lives next to the mood card in the grid;
-intentionally separate.
+numbers behind the hero's sentence — dew, humidity, cloud, wind,
+visibility. Does **not** consume the two-axis labeler; intentionally
+separate.
 
 **Thermal label** — one of nine labels driven by feels-like
 temperature: `Very cold | Cold | Chilly | Cool | Mild | Warm | Hot |
@@ -122,20 +128,13 @@ both), the air label becomes `Damp` regardless of dew point. Captures
 the cold-damp sensation that low absolute humidity readings would
 otherwise mask.
 
-**Air-comfort palette** — the single source of truth for the
-air-comfort _colors_, in `src/lib/air-comfort-palette.ts`: the
-per-bucket `--ac-dry`/`--ac-humid` anchors and the
-`--ac-lift`/`--ac-shadow`/`--ac-base-darken` depth params (day +
-night), plus the `thermal → bucket` (`THERMAL_BUCKET`) and `air →
-humidity %` (`AIR_HUMID_PCT`) mappings — all as plain data.
-`air-comfort.ts` owns the _labeling_ ladders and imports the mappings
-from here. The live cards still tint via CSS custom properties and the
-`.night` cascade, but those properties are **generated** from this
-module (`airComfortPaletteCss`) and injected once at startup
-(`injectAirComfortPalette`, in `main.tsx`) — they are no longer
-hand-written in `index.css`. The `/moods` editor reads the anchors
-directly instead of probing the DOM. Retune the palette here, not in
-CSS.
+**Air-comfort palette** — removed. The two axes once drove an OKLCH
+tint per card, single-sourced in `src/lib/air-comfort-palette.ts`,
+injected at startup, and tuned through a `/moods` editor. All of it is
+gone: the palette module, the editor, the `.ac-{bucket}` custom
+properties, and the `airComfortStyle` / `airComfortInk` helpers. Air
+comfort is expressed in words only. Day and night still swap the sky
+and the tile surfaces — that cascade is unrelated and stays.
 
 **Label vocabulary** — the two small-uppercase label classes in
 `src/index.css`: `.label-section` (tile headers — "Air", "Hourly",

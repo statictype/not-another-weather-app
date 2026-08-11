@@ -32,11 +32,12 @@ Two things a neighboring weather app could not truthfully copy:
 
 - **Two-axis air comfort.** Conditions are described as a sentence built from
   thermal (feels-like temperature, 9 labels) × air (dew point, 7 labels, plus a
-  damp override at `tempC < 12 AND humidity > 80`), rendered on an OKLCH
-  gradient whose color is derived from those same labels. `Comfortable` is the
-  one evaluative word and is spoken only where the thermal band allows it —
-  `Warm and comfortable`, `Hot but comfortable`, and at the extremes the
-  thermal label alone. See RFC 012 and `src/lib/air-comfort.ts`.
+  damp override at `tempC < 12 AND humidity > 80`). The sentence carries the
+  same weight in the hero as the city name and the temperature — it is the
+  answer, not a caption on it. `Comfortable` is the one evaluative word and is
+  spoken only where the thermal band allows it — `Warm and comfortable`,
+  `Hot but comfortable`, and at the extremes the thermal label alone. See
+  RFC 012 and `src/lib/air-comfort.ts`.
 - **A URL that is the state.** `?city=…` is the single source of truth for the
   active city. Every view is linkable and shareable; there is no internal
   "current city" that the address bar lags behind. See RFC 007.
@@ -49,11 +50,9 @@ Two things a neighboring weather app could not truthfully copy:
 - Both mobile and desktop are first-class. The search menu is one component
   rendered as a desktop dropdown or a mobile overlay via CSS, no variant prop.
 - The rendered surface changes with the location's local time: a `night` class
-  on the root swaps the sky and the air-comfort palette.
+  on the root swaps the sky and the tile surfaces.
 - Recent cities persist in `localStorage` and sync across tabs via the native
   `storage` event. Removal and clear-all are undoable via toast.
-- `/moods` is a development-only palette editor for tuning the air-comfort
-  anchors. It is not a user-facing surface and is excluded from tests.
 
 ## Capabilities and Constraints
 
@@ -84,10 +83,15 @@ Constraints:
 
 Binding:
 
-- **Day/night sky treatment and the OKLCH air-comfort mood tint are the
-  product's signature**, not decoration. Palette anchors are single-sourced in
-  `src/lib/air-comfort-palette.ts` and injected at startup; retune there, never
-  in CSS.
+- **The day/night sky treatment is the product's signature**, not decoration.
+  It is driven by the location's local time, not the viewer's OS preference.
+- **The OKLCH air-comfort mood tint was withdrawn** (Aug 2026). Six hue buckets
+  read as decoration rather than information, and the sentence beside them
+  already said the same thing in words. The palette module, the `/moods` editor
+  that tuned it, and the `.ac-{bucket}` custom properties are all deleted. Do
+  not reintroduce color as a comfort encoding. Mood is intended to return as a
+  background treatment on the hero, driven by condition and time of day — not
+  yet built, and out of scope until specified.
 - **Lighthouse 99 / 100 / 100 / 100** (performance / accessibility / best
   practices / SEO, desktop, `pnpm preview`) is a standing floor. No design change
   may regress it. The one missing performance point is accepted and closed —
