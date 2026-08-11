@@ -1,15 +1,18 @@
 import { useId, useState } from "react";
 import { MoonIcon, SunIcon } from "lucide-react";
 import type { Astro } from "@/api/types";
+import { moonGeometry, moonLitPath } from "@/lib/moon";
 import { cn } from "@/lib/utils";
 
 type AstroView = "sun" | "moon";
 
 interface AstroCardProps {
   astro: Astro | undefined;
+  /** Viewer latitude. Below the equator the moon's lit side mirrors. */
+  lat: number;
 }
 
-export function AstroCard({ astro }: AstroCardProps) {
+export function AstroCard({ astro, lat }: AstroCardProps) {
   const [view, setView] = useState<AstroView>("sun");
 
   return (
@@ -32,7 +35,12 @@ export function AstroCard({ astro }: AstroCardProps) {
             label="Show moon times and phase"
           >
             {astro ? (
-              <MoonGlyph illumination={astro.moonIllumination} phase={astro.moonPhase} size={20} />
+              <MoonGlyph
+                illumination={astro.moonIllumination}
+                phase={astro.moonPhase}
+                lat={lat}
+                size={20}
+              />
             ) : (
               <MoonIcon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
             )}
@@ -46,9 +54,15 @@ export function AstroCard({ astro }: AstroCardProps) {
 
       <div key={`panel-${view}`} className="astro-fade relative mt-3">
         {view === "sun" ? (
-          <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} />
+          <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} lat={lat} />
         ) : (
-          <ArcPanel kind="moon" rise={astro?.moonrise} set={astro?.moonset} astro={astro} />
+          <ArcPanel
+            kind="moon"
+            rise={astro?.moonrise}
+            set={astro?.moonset}
+            astro={astro}
+            lat={lat}
+          />
         )}
       </div>
     </section>
@@ -119,16 +133,17 @@ interface ArcPanelProps {
   kind: "sun" | "moon";
   rise: string | undefined;
   set: string | undefined;
+  lat: number;
   astro?: Astro | undefined;
 }
 
-function ArcPanel({ kind, rise, set, astro }: ArcPanelProps) {
+function ArcPanel({ kind, rise, set, lat, astro }: ArcPanelProps) {
   const labels =
     kind === "sun" ? { rise: "Sunrise", set: "Sunset" } : { rise: "Moonrise", set: "Moonset" };
 
   return (
     <div>
-      <Arc kind={kind} astro={astro} />
+      <Arc kind={kind} astro={astro} lat={lat} />
       <div className="mt-2 flex items-end justify-between">
         <div>
           {rise ? (
@@ -151,7 +166,15 @@ function ArcPanel({ kind, rise, set, astro }: ArcPanelProps) {
   );
 }
 
-function Arc({ kind, astro }: { kind: "sun" | "moon"; astro?: Astro | undefined }) {
+function Arc({
+  kind,
+  astro,
+  lat,
+}: {
+  kind: "sun" | "moon";
+  astro?: Astro | undefined;
+  lat: number;
+}) {
   const uid = useId();
   const arcGradId = `${uid}-arc`;
   const sunDiscId = `${uid}-sun-disc`;
@@ -236,6 +259,7 @@ function Arc({ kind, astro }: { kind: "sun" | "moon"; astro?: Astro | undefined 
           r={22}
           illumination={astro.moonIllumination}
           phase={astro.moonPhase}
+          lat={lat}
           litGradId={moonLitId}
         />
       ) : (
@@ -251,6 +275,7 @@ function MoonBodyShapes({
   r,
   illumination,
   phase,
+  lat,
   litGradId,
 }: {
   cx: number;
@@ -258,17 +283,10 @@ function MoonBodyShapes({
   r: number;
   illumination: number;
   phase: string;
+  lat: number;
   litGradId: string;
 }) {
-  const k = Math.max(0, Math.min(100, illumination)) / 100;
-  const phaseLower = phase.toLowerCase();
-  const isWaxing =
-    phaseLower.includes("waxing") || phaseLower.includes("first") || phaseLower === "new moon";
-  const isCrescent = k < 0.5;
-  const termRx = Math.abs(1 - 2 * k) * r;
-  const outerSweep = isWaxing ? 1 : 0;
-  const termSweep = (isWaxing && isCrescent) || (!isWaxing && !isCrescent) ? 1 : 0;
-  const litPath = `M ${cx},${cy - r} A ${r},${r} 0 0 ${outerSweep} ${cx},${cy + r} A ${termRx},${r} 0 0 ${termSweep} ${cx},${cy - r} Z`;
+  const litPath = moonLitPath(moonGeometry(illumination, phase, lat, r), cx, cy, r);
 
   return (
     <g>
@@ -290,10 +308,12 @@ function MoonBodyShapes({
 function MoonGlyph({
   illumination,
   phase,
+  lat,
   size = 20,
 }: {
   illumination: number;
   phase: string;
+  lat: number;
   size?: number;
 }) {
   const uid = useId();
@@ -322,6 +342,7 @@ function MoonGlyph({
         r={r}
         illumination={illumination}
         phase={phase}
+        lat={lat}
         litGradId={litGradId}
       />
     </svg>

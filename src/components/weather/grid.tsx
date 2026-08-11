@@ -52,7 +52,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         windDir={c.current.windDir}
         visibilityKm={c.current.visibilityKm}
       />
-      <AstroCard astro={forecast.data?.astro} />
+      <AstroCard astro={forecast.data?.astro} lat={c.location.lat} />
       <ExposureCard
         uv={c.current.uv}
         airQualityIndex={forecast.data?.airQualityIndex ?? null}
