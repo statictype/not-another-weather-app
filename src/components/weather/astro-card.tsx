@@ -3,6 +3,7 @@ import { MoonIcon, SunIcon } from "lucide-react";
 import type { Astro } from "@/api/types";
 import { moonGeometry, moonLitPath } from "@/lib/moon";
 import { cn } from "@/lib/utils";
+import { TabButton } from "./tab-button";
 
 type AstroView = "sun" | "moon";
 
@@ -66,35 +67,6 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
         )}
       </div>
     </section>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  label,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      aria-pressed={active}
-      className={cn(
-        "flex size-9 items-center justify-center rounded-full transition-colors",
-        active
-          ? "bg-foreground/10 text-foreground"
-          : "text-foreground/55 hover:bg-foreground/5 hover:text-foreground",
-      )}
-    >
-      {children}
-    </button>
   );
 }
 

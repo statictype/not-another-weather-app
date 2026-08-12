@@ -1,6 +1,7 @@
 import { DropletIcon, SnowflakeIcon } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import type { WeatherForecast } from "@/api/types";
+import { precipAmount, type PrecipAmount } from "@/lib/precip";
 import { cn } from "@/lib/utils";
 
 interface PrecipStripProps {
@@ -46,44 +47,20 @@ export function PrecipStrip({ today, className }: PrecipStripProps) {
             icon={DropletIcon}
             name="Chance of rain"
             chance={today.chanceOfRain}
-            amount={today.willItRain ? measure(today.totalPrecipMm, "mm", "millimetres") : null}
+            amount={today.willItRain ? precipAmount(today.totalPrecipMm, "mm") : null}
           />
           {today.willItSnow && (
             <Chip
               icon={SnowflakeIcon}
               name="Chance of snow"
               chance={today.chanceOfSnow}
-              amount={measure(today.totalSnowCm, "cm", "centimetres")}
+              amount={precipAmount(today.totalSnowCm, "cm")}
             />
           )}
         </>
       )}
     </div>
   );
-}
-
-interface Measure {
-  text: string;
-  spoken: string;
-}
-
-/**
- * The booleans upstream gate the amount, not the chance, so the chip degrades
- * correctly when the vendor disagrees with itself: `chanceOfRain: 70` with
- * `willItRain: false` prints `70%` and no amount rather than a contradiction.
- *
- * A rounded zero is dropped for the same reason the boolean gate exists —
- * `0mm` is a second way of saying `0%`, and upstream will report a true
- * `willItRain` beside a `totalprecip_mm` of `0`.
- *
- * One decimal below 10 and none above it. The tenth is the whole reading at
- * `0.4mm` and it is noise at `31.2mm`; a fixed precision gets one of the two
- * wrong.
- */
-function measure(value: number, unit: string, spokenUnit: string): Measure | null {
-  const rounded = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
-  if (rounded <= 0) return null;
-  return { text: `${rounded}${unit}`, spoken: `${rounded} ${spokenUnit}` };
 }
 
 function Chip({
@@ -95,7 +72,13 @@ function Chip({
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   name: string;
   chance: number;
-  amount: Measure | null;
+  /**
+   * The booleans upstream gate the amount, not the chance, so the chip
+   * degrades correctly when the vendor disagrees with itself:
+   * `chanceOfRain: 70` with `willItRain: false` prints `70%` and no amount
+   * rather than a contradiction.
+   */
+  amount: PrecipAmount | null;
 }) {
   return (
     // `role="img"` gives the chip one accessible name and suppresses the glyph

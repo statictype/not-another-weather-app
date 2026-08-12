@@ -579,6 +579,64 @@ html, body { background: oklch(0.97 0.02 230); }
   background: oklch(0.13 0.008 250 / 0.85);
 }
 
+/* ── Hourly strip ────────────────────────────────────────────────
+ *
+ * The strip is a table and the rules are its structure: a hairline between
+ * every pair of columns, one under every column head, meeting at the corners.
+ * No column carries a field of its own — every hour sits on the tile's own
+ * surface, so nothing in the grid is picked out over anything else, and the
+ * only marks are the rules.
+ *
+ * 8% of the foreground in day, 7% white in night. These are not the
+ * `divide-foreground/6` utility, which `.night .divide-foreground\/6` rewrites
+ * with `!important` and would take the day-break rule's weight with it. */
+.hour-col + .hour-col {
+  border-left: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+.night .hour-col + .hour-col {
+  border-left-color: oklch(1 0 0 / 0.07);
+}
+
+.hour-head {
+  border-bottom: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+.night .hour-head {
+  border-bottom-color: oklch(1 0 0 / 0.07);
+}
+
+/* The date rollover, at roughly three times the weight of the hairlines
+ * around it. It is the one boundary in 24 hours that a reader has to see
+ * without looking for it, and against 23 identical rules only weight
+ * separates it. The column beside it names the new day. */
+.hour-col + .hour-col.hour-daybreak {
+  border-left-color: color-mix(in oklab, var(--foreground) 24%, transparent);
+}
+.night .hour-col + .hour-col.hour-daybreak {
+  border-left-color: oklch(1 0 0 / 0.24);
+}
+
+/* The strip's content runs under the tile's padding at both ends, so without
+ * a soft edge a column is hard-cut mid-word wherever there are more hours
+ * behind it. Driven by the same two flags as the arrow buttons: a strip with
+ * nothing to scroll to has square edges, and each end fades only while there
+ * is something past it. */
+.hour-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--hour-fade-l, 0px),
+    #000 calc(100% - var(--hour-fade-r, 0px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--hour-fade-l, 0px),
+    #000 calc(100% - var(--hour-fade-r, 0px)),
+    transparent 100%
+  );
+}
+
 .scrollbar-none {
   scrollbar-width: none;
 }
