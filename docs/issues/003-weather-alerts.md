@@ -1,5 +1,6 @@
 # Issue 003 — Weather alerts badge and modal
 
+**Status:** Done — `5b5b804`
 **Depends on:** 002
 **Source:** original item 2
 

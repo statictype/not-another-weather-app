@@ -1,5 +1,6 @@
 # Issue 004 — Precipitation strip in the hero
 
+**Status:** Done — `fb485d4`
 **Depends on:** 002
 **Source:** original item 3
 

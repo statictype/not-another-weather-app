@@ -1,5 +1,6 @@
 # Issue 007 — Condition code table and intensity standards
 
+**Status:** Not started
 **Blocks:** 011
 **Source:** original item 7 — the mapping and documentation half
 

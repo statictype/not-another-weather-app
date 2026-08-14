@@ -1,5 +1,6 @@
 # Issue 001 — Fix moon phase geometry
 
+**Status:** Done — `2702deb`
 **Source:** original item 6 — "shows full moon at 1% illumination"
 
 ## Problem

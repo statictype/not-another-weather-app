@@ -1,5 +1,6 @@
 # Issue 006 — Unit system switch
 
+**Status:** Not started
 **Depends on:** 002
 **Source:** original item 5 (marked low priority)
 
@@ -22,8 +23,8 @@ One toggle, labelled °C/°F, that flips the whole system.
 | Wind        | km/h   | mph      | air-comfort-card:68                            |
 | Visibility  | km     | mi       | air-comfort-card:75                            |
 | Pressure    | mb     | inHg     | exposure-card:139                              |
-| Precip      | mm     | in       | hero strip (004), hourly precip mode (005)     |
-| Snow        | cm     | in       | hero strip (004), hourly precip mode (005)     |
+| Precip      | mm     | in       | hero strip (004)                               |
+| Snow        | cm     | in       | hero strip (004)                               |
 
 ### Conversion happens at the format boundary only
 
@@ -35,7 +36,6 @@ This is the load-bearing rule. The DTO stays metric, nothing refetches, and
 - `PressureGauge`'s 980–1050 mb arc mapping and `pressureLabel`'s bands
   (`exposure-card.tsx:78`, `:201`)
 - `uvScale`, `aqiScale`
-- the `< 2°` hourly collapse (005)
 
 Only the rendered string converts. No band can drift between systems, and no
 existing test changes.

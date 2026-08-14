@@ -1,5 +1,6 @@
 # Issue 011 — Background video layer
 
+**Status:** Not started
 **Depends on:** 007, 008
 **Source:** original item 7 — the video half
 

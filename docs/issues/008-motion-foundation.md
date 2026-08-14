@@ -1,5 +1,6 @@
 # Issue 008 — Motion foundation
 
+**Status:** Not started
 **Blocks:** 009, 010, 011
 **Source:** original item 1 — the shared plumbing
 
@@ -27,7 +28,8 @@ replaying the `.swap-in` CSS cascade. That is a teardown, which is precisely the
 appearance being designed away.
 
 Removing it changes behaviour: card-local state now survives a city change —
-the astro tile's sun/moon view, and the hourly mode from 005. That is intended.
+the astro tile's sun/moon view, and the hourly strip's scroll position. That is
+intended.
 Switching cities should not reset how the reader is reading.
 
 ### No reduced-motion handling exists anywhere

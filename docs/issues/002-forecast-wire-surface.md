@@ -1,5 +1,6 @@
 # Issue 002 — Extend the forecast wire surface
 
+**Status:** Done — `2de6f35`
 **Blocks:** 003, 004, 005, 006
 **Source:** original items 2, 3, 4 — the shared DTO work behind all three
 

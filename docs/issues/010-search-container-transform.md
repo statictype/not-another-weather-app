@@ -1,5 +1,6 @@
 # Issue 010 — Input-to-menu container transform
 
+**Status:** Not started
 **Depends on:** 008
 **Source:** original item 1
 
