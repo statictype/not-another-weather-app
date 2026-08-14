@@ -1,16 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { WeatherForecast } from "@/api/types";
+import type { DayPrecip } from "@/api/types";
 import { PrecipStrip } from "./precip-strip";
 
-/** The strip sits inside the LCP element: it must measure the same in all three states. */
+/** The strip sits under a day column: the rain line is unconditional, so a
+ *  day's height does not depend on whether it snows. */
 
-type Today = WeatherForecast["today"];
-
-function today(over: Partial<Today> = {}): Today {
+function precip(over: Partial<DayPrecip> = {}): DayPrecip {
   return {
-    minC: 8,
-    maxC: 15.5,
     chanceOfRain: 20,
     willItRain: true,
     chanceOfSnow: 0,
@@ -25,81 +22,75 @@ const rain = () => screen.getByRole("img", { name: /chance of rain/i });
 const snow = () => screen.queryByRole("img", { name: /chance of snow/i });
 
 describe("PrecipStrip", () => {
-  it("names each chip in full, with the units spoken", () => {
-    render(<PrecipStrip today={today({ willItSnow: true, chanceOfSnow: 15, totalSnowCm: 2 })} />);
+  it("names each line in full, with the units spoken", () => {
+    render(<PrecipStrip day={precip({ willItSnow: true, chanceOfSnow: 15, totalSnowCm: 2 })} />);
 
     expect(rain()).toHaveAccessibleName("Chance of rain, 20 percent, 4 millimetres");
     expect(snow()).toHaveAccessibleName("Chance of snow, 15 percent, 2 centimetres");
   });
 
   it("hides the icons from the accessible name", () => {
-    const { container } = render(<PrecipStrip today={today()} />);
+    const { container } = render(<PrecipStrip day={precip()} />);
     const icons = container.querySelectorAll("svg");
 
     expect(icons).toHaveLength(1);
     icons.forEach((icon) => expect(icon).toHaveAttribute("aria-hidden", "true"));
   });
 
-  it("shows the rain chip at 0% — 'no rain today' is an answer", () => {
-    render(<PrecipStrip today={today({ chanceOfRain: 0, willItRain: false, totalPrecipMm: 0 })} />);
+  it("shows the rain line at 0% — 'no rain that day' is an answer", () => {
+    render(<PrecipStrip day={precip({ chanceOfRain: 0, willItRain: false, totalPrecipMm: 0 })} />);
 
     expect(rain()).toHaveTextContent("0%");
     expect(rain()).toHaveAccessibleName("Chance of rain, 0 percent");
   });
 
-  it("omits the snow chip whatever the snow chance, when willItSnow is false", () => {
-    render(<PrecipStrip today={today({ chanceOfSnow: 80, willItSnow: false, totalSnowCm: 6 })} />);
+  it("omits the snow line when nothing snows and nothing fell", () => {
+    render(<PrecipStrip day={precip({ chanceOfSnow: 80, willItSnow: false, totalSnowCm: 0 })} />);
 
     expect(snow()).not.toBeInTheDocument();
   });
 
-  it("prints the chance without an amount when the vendor disagrees with itself", () => {
-    render(
-      <PrecipStrip today={today({ chanceOfRain: 70, willItRain: false, totalPrecipMm: 9 })} />,
-    );
+  it("shows the snow line for an amount upstream reports with willItSnow false", () => {
+    render(<PrecipStrip day={precip({ chanceOfSnow: 80, willItSnow: false, totalSnowCm: 6 })} />);
+
+    expect(snow()).toHaveTextContent("6cm");
+  });
+
+  it("prints the amount when the vendor disagrees with itself — the total is the reading", () => {
+    render(<PrecipStrip day={precip({ chanceOfRain: 70, willItRain: false, totalPrecipMm: 9 })} />);
 
     expect(rain()).toHaveTextContent("70%");
-    expect(rain()).not.toHaveTextContent("9mm");
+    expect(rain()).toHaveTextContent("9mm");
   });
 
   it("never prints a zero amount — that is a second way of saying 0%", () => {
-    render(<PrecipStrip today={today({ willItRain: true, totalPrecipMm: 0 })} />);
+    render(<PrecipStrip day={precip({ willItRain: true, totalPrecipMm: 0 })} />);
 
     expect(rain()).toHaveTextContent("20%");
     expect(rain()).not.toHaveTextContent("mm");
   });
 
   it("keeps one decimal below 10 and drops it above", () => {
-    const { rerender } = render(<PrecipStrip today={today({ totalPrecipMm: 0.42 })} />);
+    const { rerender } = render(<PrecipStrip day={precip({ totalPrecipMm: 0.42 })} />);
     expect(rain()).toHaveTextContent("0.4mm");
 
-    rerender(<PrecipStrip today={today({ totalPrecipMm: 31.24 })} />);
+    rerender(<PrecipStrip day={precip({ totalPrecipMm: 31.24 })} />);
     expect(rain()).toHaveTextContent("31mm");
   });
 
-  it("holds its height before the forecast tier lands", () => {
-    const { container, rerender } = render(<PrecipStrip today={undefined} />);
-    const strip = container.firstElementChild;
-    const shimmering = strip?.className;
+  it("holds a line of height before the forecast tier lands", () => {
+    const { container } = render(<PrecipStrip day={undefined} />);
 
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
-
-    rerender(<PrecipStrip today={today()} />);
-
-    expect(container.firstElementChild).toBe(strip);
-    expect(strip?.className).toBe(shimmering);
-    expect(strip?.className).toContain("h-8");
+    expect(container.querySelector(".animate-pulse")?.className).toContain("h-5");
   });
 
-  it("measures the same with one chip and with two", () => {
-    const { container, rerender } = render(<PrecipStrip today={today()} />);
-    const one = container.firstElementChild?.className;
-    const oneChip = rain().className;
+  it("measures the same line with and without an amount", () => {
+    const { rerender } = render(<PrecipStrip day={precip()} />);
+    const withAmount = rain().className;
 
-    rerender(<PrecipStrip today={today({ willItSnow: true, chanceOfSnow: 15, totalSnowCm: 2 })} />);
+    rerender(<PrecipStrip day={precip({ totalPrecipMm: 0 })} />);
 
-    expect(container.firstElementChild?.className).toBe(one);
-    expect(rain().className).toBe(oneChip);
-    expect(snow()?.className).toBe(oneChip);
+    expect(rain().className).toBe(withAmount);
   });
 });

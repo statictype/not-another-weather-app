@@ -776,6 +776,65 @@ html, body { background: oklch(0.97 0.02 230); }
   }
 }
 
+/* One forecast day, in two topologies over one DOM.
+
+   Below 640px a day is a list row: the day name holds the leading edge and the
+   high/low the trailing edge, so both scan down the tile's two margins. The
+   previous row packed all five elements against the left edge and left 53% of
+   a 342px tile empty.
+
+   From 640px up the same five elements stack into a centred column, matching
+   the hour table beside it at `xl`. Start-alignment left 131px of a 231px cell
+   empty at 820px, which read as a fourth, blank day.
+
+   Grid areas rather than `order`, because the two topologies group the
+   elements differently: on the row the name, condition and precipitation share
+   one middle column, and in the stack all five are siblings. */
+.fc-day {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon name temp"
+    "icon cond temp"
+    "icon prec temp";
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.125rem;
+}
+.fc-icon { grid-area: icon; }
+.fc-name { grid-area: name; }
+.fc-temp { grid-area: temp; justify-self: end; }
+.fc-cond { grid-area: cond; }
+.fc-prec { grid-area: prec; }
+
+@media (min-width: 640px) {
+  .fc-day {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "name"
+      "icon"
+      "temp"
+      "cond"
+      "prec";
+    column-gap: 0;
+    row-gap: 0;
+    text-align: center;
+  }
+  /* Centred by `text-align`, not by `justify-items`. Under `justify-items:
+     center` a cell is sized to its content, so the truncating name and
+     condition have no width to truncate against and overflow the column
+     instead — 166px of text in a 151px cell at 4 days. The icon is the one
+     item with no text to centre. */
+  .fc-icon { justify-self: center; }
+  /* The interval tightens on the way down — 12 / 10 / 6 / 2 — so the name
+     stands off the reading and the two support lines close up under it. The
+     four gaps were 8 / 4 / 4 / 6 and the five elements read as one list. */
+  .fc-icon { margin-top: 0.75rem; }
+  .fc-temp { margin-top: 0.625rem; justify-self: stretch; }
+  .fc-cond { margin-top: 0.375rem; }
+  .fc-prec { margin-top: 0.125rem; align-items: center; }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
 }

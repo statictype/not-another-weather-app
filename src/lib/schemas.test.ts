@@ -46,6 +46,11 @@ const forecastDay = {
   maxC: 15.5,
   avgC: 11.7,
   chanceOfRain: 20,
+  willItRain: false,
+  chanceOfSnow: 0,
+  willItSnow: false,
+  totalPrecipMm: 0,
+  totalSnowCm: 0,
   conditionText: "Partly cloudy",
   conditionCode: 1003,
   isDay: true,
@@ -87,6 +92,18 @@ describe("ForecastDaySchema", () => {
   });
   it("rejects a null minC", () => {
     expect(() => ForecastDaySchema.parse({ ...forecastDay, minC: null })).toThrow();
+  });
+  it("requires the precipitation fields — every day column renders them", () => {
+    for (const field of [
+      "chanceOfRain",
+      "willItRain",
+      "chanceOfSnow",
+      "willItSnow",
+      "totalPrecipMm",
+      "totalSnowCm",
+    ]) {
+      expect(() => ForecastDaySchema.parse(without(forecastDay, field))).toThrow();
+    }
   });
 });
 

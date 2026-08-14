@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import type { CurrentConditions, WeatherForecast, WeatherLocation } from "@/api/types";
+import type { CurrentConditions, WeatherLocation } from "@/api/types";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
-import { PrecipStrip } from "./precip-strip";
 
 interface HeroCardProps {
   location: WeatherLocation;
   current: CurrentConditions;
-  today: WeatherForecast["today"] | undefined;
 }
 
 /** Hierarchy is by size step, never opacity: faded white fails 4.5:1 on the day gradient. */
@@ -18,7 +16,7 @@ const SPOKEN = "font-light leading-tight text-lg md:text-xl xl:text-2xl";
 
 const CLOCK = "font-light text-base md:text-lg";
 
-export function HeroCard({ location, current, today }: HeroCardProps) {
+export function HeroCard({ location, current }: HeroCardProps) {
   const isDay = current.timeOfDay === "day";
   const country = location.country;
   const now = useTicker();
@@ -46,7 +44,6 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               </span>
               {formatDate(now, location.tz)}
             </p>
-            <PrecipStrip today={today} className="mt-4 md:mt-5" />
           </div>
 
           <div className="flex min-w-0 shrink-0 flex-col items-end gap-2 text-right sm:justify-end">

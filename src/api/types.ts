@@ -2,6 +2,7 @@ export type {
   AlertSeverity,
   Astro,
   CurrentConditions,
+  DayPrecip,
   ForecastDay,
   HourlyForecast,
   WeatherAlert,

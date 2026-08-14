@@ -2,6 +2,7 @@ import { z, ZodError } from "zod";
 import type {
   Astro,
   CurrentConditions,
+  DayPrecip,
   ForecastDay,
   HourlyForecast,
   WeatherAlert,
@@ -247,12 +248,7 @@ export async function fetchForecast(
     today: {
       minC: round1(today.day.mintemp_c),
       maxC: round1(today.day.maxtemp_c),
-      chanceOfRain: today.day.daily_chance_of_rain,
-      willItRain: isTrue(today.day.daily_will_it_rain),
-      chanceOfSnow: today.day.daily_chance_of_snow ?? 0,
-      willItSnow: isTrue(today.day.daily_will_it_snow),
-      totalPrecipMm: round1(today.day.totalprecip_mm ?? 0),
-      totalSnowCm: round1(today.day.totalsnow_cm ?? 0),
+      ...shapeDayPrecip(today.day),
     },
     airQualityIndex: typeof epa === "number" ? epa : null,
     forecast: raw.forecast.forecastday.map(shapeForecastDay),
@@ -302,10 +298,21 @@ function shapeForecastDay(d: UpstreamForecastDay): ForecastDay {
     minC: round1(d.day.mintemp_c),
     maxC: round1(d.day.maxtemp_c),
     avgC: round1(d.day.avgtemp_c),
-    chanceOfRain: d.day.daily_chance_of_rain,
+    ...shapeDayPrecip(d.day),
     conditionText: d.day.condition.text,
     conditionCode: d.day.condition.code,
     isDay: true,
+  };
+}
+
+function shapeDayPrecip(day: UpstreamForecastDay["day"]): DayPrecip {
+  return {
+    chanceOfRain: day.daily_chance_of_rain,
+    willItRain: isTrue(day.daily_will_it_rain),
+    chanceOfSnow: day.daily_chance_of_snow ?? 0,
+    willItSnow: isTrue(day.daily_will_it_snow),
+    totalPrecipMm: round1(day.totalprecip_mm ?? 0),
+    totalSnowCm: round1(day.totalsnow_cm ?? 0),
   };
 }
 

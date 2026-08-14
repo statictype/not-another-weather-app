@@ -55,12 +55,25 @@ export const HourlyForecastSchema = z.object({
 });
 export type HourlyForecast = z.infer<typeof HourlyForecastSchema>;
 
+/** A day's precipitation totals. Shared by every forecast day and by `today`,
+ *  so the readout under a day column takes one shape wherever it renders. */
+export const DayPrecipSchema = z.object({
+  chanceOfRain: z.number(),
+  /** Upstream's own call on whether precipitation lands, not a threshold on the chance. */
+  willItRain: z.boolean(),
+  chanceOfSnow: z.number(),
+  willItSnow: z.boolean(),
+  totalPrecipMm: z.number(),
+  totalSnowCm: z.number(),
+});
+export type DayPrecip = z.infer<typeof DayPrecipSchema>;
+
 export const ForecastDaySchema = z.object({
   date: z.string(),
   minC: z.number(),
   maxC: z.number(),
   avgC: z.number(),
-  chanceOfRain: z.number(),
+  ...DayPrecipSchema.shape,
   conditionText: z.string(),
   conditionCode: z.number(),
   isDay: z.boolean(),
@@ -102,12 +115,7 @@ export const WeatherForecastSchema = z.object({
   today: z.object({
     minC: z.number(),
     maxC: z.number(),
-    chanceOfRain: z.number(),
-    willItRain: z.boolean(),
-    chanceOfSnow: z.number(),
-    willItSnow: z.boolean(),
-    totalPrecipMm: z.number(),
-    totalSnowCm: z.number(),
+    ...DayPrecipSchema.shape,
   }),
   airQualityIndex: z.number().nullable(),
   forecast: z.array(ForecastDaySchema),

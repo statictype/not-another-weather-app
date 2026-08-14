@@ -30,7 +30,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         isStale && "opacity-60",
       )}
     >
-      <HeroCard location={c.location} current={c.current} today={forecast.data?.today} />
+      <HeroCard location={c.location} current={c.current} />
 
       {/* `contents` keeps both tiles as direct grid children below `xl`; at
           `xl` the wrapper becomes the one cell they stack inside. */}
