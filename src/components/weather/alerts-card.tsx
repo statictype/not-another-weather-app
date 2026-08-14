@@ -93,7 +93,9 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
             aria-hidden="true"
           />
           <span className="min-w-0 flex-1">
-            <span className="line-clamp-2 text-lg leading-snug font-light tracking-tight xl:text-xl">
+            {/* One size at every width: light is the headline weight, and it
+                needs 20px to hold its stems. */}
+            <span className="line-clamp-2 text-xl leading-snug font-light tracking-tight">
               {top.event}
             </span>
             {/* Steps down by size, not alpha — see The Step-Down Rule. */}

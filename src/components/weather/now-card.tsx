@@ -98,7 +98,13 @@ export function NowCard({ current }: NowCardProps) {
           </span>
 
           <span className="relative flex flex-col gap-5 md:flex-row md:items-center md:gap-10 xl:flex-col xl:items-stretch xl:gap-5">
-            <span className="block text-lg leading-tight font-light tracking-tight text-balance sm:text-xl md:flex-1">
+            {/* The dashboard's second voice after the hero city, and the one
+                thing on it that answers the question in words. 24px at every
+                width, because the figures are 24px at every width and no
+                figure outranks the sentence. No `tracking-tight` either: this
+                is the only light type the system sets at 24px across a full
+                line, and -0.055em closed the words up. */}
+            <span className="block text-2xl leading-tight font-light text-balance md:flex-1">
               {sentence}
             </span>
 

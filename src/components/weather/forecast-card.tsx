@@ -71,29 +71,25 @@ function DayColumn({ day, label }: { day: ForecastDay; label: string }) {
         strokeWidth={1.5}
         aria-hidden="true"
       />
-      <span className="fc-temp text-3xl leading-none tracking-tight tabular-nums whitespace-nowrap">
+      <span className="fc-temp text-2xl leading-none tracking-tight tabular-nums whitespace-nowrap">
         {Math.round(day.maxC)}°
-        <span className="ml-1 text-base font-light text-foreground/70">
-          / {Math.round(day.minC)}°
-        </span>
+        <span className="ml-1 text-base text-foreground/70">/ {Math.round(day.minC)}°</span>
       </span>
-      <span className="fc-cond truncate text-sm font-light text-foreground/70">
-        {day.conditionText}
-      </span>
+      <span className="fc-cond truncate text-sm text-foreground/70">{day.conditionText}</span>
       <PrecipStrip day={day} className="fc-prec" />
     </div>
   );
 }
 
-/** Each bar is the height of the line box it stands in — 18 / 40 / 32 / 20 / 20
- *  — so a day measures 62 px as a row and 160 px as a column either way, and
- *  the tile does not resize when the payload lands. */
+/** Each bar is the height of the line box it stands in — 18 / 40 / 24 / 20 / 20
+ *  — so a day measures the same as a row and as a column either way, and the
+ *  tile does not resize when the payload lands. */
 function DayColumnSkeleton() {
   return (
     <div aria-hidden="true" className="fc-day min-w-0">
       <div className="fc-name h-[18px] w-16 animate-pulse rounded bg-foreground/10" />
       <div className="fc-icon size-10 shrink-0 animate-pulse rounded-xl bg-foreground/10" />
-      <div className="fc-temp h-8 w-20 animate-pulse rounded bg-foreground/10" />
+      <div className="fc-temp h-6 w-20 animate-pulse rounded bg-foreground/10" />
       <div className="fc-cond h-5 w-24 animate-pulse rounded bg-foreground/10" />
       <div className="fc-prec h-5 w-14 animate-pulse rounded bg-foreground/10" />
     </div>

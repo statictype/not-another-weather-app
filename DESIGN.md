@@ -33,16 +33,16 @@ typography:
     fontWeight: 300
     lineHeight: 1.25
     letterSpacing: "-0.03em"
-  title:
+  figure:
     fontFamily: "Work Sans, system-ui, sans-serif"
-    fontSize: "1.875rem"
+    fontSize: "1.5rem"
     fontWeight: 400
     lineHeight: 1
     letterSpacing: "-0.055em"
   body:
     fontFamily: "Work Sans, system-ui, sans-serif"
     fontSize: "1rem"
-    fontWeight: 300
+    fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "-0.03em"
   label:
@@ -292,15 +292,18 @@ third voice.
 ### Hierarchy
 
 - **Display** (300, `2.125rem → 3.5rem` across breakpoints, `1.05`,
-  `-0.055em`): the hero's city name, temperature, and comfort sentence, plus
-  the empty state's question. All three hero items share one declared constant
-  so none can be sized independently.
-- **Headline** (300, `1.25rem → 1.75rem`, `1.25`): the condition text beside
-  the hero icon, and the search input. The middle rung — 28 px against 56 px
-  peaks and 16 px support at `xl`.
-- **Title** (400, `1.875rem`, `1`, `-0.055em`): forecast day temperatures.
-- **Body** (300, `0.875rem → 1rem`, `1.5`): all supporting text. Light weight,
-  never regular.
+  `-0.055em`): the hero's city name, plus the empty state's question.
+- **Headline** (300, `1.25rem → 1.5rem`, `1.25`): the words that answer the
+  question — the condition beside the hero icon, the comfort sentence in the
+  Now card, the hazard name on the alerts tile — plus the search input and the
+  dialog titles. The rung between the 56 px hero and the 24 px figures. The
+  comfort sentence is the one member fixed at `1.5rem` at every width, and the
+  one place in the system that drops `tracking-tight`: it is the only light
+  type set at 24 px across a full line, and −0.055 em closed the words up.
+- **Figure** (400, `1.5rem`, `1`, `-0.055em`): the numbers a tile is built
+  around — forecast day highs, UV and AQI values, the pressure reading. It sits
+  at the same size as Headline and is separated from it by weight.
+- **Body** (400, `0.875rem → 1rem`, `1.5`): all supporting text.
 - **Label** (500, `0.75rem`, `0.18em`, uppercase, `foreground` at 70%): tile
   headers and section headers. Class `.label-section`.
 - **Label Micro** (500, `0.625rem`, `0.18em`, uppercase, `foreground` at 70%):
@@ -314,12 +317,30 @@ sizes × five tracking values × six opacities. `.label-section` and `.label-sub
 are the entire vocabulary; they differ by size alone, never by tracking or
 alpha. Adding a third is a regression.
 
-**The Equal Peaks Rule.** City, temperature, and comfort sentence are one type
-size, declared once. The sentence is the answer, not a caption on the answer.
-Sizing any of the three separately is what collapsed the hierarchy before.
+**Light Is a Display Weight.** Weight 300 is used at 20 px and up and nowhere
+below it; 16 px and 14 px are weight 400. Work Sans Light was previously set at
+14 px on the forecast condition and the precipitation lines, at 16 px on the
+hero clock and the forecast low, and at 18 px on the alerts hazard name — all
+of it over glass at 70% `foreground`, which is the thinnest the system gets and
+was carrying content. Amended August 2026; the previous wording read "Light
+weight, never regular" and named 300 as the body weight.
 
-**The Step-Down Rule.** Every drop in the hierarchy is a size change. Opacity
-is not a hierarchy tool in this system (see The 70% Floor Rule).
+**Words Outrank Figures.** The largest thing on the dashboard is the city at
+56 px. Below it, one rung at 24 px holds both the words that answer the
+question (Headline, 300) and the numbers that support them (Figure, 400) —
+never a figure above a word. The forecast highs previously ran at 30 px against
+a 20 px comfort sentence, so three temperatures outweighed the sentence
+PRODUCT.md calls the answer. Both moved to the shared rung: figures down from
+1.875 rem, the sentence up from 1.25 rem.
+
+This replaces The Equal Peaks Rule, which named the city, the temperature and
+the comfort sentence as one size in the hero. Two of the three left the hero
+when the Now card absorbed them.
+
+**The Step-Down Rule.** Every drop in the hierarchy is a size change, with the
+one weight step above as the exception that separates Headline from Figure at
+the same size. Opacity is not a hierarchy tool in this system (see The 70%
+Floor Rule).
 
 > **Known drift.** `src/components/empty-state.tsx` uses `font-extralight`
 > (200). Only 300–700 are loaded, so the browser synthesizes or snaps to 300.

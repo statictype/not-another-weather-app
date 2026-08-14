@@ -70,7 +70,7 @@ function MetricRow({
     <div className={cn("flex flex-col gap-1.5 xl:flex-1", dim && "opacity-55")}>
       <p className="label-section">{label}</p>
       <div className="flex items-baseline gap-2">
-        <span className="text-3xl leading-[0.85] tracking-tight">{value ?? "—"}</span>
+        <span className="text-2xl leading-[0.85] tracking-tight">{value ?? "—"}</span>
         <span className="text-sm tracking-tight text-foreground/70">{tag}</span>
       </div>
       <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-foreground/6">
@@ -144,7 +144,7 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
         </svg>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-2 flex flex-col items-center">
-          <p className="text-3xl leading-none tracking-tight">
+          <p className="text-2xl leading-none tracking-tight">
             {Math.round(pressureMb)}
             <span className="ml-1.5 text-sm text-foreground/70">mb</span>
           </p>

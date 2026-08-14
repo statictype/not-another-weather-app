@@ -12,9 +12,11 @@ interface HeroCardProps {
 const PEAK =
   "font-light leading-[1.05] tracking-tight text-[2.125rem] sm:text-[2.5rem] md:text-[3rem] xl:text-[3.5rem]";
 
-const SPOKEN = "font-light leading-tight text-lg md:text-xl xl:text-2xl";
+const SPOKEN = "font-light leading-tight text-xl xl:text-2xl";
 
-const CLOCK = "font-light text-base md:text-lg";
+/** Regular, not light: at 16–18px over the day gradient, Work Sans Light has
+ *  too little stem left to hold against a saturated ground. */
+const CLOCK = "text-base md:text-lg";
 
 export function HeroCard({ location, current }: HeroCardProps) {
   const isDay = current.timeOfDay === "day";
