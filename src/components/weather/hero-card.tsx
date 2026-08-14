@@ -28,17 +28,10 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
       className={cn(
         "swap-in swap-d-1 relative col-span-1 xl:order-1 overflow-hidden rounded-[2rem] p-7 text-white sm:col-span-4 sm:p-10 xl:col-span-3 xl:p-12",
         isDay
-          ? "bg-linear-to-tr from-[#1866E1] via-[#0080FF] to-[#018CCD] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_30px_60px_-25px_rgba(24,102,225,0.55)]"
+          ? "hero-day shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_30px_60px_-25px_rgba(24,102,225,0.55)]"
           : "hero-night shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_30px_60px_-25px_rgba(8,8,24,0.85)]",
       )}
     >
-      {isDay && (
-        <>
-          <div className="absolute -right-24 -top-24 size-80 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-32 -left-16 size-80 rounded-full bg-cyan-300/20 blur-3xl" />
-        </>
-      )}
-
       <div className="relative flex h-full flex-col">
         {/* Stacked below `sm`: side by side at 390 px the left column resolves
             to 117 px and the city name overflows it. */}

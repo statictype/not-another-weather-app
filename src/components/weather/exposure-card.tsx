@@ -175,7 +175,7 @@ function uvScale(uv: number): Scale {
   return {
     pct,
     gradient:
-      "linear-gradient(to right, #4ade80 0%, #a3e635 20%, #facc15 40%, #fb923c 60%, #ef4444 88%, #7f1d1d 100%)",
+      "linear-gradient(to right, oklch(0.8003 0.1821 151.71) 0%, oklch(0.8493 0.2073 128.85) 20%, oklch(0.8606 0.1731 91.94) 40%, oklch(0.7576 0.1590 55.93) 60%, oklch(0.6368 0.2078 25.33) 88%, oklch(0.3958 0.1331 25.72) 100%)",
   };
 }
 
@@ -204,7 +204,7 @@ function aqiScale(epa: number): Scale {
   return {
     pct,
     gradient:
-      "linear-gradient(to right, #4ade80 0%, #facc15 25%, #fb923c 50%, #ef4444 75%, #b91c1c 90%, #7f1d1d 100%)",
+      "linear-gradient(to right, oklch(0.8003 0.1821 151.71) 0%, oklch(0.8606 0.1731 91.94) 25%, oklch(0.7576 0.1590 55.93) 50%, oklch(0.6368 0.2078 25.33) 75%, oklch(0.5054 0.1905 27.52) 90%, oklch(0.3958 0.1331 25.72) 100%)",
   };
 }
 

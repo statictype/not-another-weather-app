@@ -151,7 +151,9 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 .sky::before {
   opacity: 1;
-  background: radial-gradient(125% 125% at 50% 10%, #D2EEF9 40%, #9FD7FF 100%);
+  background: radial-gradient(125% 125% at 50% 10% in oklab,
+    oklch(0.9321 0.0330 223.41) 40%,
+    oklch(0.8546 0.0803 239.96) 100%);
 }
 /* Night layer */
 .sky::after {
@@ -390,14 +392,58 @@ html, body { background: oklch(0.97 0.02 230); }
   border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
 }
 
+/* One light source at the lower-right corner, falling away to deep navy at the
+   upper left. Two blooms only — earlier revisions used four or five, and the
+   extra ones read as scattered spotlights because nothing explained where each
+   sat. Both centres are parked on or past a corner (96% 98%, 6% 100%), so the
+   card only ever shows falloff, never a bloom's core.
+
+   Three properties keep the falloff invisible:
+
+   - each bloom runs its alpha ramp to 100%, so no falloff terminates at a
+     radius you can see;
+   - the ramp opens with a plateau (0.80 held to 18%) before easing down, rather
+     than peaking at a point — a single maximum is what makes a radial read as a
+     dot;
+   - each fades to its own hue at alpha 0 rather than to `transparent`
+     (= rgb(0 0 0 / 0)), which would drag the falloff toward grey.
+
+   Interpolation is oklab throughout so the blue-to-cyan ramps stay saturated
+   through the middle instead of dipping the way sRGB blending does. */
+.hero-day {
+  background:
+    /* the lamp — #00C4FF, held well under full strength so it lifts the corner
+       without bleaching it */
+    radial-gradient(118% 128% at 96% 98% in oklab,
+      oklch(0.7669 0.1510 228.87 / 0.46) 0%,
+      oklch(0.7669 0.1510 228.87 / 0.42) 18%,
+      oklch(0.7669 0.1510 228.87 / 0.22) 50%,
+      oklch(0.7669 0.1510 228.87 / 0.06) 78%,
+      oklch(0.7669 0.1510 228.87 / 0) 100%),
+    /* #1866E1, keeps the opposite bottom corner off the flat base */
+    radial-gradient(88% 80% at 6% 100% in oklab,
+      oklch(0.5411 0.2013 260.04 / 0.40) 0%,
+      oklch(0.5411 0.2013 260.04 / 0.35) 22%,
+      oklch(0.5411 0.2013 260.04 / 0.14) 58%,
+      oklch(0.5411 0.2013 260.04 / 0.03) 82%,
+      oklch(0.5411 0.2013 260.04 / 0) 100%),
+    /* base. The light end is #0080FF exactly, and it holds most of the card —
+       the deep end only takes the upper-left corner, under the city name. */
+    linear-gradient(135deg in oklab,
+      oklch(0.4550 0.1850 264.00) 0%,
+      oklch(0.6152 0.2108 256.10) 100%);
+}
+
 .hero-night {
   background:
-    linear-gradient(45deg,
+    linear-gradient(45deg in oklab,
       oklch(1 0 0 / 0.08) 0%,
-      transparent 35%,
-      transparent 65%,
+      oklch(1 0 0 / 0) 35%,
+      oklch(1 0 0 / 0) 65%,
       oklch(1 0 0 / 0.08) 100%),
-    linear-gradient(135deg, #00060f 0%, #01132b 100%);
+    linear-gradient(135deg in oklab,
+      oklch(0.1176 0.0289 243.78) 0%,
+      oklch(0.1871 0.0557 253.85) 100%);
 }
 
 
