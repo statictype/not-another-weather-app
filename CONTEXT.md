@@ -7,8 +7,8 @@ purpose; follow the pointers for the full story.
 
 ## Data model
 
-**Weather tier** — one of three independently-cacheable slices of the
-weather payload: `current`, `forecast`, `yesterday`. Defined once as the
+**Weather tier** — one of two independently-cacheable slices of the
+weather payload: `current` and `forecast`. Defined once as the
 `WeatherTier` union in `src/lib/tiers.ts`; both server-side
 `SERVER_TIERS` (`src/worker/tiers.ts`) and client-side `CLIENT_TIERS`
 (`src/hooks/use-weather.ts`) are records keyed by it. Adding or
@@ -88,10 +88,9 @@ worker.
 **Fatality** — per-tier policy for whether a failed fetch takes over
 the UI. `current` is fatal: a failure replaces the result area with a
 retry CTA. `forecast` is fatal-by-omission via TanStack Query state.
-`yesterday` is **non-fatal at the render layer**: server returns
-errors honestly, the client uses `retry: 0`, and `ForecastCard` omits
-the column via optional chaining on `yesterday.data?.yesterday`. The
-retry-skip lives in the `CLIENT_TIERS` row in `src/hooks/use-weather.ts`.
+No non-fatal tier remains, so retry policy lives entirely in
+`src/lib/query-client.ts`; `CLIENT_TIERS` carries no per-tier `retry`
+override.
 
 ---
 
@@ -163,10 +162,8 @@ isolation. See RFC 011.
 ## Infrastructure
 
 **Edge cache** — Cloudflare's `caches.default` Cache API, used by the
-worker to memoize successful weather responses per tier (10 min / 1 h /
-24 h). Keyed by `buildCacheKey(path, normalizedQuery, extras)` —
-`extras` exists for the yesterday tier's `dt` parameter to avoid UTC
-midnight skew.
+worker to memoize successful weather responses per tier (10 min /
+1 h). Keyed by `buildCacheKey(path, normalizedQuery)`.
 
 **Wire boundary** — the network seam between worker and frontend. DTOs
 are defined once in `src/lib/schemas.ts` as zod schemas; the worker

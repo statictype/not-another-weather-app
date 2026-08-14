@@ -1,8 +1,8 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "@/test/msw-server";
-import type { WeatherCurrent, WeatherForecast, WeatherYesterday } from "./types";
-import { fetchCurrent, fetchForecast, fetchYesterday, WeatherClientError } from "./weather";
+import type { WeatherCurrent, WeatherForecast } from "./types";
+import { fetchCurrent, fetchForecast, WeatherClientError } from "./weather";
 
 const okFixture: WeatherCurrent = {
   location: {
@@ -128,15 +128,5 @@ describe("fetchForecast", () => {
     );
     await expect(fetchForecast("Xyz")).rejects.toBeInstanceOf(WeatherClientError);
     await expect(fetchForecast("Xyz")).rejects.toMatchObject({ kind: "not_found" });
-  });
-});
-
-const yesterdayFixture: WeatherYesterday = { yesterday: null };
-
-describe("fetchYesterday", () => {
-  it("returns the parsed DTO on 200", async () => {
-    server.use(http.get("/api/weather/yesterday", () => HttpResponse.json(yesterdayFixture)));
-    const result = await fetchYesterday("London");
-    expect(result).toEqual(yesterdayFixture);
   });
 });

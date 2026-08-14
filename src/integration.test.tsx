@@ -4,12 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { delay, HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
-import type {
-  SuggestionItem,
-  WeatherCurrent,
-  WeatherForecast,
-  WeatherYesterday,
-} from "@/api/types";
+import type { SuggestionItem, WeatherCurrent, WeatherForecast } from "@/api/types";
 import { __resetHistoryStoreForTests } from "@/hooks/use-history";
 import { server } from "@/test/msw-server";
 
@@ -66,6 +61,26 @@ const londonForecast: WeatherForecast = {
       conditionCode: 1003,
       isDay: true,
     },
+    {
+      date: "2026-04-08",
+      minC: 9,
+      maxC: 16.5,
+      avgC: 12.7,
+      chanceOfRain: 30,
+      conditionText: "Light rain",
+      conditionCode: 1183,
+      isDay: true,
+    },
+    {
+      date: "2026-04-09",
+      minC: 10,
+      maxC: 17.5,
+      avgC: 13.7,
+      chanceOfRain: 10,
+      conditionText: "Sunny",
+      conditionCode: 1000,
+      isDay: true,
+    },
   ],
   astro: {
     sunrise: "06:32 AM",
@@ -77,21 +92,6 @@ const londonForecast: WeatherForecast = {
   },
   hourly: [],
   alerts: [],
-};
-
-const londonYesterday: WeatherYesterday = { yesterday: null };
-
-const londonYesterdayDay: WeatherYesterday = {
-  yesterday: {
-    date: "2026-04-06",
-    minC: 6,
-    maxC: 13,
-    avgC: 9.5,
-    chanceOfRain: 10,
-    conditionText: "Cloudy",
-    conditionCode: 1006,
-    isDay: true,
-  },
 };
 
 const londonSuggestion: SuggestionItem = {
@@ -148,7 +148,6 @@ beforeEach(() => {
         { status: 404 },
       );
     }),
-    http.get("/api/weather/yesterday", () => HttpResponse.json(londonYesterday)),
     http.get("/api/search", ({ request }) => {
       const q = new URL(request.url).searchParams.get("q")?.toLowerCase() ?? "";
       if (q.includes("london")) return HttpResponse.json([londonSuggestion]);
@@ -280,17 +279,13 @@ describe("Oasis (integration)", () => {
     expect(screen.getByLabelText(/city/i)).not.toHaveAttribute("aria-describedby");
   });
 
-  it("paints the hero before forecast before yesterday", async () => {
-    // If the hero ever blocks on forecast or yesterday, this hangs below.
+  it("paints the hero before the forecast", async () => {
+    // If the hero ever blocks on forecast, this hangs below.
     server.use(
       http.get("/api/weather", () => HttpResponse.json(londonCurrent)),
       http.get("/api/weather/forecast", async () => {
         await delay(30);
         return HttpResponse.json(londonForecast);
-      }),
-      http.get("/api/weather/yesterday", async () => {
-        await delay(60);
-        return HttpResponse.json(londonYesterdayDay);
       }),
     );
 
@@ -301,9 +296,7 @@ describe("Oasis (integration)", () => {
 
     expect(document.querySelector("[aria-hidden='true'].animate-pulse")).toBeInTheDocument();
 
-    await screen.findByText(/^today$/i);
-
-    await screen.findByText(/^yesterday$/i);
+    await screen.findByText(/^tomorrow$/i);
   });
 
   it("removes a history item, shows undo toast, and restores it", async () => {

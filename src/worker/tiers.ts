@@ -5,25 +5,16 @@ import {
   cachePut,
   CACHE_TTL_CURRENT,
   CACHE_TTL_FORECAST,
-  CACHE_TTL_YESTERDAY,
   normalizeQuery,
 } from "./cache";
 import { WeatherApiError } from "./errors";
 import { errorResponse } from "./respond";
 import type { Env } from "./types";
-import { fetchCurrent, fetchForecast3, fetchYesterday } from "./weather-api";
+import { fetchCurrent, fetchForecast } from "./weather-api";
 
-/** `computeExtras` feeds both the cache key and the upstream call, so a write at
- *  23:59 and a read at 00:01 cannot disagree on `dt`. */
 interface ServerTier {
   ttl: number;
-  computeExtras?: () => Record<string, string>;
-  fetch: (
-    query: string,
-    apiKey: string,
-    signal: AbortSignal | undefined,
-    extras: Record<string, string>,
-  ) => Promise<unknown>;
+  fetch: (query: string, apiKey: string, signal: AbortSignal | undefined) => Promise<unknown>;
 }
 
 const SERVER_TIERS: Record<WeatherTier, ServerTier> = {
@@ -33,26 +24,9 @@ const SERVER_TIERS: Record<WeatherTier, ServerTier> = {
   },
   forecast: {
     ttl: CACHE_TTL_FORECAST,
-    fetch: (q, key, signal) => fetchForecast3(q, key, signal),
-  },
-  yesterday: {
-    ttl: CACHE_TTL_YESTERDAY,
-    computeExtras: () => ({ dt: yesterdayUtc() }),
-    fetch: (q, key, signal, extras) => {
-      const dt = extras["dt"];
-      if (!dt) throw new Error("yesterday tier expected dt in extras");
-      return fetchYesterday(q, key, dt, signal);
-    },
+    fetch: (q, key, signal) => fetchForecast(q, key, signal),
   },
 };
-
-function yesterdayUtc(): string {
-  const d = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 export function createTierHandler(
   tier: WeatherTier,
@@ -67,8 +41,7 @@ export function createTierHandler(
       return errorResponse("invalid_query", "Query parameter `q` is required.");
     }
 
-    const extras = config.computeExtras?.() ?? {};
-    const cacheKey = buildCacheKey(cacheKeyPath, normalized, extras);
+    const cacheKey = buildCacheKey(cacheKeyPath, normalized);
     const cached = await cacheGet(cacheKey);
     if (cached) {
       const hit = new Response(cached.body, cached);
@@ -77,7 +50,7 @@ export function createTierHandler(
     }
 
     try {
-      const dto = await config.fetch(normalized, env.WEATHER_API_KEY, request.signal, extras);
+      const dto = await config.fetch(normalized, env.WEATHER_API_KEY, request.signal);
       const response = Response.json(dto, {
         headers: {
           "Cache-Control": `public, max-age=${config.ttl}, s-maxage=${config.ttl}`,

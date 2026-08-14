@@ -1,6 +1,6 @@
 import type { WeatherCurrent } from "@/api/types";
 import { cn } from "@/lib/utils";
-import { useWeatherForecast, useWeatherYesterday } from "@/hooks/use-weather";
+import { useWeatherForecast } from "@/hooks/use-weather";
 import { AirComfortCard } from "./air-comfort-card";
 import { AlertsCard } from "./alerts-card";
 import { demoAlerts } from "./alerts-demo";
@@ -19,7 +19,6 @@ interface WeatherGridProps {
 
 export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
   const forecast = useWeatherForecast(query);
-  const yesterday = useWeatherYesterday(query);
 
   const swapKey = `${c.location.name}-${c.location.country}`;
 
@@ -49,7 +48,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         />
       </div>
       <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
-      <ForecastCard forecast={forecast.data?.forecast} yesterday={yesterday.data?.yesterday} />
+      <ForecastCard forecast={forecast.data?.forecast} />
       <AirComfortCard
         dewpointC={c.current.dewpointC}
         humidity={c.current.humidity}

@@ -23,8 +23,8 @@ conflict.
 
 Answer "what is the weather like in X" quickly and completely, then get out of
 the way. Success is a correct, legible answer on first paint with no
-configuration step, and enough depth (forecast, hourly, astro, air comfort,
-yesterday's comparison) that the user does not need a second app.
+configuration step, and enough depth (forecast, hourly, astro, air comfort)
+that the user does not need a second app.
 
 ## Positioning
 
@@ -56,25 +56,24 @@ Two things a neighboring weather app could not truthfully copy:
 
 ## Capabilities and Constraints
 
-Shipped capabilities: current conditions, 3-day forecast, next-24h hourly strip,
-sunrise/sunset/moon phase, pressure/UV/AQI, location-local time, yesterday's
-comparison column, city autocomplete, geolocation lookup, random-city pick,
-recent-city history with undo.
+Shipped capabilities: current conditions, future-day forecast (2 days on a free
+key, 3 on a paid one), next-24h hourly strip, sunrise/sunset/moon phase,
+pressure/UV/AQI, location-local time, city autocomplete, geolocation lookup,
+random-city pick, recent-city history with undo.
 
 Constraints:
 
 - **No accounts, no server-side user data.** History lives in `localStorage`;
   the URL carries the active city. Binding.
-- **Free WeatherAPI.com tier.** Edge caching (10 min / 1 h / 24 h per tier)
+- **Free WeatherAPI.com tier.** The key caps `forecast.json` at 3 days total,
+  so the forecast card shows 2 future days. Edge caching (10 min / 1 h per tier)
   keeps the demo inside quota. When quota is exhausted the app shows a dedicated
   explanatory state rather than an error page — a state real users can hit.
-- Single Cloudflare Worker serves both the SPA and the four `/api/*` endpoints;
+- Single Cloudflare Worker serves both the SPA and the three `/api/*` endpoints;
   one origin, no CORS, upstream key never reaches the browser.
 - Stack is fixed by the existing codebase: React 19 (React Compiler on), Vite,
   Tailwind v4, vendored shadcn primitives in `src/components/ui/`, TanStack
   Query, motion, sonner, zod (worker-side only — banned from the client bundle).
-- Yesterday's data is non-fatal: the column is omitted when the tier fails, and
-  that tier does not retry.
 - Terminology is defined once in `CONTEXT.md` (weather tier, active city,
   normalized query, thermal label, air label, damp override, mood card vs.
   metrics card, search overlay). Use those words.
@@ -126,14 +125,13 @@ author.
 ## Product Principles
 
 1. **The answer arrives before the interface does.** Current conditions are
-   LCP-critical and paint from their own endpoint; forecast, hourly, and
-   yesterday stream in behind. Nothing that can wait may block the first answer.
+   LCP-critical and paint from their own endpoint; forecast and hourly stream in
+   behind. Nothing that can wait may block the first answer.
 2. **The URL is the state.** Every view is linkable. No hidden active-city
    state, no address bar that lags the screen.
 3. **Degrade honestly, at the right layer.** The server reports failures
-   truthfully; the render layer decides what is fatal. Yesterday's column simply
-   disappears. Quota exhaustion gets its own explained state. No silent
-   fallbacks, no invented data.
+   truthfully; the render layer decides what is fatal. Quota exhaustion gets its
+   own explained state. No silent fallbacks, no invented data.
 4. **Describe the weather, don't just report it.** The two-axis comfort sentence
    and its derived color are the product's point of view; raw numbers stay
    available alongside, never instead. The sentence says only what the reading

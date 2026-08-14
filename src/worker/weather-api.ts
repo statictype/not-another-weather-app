@@ -8,7 +8,6 @@ import type {
   WeatherCurrent,
   WeatherForecast,
   WeatherLocation,
-  WeatherYesterday,
 } from "./types";
 import { defaultMessage, type WeatherErrorKind } from "@/lib/errors";
 import { normalizeSeverity, sortAndCapAlerts } from "./alerts";
@@ -125,8 +124,12 @@ type UpstreamForecastDay = z.infer<typeof UpstreamForecastDaySchema>;
 
 const UPSTREAM_CURRENT = "https://api.weatherapi.com/v1/current.json";
 const UPSTREAM_FORECAST = "https://api.weatherapi.com/v1/forecast.json";
-const UPSTREAM_HISTORY = "https://api.weatherapi.com/v1/history.json";
 const UPSTREAM_SEARCH = "https://api.weatherapi.com/v1/search.json";
+
+/** Asks for today + 3. Free keys silently cap the response at 3 days total, so
+ *  `forecast` carries 2 or 3 future days depending on the plan; the card renders
+ *  whatever arrives. */
+const FORECAST_DAYS = "4";
 
 export interface SearchResult {
   id: number;
@@ -219,7 +222,7 @@ export async function fetchCurrent(
   };
 }
 
-export async function fetchForecast3(
+export async function fetchForecast(
   query: string,
   apiKey: string,
   signal?: AbortSignal,
@@ -227,7 +230,7 @@ export async function fetchForecast3(
   const url = new URL(UPSTREAM_FORECAST);
   url.searchParams.set("key", apiKey);
   url.searchParams.set("q", query);
-  url.searchParams.set("days", "3");
+  url.searchParams.set("days", FORECAST_DAYS);
   url.searchParams.set("aqi", "yes");
   url.searchParams.set("alerts", "yes");
 
@@ -257,24 +260,6 @@ export async function fetchForecast3(
     hourly,
     alerts: sortAndCapAlerts((raw.alerts?.alert ?? []).map(shapeAlert)),
   };
-}
-
-export async function fetchYesterday(
-  query: string,
-  apiKey: string,
-  dt: string,
-  signal?: AbortSignal,
-): Promise<WeatherYesterday> {
-  const url = new URL(UPSTREAM_HISTORY);
-  url.searchParams.set("key", apiKey);
-  url.searchParams.set("q", query);
-  url.searchParams.set("dt", dt);
-
-  const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
-  const day = raw.forecast?.forecastday?.[0];
-  // `null` is upstream-OK-no-data, not upstream-failed. Failures throw.
-  if (!day) return { yesterday: null };
-  return { yesterday: shapeForecastDay(day) };
 }
 
 function shapeLocation(raw: UpstreamLocation): WeatherLocation {

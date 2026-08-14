@@ -9,7 +9,6 @@ import {
   WeatherCurrentSchema,
   WeatherForecastSchema,
   WeatherLocationSchema,
-  WeatherYesterdaySchema,
 } from "./schemas";
 
 const location = {
@@ -246,19 +245,5 @@ describe("WeatherForecastSchema", () => {
       alerts: null,
     };
     expect(() => WeatherForecastSchema.parse(fixture)).toThrow();
-  });
-});
-
-describe("WeatherYesterdaySchema", () => {
-  it("parses a canonical fixture with a day", () => {
-    expect(WeatherYesterdaySchema.parse({ yesterday: forecastDay })).toEqual({
-      yesterday: forecastDay,
-    });
-  });
-  it("parses null yesterday", () => {
-    expect(WeatherYesterdaySchema.parse({ yesterday: null })).toEqual({ yesterday: null });
-  });
-  it("rejects a missing yesterday key", () => {
-    expect(() => WeatherYesterdaySchema.parse({})).toThrow();
   });
 });

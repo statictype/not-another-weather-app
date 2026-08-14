@@ -1,44 +1,48 @@
 import type { ForecastDay } from "@/api/types";
+import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
 
 interface ForecastCardProps {
   forecast: ForecastDay[] | undefined;
-  yesterday: ForecastDay | null | undefined;
 }
 
-export function ForecastCard({ forecast, yesterday }: ForecastCardProps) {
-  const days: Array<
-    { key: string; day: ForecastDay; label: string } | { key: string; skeleton: true }
-  > = [];
+/** Index 0 of the upstream array is today, which the hero already shows. */
+const FIRST_FUTURE_DAY = 1;
+const MAX_FUTURE_DAYS = 3;
 
-  if (yesterday === undefined) {
-    days.push({ key: "yesterday-skeleton", skeleton: true });
-  } else if (yesterday) {
-    days.push({ key: `y-${yesterday.date}`, day: yesterday, label: "Yesterday" });
-  }
+/** Free keys cap the payload at 3 days total, so 2 future days is what lands
+ *  today; a plan upgrade brings the third, and the columns tighten to fit it.
+ *  Static strings, because Tailwind scans source text and cannot see an
+ *  interpolated column count. */
+const LAYOUTS: Record<number, string> = {
+  1: "sm:grid-cols-1 sm:[&>*]:px-6",
+  2: "sm:grid-cols-2 sm:[&>*]:px-6",
+  3: "sm:grid-cols-3 sm:[&>*]:px-4",
+};
 
-  if (forecast) {
-    forecast.slice(0, 3).forEach((d, i) => {
-      days.push({ key: `f-${d.date}`, day: d, label: forecastLabel(d.date, i) });
-    });
-  } else {
-    for (let i = 0; i < 3; i++) {
-      days.push({ key: `forecast-skeleton-${i}`, skeleton: true });
-    }
-  }
+/** Matches the current plan's 2 days, so the common case does not reflow. */
+const SKELETON_DAYS = 2;
+
+export function ForecastCard({ forecast }: ForecastCardProps) {
+  const days = forecast?.slice(FIRST_FUTURE_DAY, FIRST_FUTURE_DAY + MAX_FUTURE_DAYS);
+  const layout = LAYOUTS[days?.length ?? SKELETON_DAYS] ?? LAYOUTS[MAX_FUTURE_DAYS];
 
   return (
-    <section className="swap-in swap-d-7 bento-tile flex flex-col p-7 sm:col-span-12 xl:order-7">
-      <div className="mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-0 sm:gap-y-6 sm:[&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(odd)]:border-foreground/6 md:grid-cols-4 md:gap-0 md:[&>*]:border-r md:[&>*]:border-foreground/6 md:[&>*:last-child]:border-r-0">
-        {days.map((entry) =>
-          "skeleton" in entry ? (
-            <DayRowSkeleton key={entry.key} />
-          ) : (
-            <div key={entry.key} className="sm:px-6">
-              <DayRow day={entry.day} label={entry.label} />
-            </div>
-          ),
+    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center p-7 sm:col-span-12 xl:order-4 xl:col-span-6">
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-4 sm:gap-0",
+          "sm:[&>*:not(:last-child)]:border-r sm:[&>*:not(:last-child)]:border-foreground/6",
+          layout,
         )}
+      >
+        {days
+          ? days.map((day, i) => (
+              <div key={day.date}>
+                <DayRow day={day} label={forecastLabel(day.date, i)} />
+              </div>
+            ))
+          : Array.from({ length: SKELETON_DAYS }, (_, i) => <DayRowSkeleton key={i} />)}
       </div>
     </section>
   );
@@ -72,7 +76,7 @@ function DayRow({ day, label }: { day: ForecastDay; label: string }) {
 
 function DayRowSkeleton() {
   return (
-    <div aria-hidden="true" className="flex items-center gap-3 sm:px-6">
+    <div aria-hidden="true" className="flex items-center gap-3">
       <div className="size-10 shrink-0 animate-pulse rounded-xl bg-foreground/10" />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="h-3 w-16 animate-pulse rounded bg-foreground/10" />
@@ -83,9 +87,9 @@ function DayRowSkeleton() {
   );
 }
 
+/** `index` counts from the first future day, so 0 is tomorrow. */
 function forecastLabel(date: string, index: number): string {
-  if (index === 0) return "Today";
-  if (index === 1) return "Tomorrow";
+  if (index === 0) return "Tomorrow";
   try {
     const d = new Date(date);
     return d.toLocaleDateString(undefined, { weekday: "short" });

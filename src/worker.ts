@@ -6,7 +6,6 @@ import type { Env } from "./worker/types";
 
 const handleCurrent = createTierHandler("current");
 const handleForecast = createTierHandler("forecast");
-const handleYesterday = createTierHandler("yesterday");
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -18,8 +17,6 @@ export default {
           return handleCurrent(request, env);
         case "/api/weather/forecast":
           return handleForecast(request, env);
-        case "/api/weather/yesterday":
-          return handleYesterday(request, env);
         case "/api/search":
           return handleSearch(request, env);
       }

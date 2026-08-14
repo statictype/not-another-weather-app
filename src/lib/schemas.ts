@@ -116,8 +116,3 @@ export const WeatherForecastSchema = z.object({
   alerts: z.array(WeatherAlertSchema),
 });
 export type WeatherForecast = z.infer<typeof WeatherForecastSchema>;
-
-export const WeatherYesterdaySchema = z.object({
-  yesterday: ForecastDaySchema.nullable(),
-});
-export type WeatherYesterday = z.infer<typeof WeatherYesterdaySchema>;

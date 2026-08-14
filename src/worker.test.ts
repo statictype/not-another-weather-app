@@ -115,25 +115,6 @@ const upstreamAlert = {
   instruction: "Secure loose objects.",
 };
 
-const upstreamYesterdayFixture = {
-  location: upstreamLocation,
-  forecast: {
-    forecastday: [
-      {
-        date: "2026-04-06",
-        day: {
-          mintemp_c: 6.0,
-          maxtemp_c: 13.0,
-          avgtemp_c: 9.5,
-          daily_chance_of_rain: 10,
-          condition: { text: "Cloudy", code: 1006 },
-        },
-        astro: upstreamAstro,
-      },
-    ],
-  },
-};
-
 beforeAll(() => {
   fetchMock.activate();
   fetchMock.disableNetConnect();
@@ -167,7 +148,6 @@ describe("Worker /api/weather (current)", () => {
       },
     });
     expect(body.forecast).toBeUndefined();
-    expect(body.yesterday).toBeUndefined();
     expect(body.astro).toBeUndefined();
     expect(body.today).toBeUndefined();
   });
@@ -309,7 +289,8 @@ describe("Worker /api/weather/forecast", () => {
     const params = new URLSearchParams(seenPath.slice(seenPath.indexOf("?")));
     expect(params.get("alerts")).toBe("yes");
     expect(params.get("aqi")).toBe("yes");
-    expect(params.get("days")).toBe("3");
+    // Asks for today + 3; free keys cap the reply at 3 days total.
+    expect(params.get("days")).toBe("4");
   });
 
   it("shapes the hourly precipitation fields", async () => {
@@ -526,66 +507,11 @@ describe("Worker /api/weather/forecast", () => {
   });
 });
 
-describe("Worker /api/weather/yesterday", () => {
-  it("returns yesterday's shaped day and marks MISS", async () => {
-    fetchMock
-      .get("https://api.weatherapi.com")
-      .intercept({ path: (p) => p.startsWith("/v1/history.json") })
-      .reply(200, upstreamYesterdayFixture);
-
-    const res = await SELF.fetch("https://example.com/api/weather/yesterday?q=YesterdayCity1");
-    expect(res.status).toBe(200);
-    expect(res.headers.get("X-Oasis-Cache")).toBe("MISS");
-
-    const body = (await res.json()) as { yesterday: { date: string; minC: number } | null };
-    expect(body.yesterday?.date).toBe("2026-04-06");
-    expect(body.yesterday?.minC).toBe(6);
-  });
-
-  it("surfaces upstream failures as 502/upstream — UI handles non-fatality via optional chaining", async () => {
-    fetchMock
-      .get("https://api.weatherapi.com")
-      .intercept({ path: (p) => p.startsWith("/v1/history.json") })
-      .reply(500, { error: { code: 9999, message: "boom" } });
-
-    const res = await SELF.fetch("https://example.com/api/weather/yesterday?q=YesterdayFailCity");
-    expect(res.status).toBe(502);
+describe("Worker retired routes", () => {
+  it("404s the removed yesterday tier without calling upstream", async () => {
+    const res = await SELF.fetch("https://example.com/api/weather/yesterday?q=London");
+    expect(res.status).toBe(404);
     const body = (await res.json()) as { error: { kind: string } };
-    expect(body.error.kind).toBe("upstream");
-  });
-
-  it("caches yesterday responses per (city, dt)", async () => {
-    fetchMock
-      .get("https://api.weatherapi.com")
-      .intercept({ path: (p) => p.startsWith("/v1/history.json") })
-      .reply(200, upstreamYesterdayFixture);
-
-    const first = await SELF.fetch("https://example.com/api/weather/yesterday?q=YesterdayCache1");
-    expect(first.headers.get("X-Oasis-Cache")).toBe("MISS");
-    await first.text();
-
-    const second = await SELF.fetch("https://example.com/api/weather/yesterday?q=YesterdayCache1");
-    expect(second.headers.get("X-Oasis-Cache")).toBe("HIT");
-  });
-
-  it("rejects empty queries with invalid_query", async () => {
-    const res = await SELF.fetch("https://example.com/api/weather/yesterday?q=");
-    expect(res.status).toBe(400);
-  });
-
-  it("rejects a schema-broken upstream body with 502/upstream and no leaked field names", async () => {
-    // Missing `forecastday` must throw, not be swallowed into `{ yesterday: null }`.
-    fetchMock
-      .get("https://api.weatherapi.com")
-      .intercept({ path: (p) => p.startsWith("/v1/history.json") })
-      .reply(200, { location: upstreamLocation, forecast: {} });
-
-    const res = await SELF.fetch(
-      "https://example.com/api/weather/yesterday?q=YesterdaySchemaReject",
-    );
-    expect(res.status).toBe(502);
-    const body = (await res.json()) as { error: { kind: string; message: string } };
-    expect(body.error.kind).toBe("upstream");
-    expect(body.error.message.toLowerCase()).not.toContain("forecastday");
+    expect(body.error.kind).toBe("not_found");
   });
 });

@@ -8,7 +8,6 @@ export type {
   WeatherCurrent,
   WeatherForecast,
   WeatherLocation,
-  WeatherYesterday,
 } from "@/lib/schemas";
 
 export type { WeatherErrorKind } from "@/lib/errors";

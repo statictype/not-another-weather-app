@@ -1,6 +1,6 @@
 import { defaultMessage, kindForStatus, type WeatherErrorKind } from "@/lib/errors";
 import { WEATHER_TIER_PATHS, type WeatherTier } from "@/lib/tiers";
-import type { SuggestionItem, WeatherCurrent, WeatherForecast, WeatherYesterday } from "./types";
+import type { SuggestionItem, WeatherCurrent, WeatherForecast } from "./types";
 
 export class WeatherClientError extends Error {
   constructor(
@@ -51,10 +51,6 @@ export function fetchCurrent(query: string): Promise<WeatherCurrent> {
 
 export function fetchForecast(query: string): Promise<WeatherForecast> {
   return fetchTier<WeatherForecast>("forecast", query);
-}
-
-export function fetchYesterday(query: string): Promise<WeatherYesterday> {
-  return fetchTier<WeatherYesterday>("yesterday", query);
 }
 
 export function fetchSearch(query: string): Promise<SuggestionItem[]> {

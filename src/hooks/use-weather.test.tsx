@@ -3,9 +3,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
-import type { WeatherCurrent, WeatherForecast, WeatherYesterday } from "@/api/types";
+import type { WeatherCurrent, WeatherForecast } from "@/api/types";
 import { server } from "@/test/msw-server";
-import { useWeather, useWeatherForecast, useWeatherYesterday } from "./use-weather";
+import { useWeather, useWeatherForecast } from "./use-weather";
 
 const currentFixture: WeatherCurrent = {
   location: {
@@ -72,8 +72,6 @@ const forecastFixture: WeatherForecast = {
   hourly: [],
   alerts: [],
 };
-
-const yesterdayFixture: WeatherYesterday = { yesterday: null };
 
 function makeWrapper(client?: QueryClient) {
   const c =
@@ -188,37 +186,5 @@ describe("useWeatherForecast", () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.kind).toBe("not_found");
-  });
-});
-
-describe("useWeatherYesterday", () => {
-  it("returns { yesterday: null } on happy path", async () => {
-    server.use(http.get("/api/weather/yesterday", () => HttpResponse.json(yesterdayFixture)));
-
-    const { result } = renderHook(() => useWeatherYesterday("London"), {
-      wrapper: makeWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual(yesterdayFixture);
-  });
-
-  it("does not retry on failure — protects `retry: 0`", async () => {
-    let calls = 0;
-    server.use(
-      http.get("/api/weather/yesterday", () => {
-        calls += 1;
-        return HttpResponse.json({ error: { kind: "upstream", message: "boom" } }, { status: 502 });
-      }),
-    );
-
-    // No `retry: false` in the defaults: the hook's own `retry: 0` must win.
-    const client = new QueryClient();
-    const { result } = renderHook(() => useWeatherYesterday("London"), {
-      wrapper: makeWrapper(client),
-    });
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(calls).toBe(1);
   });
 });
