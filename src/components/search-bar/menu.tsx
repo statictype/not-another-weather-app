@@ -30,23 +30,6 @@ interface MenuProps {
   setDialogOpen: (open: boolean) => void;
 }
 
-/**
- * The menu's contents — one rendering, CSS-driven across breakpoints.
- *
- * The chrome around it (dropdown panel on desktop, full-screen glass
- * overlay on mobile) is the parent's concern. This component just
- * renders the sections + action footer over the shared `MenuModel`.
- *
- * Visual rules:
- *  - Recents and suggestions are list rows on every breakpoint.
- *  - Suggestion rows always carry the map-pin icon.
- *  - The X "remove" button is always visible on touch (no hover state
- *    to discover it from), hover-to-reveal on desktop.
- *  - The default-focused row gets the springy `FocusPill` highlight
- *    on both — same `layoutId` across renders.
- *  - Action footer is inline with a divider between the two buttons,
- *    slightly larger tap targets on mobile.
- */
 export function Menu(props: MenuProps) {
   return (
     <LayoutGroup id="search-menu">
@@ -151,7 +134,6 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
     );
   }
 
-  // keep-typing
   return (
     <div className="px-3 py-2">
       <p className="text-xs font-medium text-foreground/70">Keep typing for city suggestions…</p>
@@ -218,8 +200,7 @@ function RecentRow({
         }}
         className={cn(
           "absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/55 transition-all duration-150 hover:bg-foreground/[0.08] hover:text-foreground/70 focus-visible:outline-none active:scale-90",
-          // Mobile: always visible (no hover affordance on touch).
-          // Desktop: hover-to-reveal, plus visible when the row is focused.
+          // Always visible on touch; hover-to-reveal on desktop.
           "opacity-100 lg:opacity-0 lg:group-hover:opacity-100",
           focused && "lg:opacity-100",
         )}

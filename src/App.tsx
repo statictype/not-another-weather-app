@@ -3,8 +3,6 @@ import { toast } from "sonner";
 import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
 
-// Toaster renders nothing until a toast fires, so deferring it is
-// invisible to the user and keeps sonner out of the first-paint chunk.
 const Toaster = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
 import { WeatherResult } from "@/components/weather-result";
 import type { HistoryItem } from "@/hooks/use-history";
@@ -15,33 +13,16 @@ import { useWeather } from "@/hooks/use-weather";
 import { pickRandomCity } from "@/lib/random-cities";
 
 export function App() {
-  // ─── Search state ────────────────────────────────────────────────────
-  // The SearchBar owns its input value via `useSearchMenu`; we only mirror
-  // it here so `useSuggestions` can debounce off the current text. The
-  // hook fires `onValueChange` on every keystroke and on close-on-commit.
   const [inputValue, setInputValue] = useState("");
-  // The URL's `?city=` param is the single source of truth for the
-  // active city. The one-time bootstrap in main.tsx seeds it from
-  // history on cold load, so returning users still see their last city
-  // — but the URL now accurately reflects what's on screen from the
-  // first paint. See docs/rfcs/007-url-driven-city.md.
+
   const activeQuery = useSearchParam("city");
 
-  // ─── History + undo ──────────────────────────────────────────────────
   const { history, add: addHistory, removeWithUndo, clearAllWithUndo } = useReversibleHistory();
 
-  // ─── City suggestions (debounced, 3+ chars) ──────────────────────────
   const suggestions = useSuggestions(inputValue);
 
-  // ─── Fetch ───────────────────────────────────────────────────────────
   const query = useWeather({ query: activeQuery });
 
-  // ─── Add successful fetches to history ───────────────────────────────
-  // `useWeather` uses `keepPreviousData`, so on a city switch `query.data`
-  // briefly points at the *previous* city's payload while the new fetch
-  // is in flight. Committing during that window writes the old
-  // `displayName` under the new query key. Gate on `isPlaceholderData` so
-  // we only commit once the real payload for `activeQuery` has landed.
   const lastCommittedQuery = useRef<string | null>(null);
   useEffect(() => {
     if (!query.isSuccess || !query.data || query.isPlaceholderData) return;
@@ -55,7 +36,6 @@ export function App() {
     });
   }, [query.isSuccess, query.data, query.isPlaceholderData, activeQuery, addHistory]);
 
-  // ─── Suggestion / history selection (the only things that trigger a fetch) ──
   const handleSuggestionSelect = (item: SuggestionItem) => {
     const q = item.region
       ? `${item.name}, ${item.region}, ${item.country}`
@@ -74,11 +54,7 @@ export function App() {
     }
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        // Round to ~100m precision (3 decimals). Coarser than typical
-        // GPS noise (5–10m) so repeated reads at the same spot dedupe
-        // into a single history entry, but tight enough that the
-        // rounded point is still inside the user's block and is
-        // overwhelmingly likely to reverse-geocode to the same place.
+        // ~100m, coarser than GPS noise, so repeated reads dedupe in history.
         const lat = position.coords.latitude.toFixed(3);
         const lon = position.coords.longitude.toFixed(3);
         setSearchParam("city", `${lat},${lon}`);

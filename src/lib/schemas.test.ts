@@ -12,14 +12,6 @@ import {
   WeatherYesterdaySchema,
 } from "./schemas";
 
-/**
- * Drift tripwires for the shared wire DTO schemas.
- *
- * The frontend type-imports from this file so a loosened or renamed
- * field wouldn't surface until runtime. These tests assert each schema
- * accepts a canonical fixture and rejects a structurally-broken variant.
- */
-
 const location = {
   name: "London",
   region: "Greater London",
@@ -157,7 +149,6 @@ const weatherAlert = {
   instruction: "Secure loose objects and avoid coastal paths.",
 };
 
-/** A shallow copy with one key removed, for asserting a field is required. */
 function without(obj: object, field: string): Record<string, unknown> {
   const copy: Record<string, unknown> = { ...obj };
   delete copy[field];

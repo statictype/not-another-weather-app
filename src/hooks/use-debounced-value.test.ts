@@ -49,7 +49,6 @@ describe("useDebouncedValue", () => {
     act(() => {
       vi.advanceTimersByTime(300);
     });
-    // 600ms total elapsed since "a"→"b", but only 300ms since "b"→"c".
     expect(result.current).toBe("a");
 
     act(() => {

@@ -3,13 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { WeatherForecast } from "@/api/types";
 import { PrecipStrip } from "./precip-strip";
 
-/**
- * August in the demo key's cities does not produce snow on request, and the
- * shimmer state lasts about as long as one fetch, so both are proved from
- * fixtures. The height assertions are the load-bearing ones: the strip sits
- * inside the LCP element, so it must measure the same before the forecast tier
- * lands, with one chip, and with two.
- */
+/** The strip sits inside the LCP element: it must measure the same in all three states. */
 
 type Today = WeatherForecast["today"];
 
@@ -92,8 +86,6 @@ describe("PrecipStrip", () => {
 
     rerender(<PrecipStrip today={today()} />);
 
-    // Same element, same classes — the strip is never conditionally mounted,
-    // so there is nothing for the browser to reflow inside the LCP element.
     expect(container.firstElementChild).toBe(strip);
     expect(strip?.className).toBe(shimmering);
     expect(strip?.className).toContain("h-8");
@@ -106,8 +98,6 @@ describe("PrecipStrip", () => {
 
     rerender(<PrecipStrip today={today({ willItSnow: true, chanceOfSnow: 15, totalSnowCm: 2 })} />);
 
-    // Both chips are `h-8` on a single `h-8` row, so the second one costs
-    // width and nothing else.
     expect(container.firstElementChild?.className).toBe(one);
     expect(rain().className).toBe(oneChip);
     expect(snow()?.className).toBe(oneChip);

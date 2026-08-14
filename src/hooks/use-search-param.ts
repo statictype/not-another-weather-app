@@ -1,18 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { createSubscription } from "@/lib/external-store";
 
-/**
- * Subscribes to a single URL search param via `useSyncExternalStore`.
- *
- * Re-renders when the browser fires `popstate` (back / forward
- * navigation) or when another subscriber updates the URL via the
- * exported `setSearchParam` helper. `popstate` does NOT fire for
- * programmatic `pushState` / `replaceState`, so we notify subscribers
- * manually from `setSearchParam`.
- *
- * Cross-tab updates are not handled — URL state is inherently per-tab.
- * See `docs/rfcs/007-url-driven-city.md`.
- */
+/** `popstate` does not fire for `pushState`, so `setSearchParam` notifies subscribers. */
 
 const urlSubscription = createSubscription((onChange) => {
   window.addEventListener("popstate", onChange);
@@ -32,15 +21,6 @@ export function useSearchParam(name: string): string | null {
   );
 }
 
-/**
- * Update a single search param and notify subscribers.
- *
- * Pass `null` to remove the param. Uses `pushState` so back / forward
- * navigation works — each user-initiated city change gets its own
- * history entry. The one-time bootstrap in `main.tsx` uses
- * `replaceState` directly because it's a cold-load bootstrap and
- * shouldn't grow the history stack.
- */
 export function setSearchParam(name: string, value: string | null): void {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);

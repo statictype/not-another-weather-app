@@ -109,7 +109,6 @@ describe("useReversibleHistory", () => {
     act(() => action?.onClick());
     expect(result.current.history).toHaveLength(1);
 
-    // Second click should not re-prepend a duplicate.
     act(() => action?.onClick());
     expect(result.current.history).toHaveLength(1);
   });

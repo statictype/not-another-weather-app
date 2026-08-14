@@ -1,17 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { WeatherClientError } from "@/api/weather";
 
-/**
- * Single QueryClient for the app.
- *
- * Retry policy:
- *  - 404 / 400 / 429 are user-meaningful and instant; never retry.
- *  - Network / upstream (5xx) get up to 2 retries with exponential backoff.
- *  - AbortError is never retried (it's an intentional cancellation).
- *
- * Stale time matches the proxy's edge cache TTL (10 min) so refetches
- * stay rare and the UI feels snappy.
- */
+/** 404 / 400 / 429 never retry; network and 5xx retry twice; AbortError never. */
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {

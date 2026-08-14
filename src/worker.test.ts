@@ -1,22 +1,7 @@
 import { fetchMock, SELF } from "cloudflare:test";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 
-/**
- * Worker proxy tests for the three-tier weather pipeline.
- *
- * `fetchMock` from `cloudflare:test` is an undici MockAgent that
- * intercepts outgoing fetches made *inside* the Worker runtime. We stub
- * each upstream endpoint and assert the handler behavior for every
- * branch that matters:
- *
- *   - happy path → shaped DTO + MISS header
- *   - cache hit  → second request returns HIT without re-calling upstream
- *   - 1006       → not_found / 404
- *   - 2007       → quota_exceeded / 429
- *   - other code → upstream / 502 (no vendor detail leaked)
- *   - empty q    → invalid_query / 400 (no upstream call)
- *   - normalize  → casing / whitespace variants share one cache entry
- */
+/** `fetchMock` intercepts fetches made inside the Worker runtime. */
 
 const upstreamLocation = {
   name: "London",
@@ -158,8 +143,6 @@ afterEach(() => {
   fetchMock.assertNoPendingInterceptors();
 });
 
-// ─── /api/weather (current) ─────────────────────────────────────────────
-
 describe("Worker /api/weather (current)", () => {
   it("returns a shaped current DTO and marks the response as MISS", async () => {
     fetchMock
@@ -183,7 +166,6 @@ describe("Worker /api/weather (current)", () => {
         humidity: 67,
       },
     });
-    // The fast endpoint must not include forecast / yesterday / astro.
     expect(body.forecast).toBeUndefined();
     expect(body.yesterday).toBeUndefined();
     expect(body.astro).toBeUndefined();
@@ -278,8 +260,6 @@ describe("Worker /api/weather (current)", () => {
     expect(second.headers.get("X-Oasis-Cache")).toBe("HIT");
   });
 });
-
-// ─── /api/weather/forecast ──────────────────────────────────────────────
 
 describe("Worker /api/weather/forecast", () => {
   it("returns today + 3-day forecast + astro, and marks MISS", async () => {
@@ -546,8 +526,6 @@ describe("Worker /api/weather/forecast", () => {
   });
 });
 
-// ─── /api/weather/yesterday ─────────────────────────────────────────────
-
 describe("Worker /api/weather/yesterday", () => {
   it("returns yesterday's shaped day and marks MISS", async () => {
     fetchMock
@@ -596,9 +574,7 @@ describe("Worker /api/weather/yesterday", () => {
   });
 
   it("rejects a schema-broken upstream body with 502/upstream and no leaked field names", async () => {
-    // Missing `forecastday` — UpstreamForecastResponseSchema rejects.
-    // Previously this was swallowed into { yesterday: null }; the
-    // rendering layer now handles non-fatality via optional chaining.
+    // Missing `forecastday` must throw, not be swallowed into `{ yesterday: null }`.
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/history.json") })

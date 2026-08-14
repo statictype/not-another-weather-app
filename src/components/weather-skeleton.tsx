@@ -1,11 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * Skeleton placeholder shaped like the real weather card so the layout
- * doesn't shift when data lands. Shown only on `isLoading` (first fetch
- * with no prior data) — refetches dim the existing card instead.
- */
 export function WeatherSkeleton() {
   return (
     <Card aria-busy="true" aria-label="Loading weather">

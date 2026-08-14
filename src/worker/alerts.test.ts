@@ -2,13 +2,6 @@ import { describe, expect, it } from "vitest";
 import { MAX_ALERTS, normalizeSeverity, severityRank, sortAndCapAlerts } from "./alerts";
 import type { AlertSeverity, WeatherAlert } from "@/lib/schemas";
 
-/**
- * Upstream's `severity` is an unconstrained string aggregated from national
- * providers. These tests pin the vocabularies observed in the wild onto the
- * closed union, and pin the order the client depends on when it renders
- * `alerts[0]` as the top alert.
- */
-
 function alert(severity: AlertSeverity, event = "Test"): WeatherAlert {
   return {
     event,

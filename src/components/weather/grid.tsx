@@ -17,11 +17,6 @@ interface WeatherGridProps {
   isStale: boolean;
 }
 
-/**
- * Document order is the small-screen reading order: the answer, then the
- * next hours, then the next days. `xl:order-*` restores the desktop
- * composition, where the hero spans two rows beside a stacked right column.
- */
 export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
   const forecast = useWeatherForecast(query);
   const yesterday = useWeatherYesterday(query);
@@ -39,10 +34,8 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
     >
       <HeroCard location={c.location} current={c.current} today={forecast.data?.today} />
 
-      {/* The right column beside the hero: what is urgent, then what is
-          current. `contents` keeps both tiles as direct grid children below
-          `xl`, so document order stays the mobile reading order; at `xl` the
-          wrapper becomes the one 4-wide grid cell they stack inside. */}
+      {/* `contents` keeps both tiles as direct grid children below `xl`; at
+          `xl` the wrapper becomes the one 4-wide cell they stack inside. */}
       <div className="contents xl:order-2 xl:col-span-4 xl:flex xl:flex-col xl:gap-6">
         <AlertsCard
           alerts={demoAlerts() ?? forecast.data?.alerts}

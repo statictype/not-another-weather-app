@@ -149,7 +149,6 @@ describe("useWeather", () => {
     const second = renderHook(() => useWeather({ query: "New York" }), { wrapper });
     await waitFor(() => expect(second.result.current.isSuccess).toBe(true));
 
-    // Protects the RFC 003 whitespace fix — the second mount hits the cache.
     expect(calls).toBe(1);
   });
 });
@@ -213,8 +212,7 @@ describe("useWeatherYesterday", () => {
       }),
     );
 
-    // NOTE: no `retry: false` in the default options here — we want to
-    // prove the hook's own `retry: 0` wins regardless of client defaults.
+    // No `retry: false` in the defaults: the hook's own `retry: 0` must win.
     const client = new QueryClient();
     const { result } = renderHook(() => useWeatherYesterday("London"), {
       wrapper: makeWrapper(client),

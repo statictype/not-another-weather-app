@@ -76,8 +76,7 @@ function MetricRow({
 }
 
 function PressureGauge({ pressureMb }: { pressureMb: number }) {
-  // Map 980–1050 mb onto the half-circle so the sweet spot (1013–1022 mb)
-  // sits centered under the apex where the gradient is green.
+  // 980–1050 mb across the half-circle, so 1013–1022 sits under the apex.
   const PRESSURE_MIN = 980;
   const PRESSURE_MAX = 1050;
   const clamped = Math.max(PRESSURE_MIN, Math.min(PRESSURE_MAX, pressureMb));
@@ -110,7 +109,6 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
             </linearGradient>
           </defs>
 
-          {/* Background track */}
           <path
             d={arcPath}
             fill="none"
@@ -119,7 +117,6 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
             strokeWidth="6"
             strokeLinecap="round"
           />
-          {/* Color-coded arc, drawn only up to the current value */}
           <path
             d={arcPath}
             fill="none"

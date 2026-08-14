@@ -11,7 +11,6 @@ interface Row {
   air: AirLabel;
 }
 
-/** The Reference Data table from RFC 012. A failure means spec or labeler drifted. */
 const referenceRows: Row[] = [
   {
     location: "Cairo",
@@ -260,7 +259,6 @@ describe("airComfort — reference data", () => {
   );
 });
 
-/** Both sides of every band edge. Air rows pin temp/humidity clear of the damp override. */
 const thermalBoundaries: Array<[number, ThermalLabel]> = [
   [-6, "Very cold"],
   [-5, "Cold"],
@@ -392,7 +390,6 @@ describe("airComfort — sentence format", () => {
   });
 });
 
-/** One row per `ThermalLabel`, so every `COMFORT_JOIN` entry runs. Rows below Cool can't occur. */
 const comfortSentences: Array<[ThermalLabel, number, string]> = [
   ["Very cold", -10, "Very cold"],
   ["Cold", 0, "Cold"],

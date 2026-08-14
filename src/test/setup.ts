@@ -3,7 +3,7 @@ import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "./msw-server";
 
-// jsdom doesn't implement matchMedia; sonner reads it on mount. Stub once.
+// jsdom has no matchMedia; sonner reads it on mount.
 if (typeof window !== "undefined" && !window.matchMedia) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -20,7 +20,7 @@ if (typeof window !== "undefined" && !window.matchMedia) {
   });
 }
 
-// jsdom doesn't implement Pointer Capture APIs (used by Radix primitives).
+// jsdom has no Pointer Capture APIs, which Radix primitives use.
 if (typeof Element !== "undefined") {
   if (!Element.prototype.hasPointerCapture) {
     Element.prototype.hasPointerCapture = () => false;
@@ -36,7 +36,6 @@ if (typeof Element !== "undefined") {
   }
 }
 
-// Start MSW once for the whole test suite.
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
 afterEach(() => {

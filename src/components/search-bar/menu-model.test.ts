@@ -148,7 +148,6 @@ describe("buildMenuModel", () => {
       suggestions: [],
       isSuggestionsLoading: false,
     });
-    // Cold start: no city rows. Actions exist but aren't auto-focused.
     expect(m.defaultFocusKey).toBeNull();
     expect(m.navigable.length).toBe(2); // both actions
   });

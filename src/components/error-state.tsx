@@ -7,14 +7,6 @@ interface ErrorStateProps {
   onRetry?: (() => void) | undefined;
 }
 
-/**
- * Generic system-error takeover. Used for `network` and `upstream`
- * kinds — situations where the proxy or its dependencies are unhealthy
- * and the user's input has nothing to do with the failure.
- *
- * Includes a retry button by default; the parent decides whether to
- * pass `onRetry` based on whether retrying is meaningful right now.
- */
 export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
   return (
     <div className="card-surface flex flex-col items-center gap-6 rounded-[2rem] px-6 py-20 text-center">

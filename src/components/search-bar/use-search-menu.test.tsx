@@ -120,7 +120,6 @@ describe("useSearchMenu", () => {
 
     expect(onRecentSelect).not.toHaveBeenCalled();
     expect(onSuggestionSelect).not.toHaveBeenCalled();
-    // The hook does not surface any "Select a city from the list" flag.
     expect(result.current.isOpen).toBe(true);
   });
 
@@ -211,7 +210,6 @@ describe("useSearchMenu", () => {
         target: { value: "P" },
       } as unknown as Parameters<typeof result.current.inputProps.onChange>[0]),
     );
-    // "P" filters recents to just Paris — focus falls back to the new first row.
     expect(result.current.focusedKey).toBe("recent:a");
   });
 });

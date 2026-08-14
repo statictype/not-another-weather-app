@@ -1,12 +1,4 @@
-/**
- * Two-axis air comfort labels (RFC 012). Bands are lower-inclusive,
- * upper-exclusive. This module is the whole vocabulary: the labels, the
- * sentence that joins them, and nothing else.
- *
- * There is deliberately no color here. The two axes used to drive an OKLCH
- * tint per card, single-sourced in `air-comfort-palette.ts` and tuned through
- * a `/moods` editor; both are gone. Comfort is expressed in words.
- */
+/** RFC 012. Bands are lower-inclusive, upper-exclusive. */
 
 export type ThermalLabel =
   | "Very cold"
@@ -79,7 +71,6 @@ function isDamp(tempC: number, humidity: number): boolean {
   return tempC < 12 && humidity > 80;
 }
 
-/** Joins the labels when air is `Comfortable`; `null` drops the air clause. */
 type ComfortJoin = "and" | "but" | null | { join: "but"; maxFeelsLikeC: number };
 
 const COMFORT_JOIN: Record<ThermalLabel, ComfortJoin> = {
@@ -105,7 +96,6 @@ function sentence(thermal: ThermalLabel, air: AirLabel, feelsLikeC: number): str
   return `${thermal} ${join} ${air.toLowerCase()}`;
 }
 
-/** Beaufort-scale description of a wind speed in km/h. */
 export function beaufort(kph: number): string {
   if (kph < 1) return "Calm";
   if (kph < 6) return "Light air";

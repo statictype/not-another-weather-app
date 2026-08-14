@@ -4,13 +4,7 @@ import { errorResponse } from "./respond";
 import type { Env } from "./types";
 import { fetchSearch } from "./weather-api";
 
-/**
- * GET /api/search?q=<city>
- *
- * Lightweight autocomplete proxy. Returns up to 10 matching cities from
- * WeatherAPI.com's search endpoint. Not cached — results are ephemeral
- * and the debounced client call rate is already low.
- */
+/** Not cached — the debounced client call rate is already low. */
 export async function handleSearch(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const normalized = normalizeQuery(url.searchParams.get("q"));

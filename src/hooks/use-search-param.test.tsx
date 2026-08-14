@@ -2,13 +2,6 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { setSearchParam, useSearchParam } from "./use-search-param";
 
-/**
- * Guards the `useSyncExternalStore` wiring in `use-search-param.ts`.
- * Covers the three paths that can rotate the URL: initial read,
- * `setSearchParam` (which notifies manually since `pushState` doesn't
- * fire `popstate`), and the actual `popstate` event.
- */
-
 afterEach(() => {
   window.history.replaceState(null, "", "/");
 });

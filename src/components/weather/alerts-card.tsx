@@ -12,23 +12,8 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * Severity, as one table. The union comes from the wire (`AlertSeverity`),
- * so adding a severity upstream is a compile error here rather than a silent
- * fallthrough.
- *
- * Three visual steps, not five: the warm ramp reads as filled / tinted /
- * muted, and the icon shape separates the two that share a step. Colour is
- * never the only carrier — `word` is spoken to screen readers on the plate
- * and printed as a chip in the modal, and the event text says it in English
- * either way. `unknown` has no word because the provider did not send one;
- * inventing "Unknown severity" would be louder than the truth.
- *
- * `tile` is the card's whole surface, since the card is the tile. All three
- * steps are variant classes in `index.css`, declared beside `.tile-wind` and
- * `.tile-astro` because `.bento-tile` sets `background` and `border`
- * unlayered and a utility cannot override either. `.tile-alert-plain` takes
- * no warm hue — it is a neutral rim, there so a `minor` advisory still reads
- * as its own surface rather than as one more glass tile.
+ * `tile` classes live in `index.css`, not as utilities: `.bento-tile` sets
+ * `background` and `border` unlayered, which a utility cannot override.
  */
 const SEVERITY: Record<
   AlertSeverity,
@@ -72,37 +57,12 @@ const SEVERITY: Record<
 };
 
 interface AlertsCardProps {
-  /**
-   * Worst-first, as the worker sorted them. Undefined until the forecast tier
-   * lands, and empty for most locations on most days — either way the card is
-   * absent, with no placeholder and no skeleton.
-   */
   alerts: readonly WeatherAlert[] | undefined;
-  /** IANA zone of the located city — alert times are its times, not the reader's. */
   tz: string;
-  /**
-   * The modal is portalled onto `<body>`, outside the `.night` root, so it
-   * carries the class itself rather than inheriting the cascade.
-   */
+  /** The modal portals onto `<body>`, outside the `.night` root, so it needs the class itself. */
   isNight: boolean;
 }
 
-/**
- * The top tile of the right column, above `NowCard`. It is the only tile that
- * can be absent: no alerts means no card, and the column collapses back to
- * the Now card alone beside the hero.
- *
- * One tile, always. The worst alert is named in full and the rest are a `+N`
- * count — five stacked rows would be a wall of near-duplicate provider text,
- * and the tile's height would then move with `alerts.length`. Everything else
- * is one click away in the modal.
- *
- * The trigger *is* the tile: no pane around a plate around a row. It is the
- * only tile in the system that is a control, so it is also the only one
- * without a `.label-section` header — the hazard is named at headline size
- * across the full width, and a label reading "Alerts" above it would repeat
- * what the tile already is.
- */
 export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
   const [open, setOpen] = useState(false);
   const top = alerts?.[0];
@@ -114,9 +74,6 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* Centred rather than top-aligned: the grid's `minmax(150px,auto)` row
-          floor is taller than the content, so below `xl` the tile would
-          otherwise hold it against the top edge over a void. */}
       <DialogTrigger
         className={cn(
           "swap-in swap-d-2 bento-tile group flex w-full flex-col justify-center p-6 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-12",
@@ -126,15 +83,10 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
         <span className="flex w-full items-start gap-3.5">
           <Icon className="mt-0.5 size-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />
           <span className="min-w-0 flex-1">
-            {/* Headline size, the same rung the hero's condition line uses.
-                Clamped at two lines so a provider string like "Extreme Heat
-                Warning for the Metropolitan Area" reads instead of truncating
-                mid-word, and the tile's height still has a ceiling. */}
             <span className="line-clamp-2 text-lg leading-snug font-light tracking-tight underline-offset-4 decoration-1 group-hover:underline xl:text-xl">
               {top.event}
             </span>
-            {/* The step down is size, never alpha: over `--alert-fill` the ink
-                measures 5.20:1 in day, and fading it would drop below AA. */}
+            {/* Steps down by size, not alpha: over `--alert-fill`, fading drops below AA. */}
             {until && <span className="mt-1.5 block text-sm tracking-tight">{until}</span>}
           </span>
           {extra > 0 && (
@@ -167,8 +119,6 @@ function AlertsDialog({
         isNight && "night",
       )}
     >
-      {/* The header holds still; only the list below it scrolls, because a
-          US NWS `desc` runs several hundred words. */}
       <DialogHeader className="px-6 pt-6 pb-4 text-left sm:px-8 sm:pt-8">
         <DialogTitle className="text-xl font-light tracking-tight">
           {alerts.length === 1 ? "Weather alert" : "Weather alerts"}
@@ -191,8 +141,6 @@ function AlertsDialog({
   );
 }
 
-/** Empty strings are omitted rather than rendered as blank rows — several
- *  providers send `instruction: ""` and `areas: ""`. */
 function AlertEntry({ alert, tz }: { alert: WeatherAlert; tz: string }) {
   const { icon: Icon, word, chip, modalIcon } = SEVERITY[alert.severity];
   const range = formatRange(alert.effective, alert.expires, tz);
@@ -234,14 +182,6 @@ function AlertEntry({ alert, tz }: { alert: WeatherAlert; tz: string }) {
   );
 }
 
-/**
- * Alert windows are stated in the located city's time, matching the hero
- * clock — a warning that expires at 9 pm expires at 9 pm *there*. The end
- * drops its date when it lands on the same local day as the start.
- *
- * Returns `null` when neither bound parses, so the line is omitted rather
- * than printed as a dash.
- */
 function formatRange(effective: string, expires: string, tz: string): string | null {
   const from = parseInstant(effective);
   const to = parseInstant(expires);
@@ -252,16 +192,6 @@ function formatRange(effective: string, expires: string, tz: string): string | n
   return `${formatStamp(from, tz, true)} – ${formatStamp(to, tz, !sameDay)}`;
 }
 
-/**
- * The card states only when the worst alert ends; the full window is in the
- * modal. The date is printed only when the end is not today in the city's
- * zone, so the common case reads "Until 9:00 pm" and the plate's second line
- * stays one short phrase.
- *
- * Returns `null` when the bound is missing or unparseable, and when the zone
- * itself is rejected, so the line is omitted rather than printed as
- * "Until —".
- */
 function formatUntil(expires: string, tz: string): string | null {
   const to = parseInstant(expires);
   if (to === null) return null;
@@ -284,7 +214,6 @@ function formatDay(t: number, tz: string): string {
   }
 }
 
-/** `withDate` off yields just "9:00 pm", matching the hero's lowercase clock. */
 function formatStamp(t: number, tz: string, withDate: boolean): string {
   const d = new Date(t);
   try {

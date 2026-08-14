@@ -17,7 +17,6 @@ interface SearchBarProps {
   isSuggestionsLoading: boolean;
   error: WeatherClientError | null;
   activeQuery: string | null;
-  /** Fires whenever the search input value changes. App.tsx reads this to drive autocomplete. */
   onValueChange: (next: string) => void;
   onSuggestionSelect: (item: SuggestionItem) => void;
   onRecentSelect: (item: HistoryItem) => void;
@@ -48,23 +47,12 @@ const backdropVariants = {
 };
 
 /**
- * Composition: single Input element kept in document flow on every
- * state, one `useSearchMenu` state machine, one `<Menu>` renderer
- * shared across breakpoints.
- *
- * The mobile overlay (backdrop + Cancel) animates **around** the input
- * without moving it — the input's wrapper never becomes fixed, so y
- * position is stable across focus/blur. Cancel slides in via motion
- * `layout` so the input's width change is animated rather than a jump.
- *
- * The glass backdrop starts below the page header so the 😶‍🌫️ emoji
- * stays visible above the overlay. See RFC 011.
+ * The Input stays in document flow in every state — no position swap, no
+ * remount. The mobile overlay animates around it, so y position is stable
+ * across focus/blur, and the surface grows leftward over the emoji by animating
+ * a negative marginLeft (values below are emoji width + header gap per
+ * breakpoint). See RFC 011.
  */
-// How far the search surface slides leftward to overlap the emoji when
-// the mobile menu opens — emoji size + header gap at each breakpoint:
-//   xs (<640): text-5xl emoji (3rem) + gap-2 (0.5rem) = 56px
-//   sm (640+): text-7xl emoji (4.5rem) + gap-2 (0.5rem) = 80px
-//   md (768+): text-7xl emoji (4.5rem) + md:gap-6 (1.5rem) = 96px
 const SLIDE_XS = 56;
 const SLIDE_SM = 80;
 const SLIDE_MD = 96;
@@ -147,11 +135,6 @@ export function SearchBar({
           Search city
         </label>
 
-        {/* Glass backdrop covering the full viewport. The emoji sits at
-            z-auto in the header behind it; the input row + Cancel stack
-            above via z-40. The 200 ms opacity ramp is what produces the
-            old behaviour where the emoji's yellow briefly shines through
-            the input's glass while the overlay is still translucent. */}
         <AnimatePresence>
           {isMobileOverlay && (
             <motion.div
@@ -167,14 +150,6 @@ export function SearchBar({
           )}
         </AnimatePresence>
 
-        {/* Input row stays in document flow — no position swap, no remount.
-            When the mobile menu opens, the search surface grows leftward by
-            animating a negative marginLeft. Flex re-distributes the freed
-            space into the input's width, so the right edge stays put and
-            the left edge slides over the emoji (the glass background lets
-            the emoji's yellow shine through). Cancel animates its own
-            width + marginLeft (rather than the parent's gap) so the right
-            edge slides smoothly back when closing — no unmount jump. */}
         <div className="relative z-40 flex items-center">
           <motion.div
             layout
@@ -233,9 +208,6 @@ export function SearchBar({
 
         <SearchError id={errorId} message={errorMessage} />
 
-        {/* Menu — positioned as an absolute dropdown on desktop, fixed
-            full-area below the header on mobile-overlay. Same content
-            either way; the wrapper picks the chrome. */}
         <AnimatePresence>
           {isOpen &&
             (isMobileOverlay ? (

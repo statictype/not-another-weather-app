@@ -1,38 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { isWaxing, moonGeometry, moonLitPath, type MoonGeometry } from "./moon";
 
-/** The radius `astro-card.tsx` draws the moon at. */
 const R = 22;
 const DISC = Math.PI * R * R;
 
-/**
- * Area enclosed by the two-arc path, derived from the SVG sweep-flag
- * semantics rather than from the module's branches: the arcs run in opposite
- * directions, so equal flags bow to opposite sides (half disc plus half
- * ellipse) and unequal flags bow to the same side (half disc minus half
- * ellipse).
- */
+/** Derived from sweep-flag semantics, not the module's branches. */
 function litArea(g: MoonGeometry, r: number): number {
   const half = (Math.PI * r * r) / 2;
   const lens = (Math.PI * g.termRx * r) / 2;
   return g.outerSweep === g.termSweep ? half + lens : half - lens;
 }
 
-/** Which side of the disc the bright limb sits on. */
 function litSide(g: MoonGeometry): "left" | "right" {
   return g.outerSweep === 1 ? "right" : "left";
 }
 
 interface Row {
-  /** Exactly as WeatherAPI emits it. */
   phase: string;
   illumination: number;
   waxing: boolean;
-  /** Bright limb as seen from the northern hemisphere. */
   north: "left" | "right";
 }
 
-/** All eight phase strings WeatherAPI emits, at representative illuminations. */
 const phases: Row[] = [
   { phase: "New Moon", illumination: 0, waxing: true, north: "right" },
   { phase: "Waxing Crescent", illumination: 25, waxing: true, north: "right" },

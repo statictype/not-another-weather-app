@@ -19,8 +19,6 @@ const CITIES = [
   "Cusco, Peru",
   "Jaipur, India",
   "Vancouver, Canada",
-  // Air-comfort reference fixtures — each covers a distinct corner of the
-  // thermal × air-axis grid. See file.md.
   "Cairo, Egypt",
   "Panipat, India",
   "Beijing, China",
@@ -50,6 +48,5 @@ const CITIES = [
 ];
 
 export function pickRandomCity(): string {
-  // CITIES is a non-empty constant array — the index is always in bounds.
   return CITIES[Math.floor(Math.random() * CITIES.length)]!;
 }

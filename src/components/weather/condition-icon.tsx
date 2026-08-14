@@ -16,13 +16,6 @@ import {
 } from "lucide-react";
 import { type ComponentProps, createElement } from "react";
 
-/**
- * Pick a lucide icon for a WeatherAPI condition string. Shared by
- * `hero-card` and `forecast-card` — the only two places that render
- * condition icons. Small enough that the one-file duplication the RFC
- * contemplated wasn't worth it; a 40-line helper imported from both
- * cards is cleaner.
- */
 function pickConditionIcon(text: string, isDay: boolean): LucideIcon {
   const t = text.toLowerCase();
   if (/thunder|lightning/.test(t)) return CloudLightningIcon;

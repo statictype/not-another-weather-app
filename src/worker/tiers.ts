@@ -13,14 +13,8 @@ import { errorResponse } from "./respond";
 import type { Env } from "./types";
 import { fetchCurrent, fetchForecast3, fetchYesterday } from "./weather-api";
 
-/**
- * Per-tier server configuration.
- *
- * `computeExtras` runs once per request and feeds BOTH the cache key
- * and the upstream call. Keeping it on a single computed value matters
- * for the yesterday tier near UTC midnight: a write at 23:59 and a read
- * at 00:01 must not disagree on which `dt` they reference.
- */
+/** `computeExtras` feeds both the cache key and the upstream call, so a write at
+ *  23:59 and a read at 00:01 cannot disagree on `dt`. */
 interface ServerTier {
   ttl: number;
   computeExtras?: () => Record<string, string>;
@@ -60,12 +54,6 @@ function yesterdayUtc(): string {
   return `${y}-${m}-${day}`;
 }
 
-/**
- * Build the Worker handler for a given tier. Three near-identical
- * handler files used to live in this folder; the per-tier knobs
- * (TTL, fetch, optional extras) are now a table and the rest is one
- * generic function — adding a tier is one row, not a new file.
- */
 export function createTierHandler(
   tier: WeatherTier,
 ): (request: Request, env: Env) => Promise<Response> {

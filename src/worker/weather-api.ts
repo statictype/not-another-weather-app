@@ -14,14 +14,7 @@ import { defaultMessage, type WeatherErrorKind } from "@/lib/errors";
 import { normalizeSeverity, sortAndCapAlerts } from "./alerts";
 import { WeatherApiError } from "./errors";
 
-/* ───── Upstream schemas (private to this file) ──────────────────────
- *
- * These describe the subset of WeatherAPI.com's response shapes we
- * actually consume. They are intentionally kept separate from the
- * exported DTO schemas in `@/lib/schemas` — the upstream shapes are
- * an implementation detail of this file and get replaced wholesale
- * if we ever swap providers.
- */
+/* Upstream (WeatherAPI.com) shapes, private to this file. */
 
 const UpstreamLocationSchema = z.object({
   name: z.string(),
@@ -102,14 +95,6 @@ const UpstreamForecastDaySchema = z.object({
   hour: z.array(UpstreamHourSchema).optional(),
 });
 
-/**
- * Every field is nullish: providers populate this block inconsistently and
- * an alert missing an `instruction` is still worth showing. `severity` is
- * an unconstrained string here — `normalizeSeverity` closes it.
- *
- * `msgtype`, `category`, `certainty`, `urgency` and `note` are deliberately
- * not consumed; they are constant or meaningless to a reader.
- */
 const UpstreamAlertSchema = z.object({
   event: z.string().nullish(),
   headline: z.string().nullish(),
@@ -123,19 +108,10 @@ const UpstreamAlertSchema = z.object({
 
 const UpstreamForecastResponseSchema = z.object({
   location: UpstreamLocationSchema,
-  /**
-   * The forecast endpoint always echoes a `current` block, but we only
-   * need it for `air_quality` (passed via `aqi=yes`). Everything else
-   * comes from the dedicated current.json call on the fast path.
-   */
   current: UpstreamCurrentBlockSchema.optional(),
   forecast: z.object({
     forecastday: z.array(UpstreamForecastDaySchema),
   }),
-  /**
-   * Absent entirely on `alerts=no` and on plans without alert access;
-   * `alert` is `[]` when the plan supplies them but the area has none.
-   */
   alerts: z
     .object({
       alert: z.array(UpstreamAlertSchema).nullish(),
@@ -146,16 +122,6 @@ const UpstreamForecastResponseSchema = z.object({
 type UpstreamLocation = z.infer<typeof UpstreamLocationSchema>;
 type UpstreamCurrent = z.infer<typeof UpstreamCurrentBlockSchema>;
 type UpstreamForecastDay = z.infer<typeof UpstreamForecastDaySchema>;
-
-/**
- * Upstream client for WeatherAPI.com.
- *
- * The pipeline is split into three independently-cacheable calls so the
- * hero can paint on `current` without waiting for forecast or history.
- * Each function takes a normalized query, returns a shaped DTO, and
- * throws a typed `WeatherApiError` for anything that goes wrong. Callers
- * never see the upstream's schema or HTTP status codes.
- */
 
 const UPSTREAM_CURRENT = "https://api.weatherapi.com/v1/current.json";
 const UPSTREAM_FORECAST = "https://api.weatherapi.com/v1/forecast.json";
@@ -179,20 +145,7 @@ interface UpstreamError {
   };
 }
 
-/**
- * WeatherAPI.com vendor codes mapped to our taxonomy in `@/lib/errors`.
- * Anything not listed collapses to the generic `upstream` kind so we
- * never leak vendor-specific failure modes (especially anything
- * involving the API key) to the client. The value type is constrained
- * to `WeatherErrorKind`, so dropping a kind from `WEATHER_ERRORS` is a
- * compile error here.
- *
- * Codes not in the table — 1002, 1003, 1005, 2006, 2008, 2009, 9999,
- * etc. — fall through to `upstream`. The accompanying message comes
- * from `defaultMessage(kind)` so the wording lives in one place.
- *
- * Reference: https://www.weatherapi.com/docs/#intro-error-codes
- */
+/** Unlisted codes collapse to `upstream`, so API-key errors never reach the client. */
 const UPSTREAM_CODE_TO_KIND: Record<number, WeatherErrorKind> = {
   1006: "not_found",
   2007: "quota_exceeded",
@@ -203,12 +156,6 @@ function mapUpstreamErrorCode(code: number): WeatherApiError {
   return new WeatherApiError(kind, defaultMessage(kind));
 }
 
-/**
- * Fetch an upstream endpoint and validate the response body against
- * `schema`. Parse failures are mapped to `WeatherApiError("upstream", …)`
- * with the structured `ZodError` logged to worker console so operators
- * can see the exact field mismatch without it leaking to clients.
- */
 async function fetchUpstream<S extends z.ZodType>(
   url: URL,
   schema: S,
@@ -325,9 +272,7 @@ export async function fetchYesterday(
 
   const raw = await fetchUpstream(url, UpstreamForecastResponseSchema, signal);
   const day = raw.forecast?.forecastday?.[0];
-  // `null` here is upstream-OK-no-data (the date is simply absent), not
-  // upstream-failed. Failures throw and are surfaced to the client; the
-  // grid omits the column via optional chaining on `yesterday.data?.yesterday`.
+  // `null` is upstream-OK-no-data, not upstream-failed. Failures throw.
   if (!day) return { yesterday: null };
   return { yesterday: shapeForecastDay(day) };
 }
@@ -348,9 +293,7 @@ function shapeCurrent(raw: UpstreamCurrent): CurrentConditions {
   return {
     tempC: round1(raw.temp_c),
     feelsLikeC: round1(raw.feelslike_c),
-    // Heat index is only meaningful in warm/humid weather; in cold air
-    // the upstream may omit it. Fall back to the air temperature so
-    // the field is always a real number for downstream consumers.
+    // Upstream omits heat index in cold air; fall back so the field is always a number.
     heatIndexC: round1(raw.heatindex_c ?? raw.temp_c),
     conditionText: raw.condition.text,
     conditionCode: raw.condition.code,
@@ -430,7 +373,6 @@ function round1(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
-/** Upstream spells its booleans as 0 / 1, and omits them on some plans. */
 function isTrue(flag: number | null | undefined): boolean {
   return flag === 1;
 }

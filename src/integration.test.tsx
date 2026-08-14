@@ -13,21 +13,6 @@ import type {
 import { __resetHistoryStoreForTests } from "@/hooks/use-history";
 import { server } from "@/test/msw-server";
 
-/**
- * End-to-end-ish tests for the full app, run via MSW so the real API
- * client, TanStack Query wiring, hooks, URL state, and UI all
- * participate. This file is the safety net for "did anything in the
- * URL → fetch → render → history flow break".
- *
- * Most weather-render assertions navigate via the URL (`?city=London`)
- * rather than clicking through the suggestion flow. URL-driven tests
- * are closer to how users actually arrive at a city (link sharing,
- * bookmarks) and don't couple every test to the search-bar UI. The
- * suggestion-click path still gets one dedicated test.
- *
- * Per docs/rfcs/007-url-driven-city.md.
- */
-
 const londonCurrent: WeatherCurrent = {
   location: {
     name: "London",
@@ -134,10 +119,7 @@ beforeEach(() => {
   __resetHistoryStoreForTests();
   window.history.replaceState(null, "", "/");
 
-  // Force the desktop search layout. The mobile overlay remounts the input
-  // on focus (different JSX subtree), which detaches the element `user.type`
-  // is targeting and leaves the input empty; the mobile recent pills also
-  // omit the "Load weather for X" aria-label these tests query by.
+  // Desktop layout: the mobile overlay remounts the input on focus.
   vi.stubGlobal("matchMedia", (query: string) => ({
     matches: query.includes("min-width: 1024px"),
     media: query,
@@ -183,9 +165,7 @@ describe("Oasis (integration)", () => {
   it("renders the weather for the city in the URL (no click-through)", async () => {
     renderAppAt("/?city=London");
 
-    // Hero paints. Its <h2> city heading is unique to the hero card.
     await screen.findByRole("heading", { name: /london/i });
-    // The readings moved out of the hero into the NowCard beside it.
     expect(screen.getAllByText(/12°C/).length).toBeGreaterThan(0);
     expect(screen.getByText(/feels like/i)).toBeInTheDocument();
   });
@@ -205,17 +185,14 @@ describe("Oasis (integration)", () => {
     const suggestion = await screen.findByRole("button", { name: /search weather for london/i });
     await user.click(suggestion);
 
-    // URL now carries the city.
     await waitFor(() => {
       expect(new URL(window.location.href).searchParams.get("city")?.toLowerCase()).toContain(
         "london",
       );
     });
 
-    // Hero paints. Its <h2> city heading is unique to the hero card.
     await screen.findByRole("heading", { name: /london/i });
 
-    // History entry appears when re-opening the dropdown.
     await user.click(input);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();
@@ -223,14 +200,7 @@ describe("Oasis (integration)", () => {
   });
 
   it("clicking 'My location' multiple times dedupes despite GPS jitter", async () => {
-    // GPS reads at the same physical spot jitter in the trailing
-    // decimals — without rounding, each click composes a unique query
-    // string and history (which dedupes by exact match) keeps them
-    // all. `handleLocationRequest` rounds to ~1km precision so the
-    // jittered reads collapse into one entry.
-    // Typical GPS jitter is 5–10m at the same spot. The readings below
-    // span ~15m and stay inside one 100m bin so `.toFixed(3)` collapses
-    // them to a single query.
+    // These reads span ~15m and must collapse to one history entry.
     const readings = [
       { coords: { latitude: 51.52313, longitude: -0.12893 } },
       { coords: { latitude: 51.52319, longitude: -0.12889 } },
@@ -245,8 +215,6 @@ describe("Oasis (integration)", () => {
       value: { getCurrentPosition },
     });
 
-    // Any /api/weather call lands as London so each location-derived
-    // query commits to history.
     server.use(http.get("/api/weather", () => HttpResponse.json(londonCurrent)));
 
     const user = userEvent.setup();
@@ -260,7 +228,6 @@ describe("Oasis (integration)", () => {
       await waitFor(() => {
         expect(new URL(window.location.href).searchParams.get("city")).toBeTruthy();
       });
-      // Hero paints — that's when the history-commit effect fires.
       await screen.findByRole("heading", { name: /london/i });
     }
 
@@ -272,11 +239,6 @@ describe("Oasis (integration)", () => {
   });
 
   it("pressing Enter with no matching city is a silent no-op (no fetch, no alert)", async () => {
-    // The menu auto-focuses the top city row and Enter commits it.
-    // When there are no rows to commit (gibberish input with no recents
-    // and no suggestions), Enter does nothing — no validation prompt,
-    // no fetch. The inline "No cities found" hint already covers the
-    // empty-state communication. See RFC 011.
     const user = userEvent.setup();
     renderAppAt("/");
 
@@ -284,12 +246,9 @@ describe("Oasis (integration)", () => {
     await user.type(input, "xyzgibberish");
     await user.keyboard("{Enter}");
 
-    // The inline "No cities found" hint is shown in the dropdown; the
-    // input's alert region stays empty (nothing was ever fetched).
     expect(screen.getByRole("alert")).toBeEmptyDOMElement();
     await screen.findByText(/no cities found/i);
 
-    // No weather card loaded — empty state heading still present.
     expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 
@@ -322,10 +281,7 @@ describe("Oasis (integration)", () => {
   });
 
   it("paints the hero before forecast before yesterday", async () => {
-    // Staggered delays expose the three-tier paint order. If the hero
-    // ever secretly starts blocking on forecast or yesterday (the bug
-    // RFC 001 was meant to fix) this test will hang on the first
-    // assertion.
+    // If the hero ever blocks on forecast or yesterday, this hangs below.
     server.use(
       http.get("/api/weather", () => HttpResponse.json(londonCurrent)),
       http.get("/api/weather/forecast", async () => {
@@ -340,18 +296,13 @@ describe("Oasis (integration)", () => {
 
     renderAppAt("/?city=London");
 
-    // t≈0: hero paints. "Feels like 11°" is unique to HeroCard (see
-    // the gotcha in RFC 006 — `/partly cloudy/i` double-matches once
-    // forecast lands).
+    // `/partly cloudy/i` double-matches once forecast lands.
     await screen.findByRole("heading", { name: /london/i });
 
-    // Hero stats row is still shimmering — forecast hasn't landed yet.
     expect(document.querySelector("[aria-hidden='true'].animate-pulse")).toBeInTheDocument();
 
-    // t≈30ms: forecast lands → "Today" label appears.
     await screen.findByText(/^today$/i);
 
-    // t≈60ms: yesterday lands → "Yesterday" label appears.
     await screen.findByText(/^yesterday$/i);
   });
 
@@ -359,7 +310,6 @@ describe("Oasis (integration)", () => {
     const user = userEvent.setup();
     renderAppAt("/?city=London");
 
-    // Wait for fetch to land and history entry to accumulate.
     await screen.findByRole("heading", { name: /london/i });
     const input = screen.getByLabelText(/city/i);
     await user.click(input);

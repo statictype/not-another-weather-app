@@ -12,23 +12,7 @@ interface WeatherResultProps {
   onRetry: () => void;
 }
 
-/**
- * State-machine container for the result area.
- *
- * Drives off the fast `current` query only. The forecast and yesterday
- * tiers fire inside `WeatherGrid` and stream in independently.
- *
- * Error policy:
- *  - `not_found` and `invalid_query` are *input* errors, surfaced under
- *    the input by `search-bar/search-error.tsx`. This component falls
- *    through to the empty state.
- *  - `quota_exceeded` is a global degradation that supersedes whatever
- *    was on screen — full takeover.
- *  - `network` / `upstream` take over with a retry CTA whenever there
- *    is no prior successful data to fall back to. The URL is the
- *    source of truth for the active query, so every failed fetch is
- *    legitimately the user's intent — no silent fallback.
- */
+/** `not_found` / `invalid_query` are input errors, surfaced under the search input. */
 export function WeatherResult({ query, activeQuery, onRetry }: WeatherResultProps) {
   const { data, error, isLoading, isFetching, isPlaceholderData } = query;
 

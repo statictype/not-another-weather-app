@@ -1,18 +1,6 @@
 /**
- * Single source of truth for the wire DTO shapes between the Oasis
- * worker and frontend.
- *
- * Both sides import types from this file via `z.infer`. The worker
- * additionally uses the runtime schemas for upstream validation; the
- * frontend only imports types, so `isolatedModules` erases the zod
- * reference at compile time and zod's runtime is tree-shaken out of
- * the client bundle.
- *
- * Hard constraint: nothing in `src/api`, `src/hooks`, or
- * `src/components` may value-import from this file. Type imports
- * only. The `no-restricted-imports` eslint rule enforces this and a
- * build-size regression test catches accidental leaks.
- *
+ * Nothing in `src/api`, `src/hooks`, or `src/components` may value-import from
+ * this file — type imports only, so zod stays out of the client bundle.
  * See docs/rfcs/008-zod-wire-boundaries.md.
  */
 
@@ -22,9 +10,7 @@ export const WeatherLocationSchema = z.object({
   name: z.string(),
   region: z.string(),
   country: z.string(),
-  /** ISO 8601 local time at the queried location. */
   localTime: z.string(),
-  /** IANA timezone id, e.g. "America/Anchorage". */
   tz: z.string(),
   lat: z.number(),
   lon: z.number(),
@@ -52,7 +38,6 @@ export const CurrentConditionsSchema = z.object({
 export type CurrentConditions = z.infer<typeof CurrentConditionsSchema>;
 
 export const HourlyForecastSchema = z.object({
-  /** ISO datetime string, e.g. "2026-05-09 14:00". */
   time: z.string(),
   tempC: z.number(),
   feelsLikeC: z.number(),
@@ -71,7 +56,6 @@ export const HourlyForecastSchema = z.object({
 export type HourlyForecast = z.infer<typeof HourlyForecastSchema>;
 
 export const ForecastDaySchema = z.object({
-  /** ISO date (YYYY-MM-DD) at the queried location. */
   date: z.string(),
   minC: z.number(),
   maxC: z.number(),
@@ -89,26 +73,16 @@ export const AstroSchema = z.object({
   moonrise: z.string(),
   moonset: z.string(),
   moonPhase: z.string(),
-  /** 0–100 */
   moonIllumination: z.number(),
 });
 export type Astro = z.infer<typeof AstroSchema>;
 
-/** Response shape for `GET /api/weather` — fast path, LCP-critical. */
 export const WeatherCurrentSchema = z.object({
   location: WeatherLocationSchema,
   current: CurrentConditionsSchema,
 });
 export type WeatherCurrent = z.infer<typeof WeatherCurrentSchema>;
 
-/**
- * Alert severity, normalized worker-side into a closed union. Upstream
- * emits an unconstrained string — the vendor aggregates national providers
- * and enumerates no values — so `src/worker/alerts.ts` maps the observed
- * vocabularies onto these five and ranks them. Ordered worst-first; the
- * worker sorts by this order, so the client can render `alerts[0]` as the
- * top alert without owning a rank table.
- */
 export const ALERT_SEVERITIES = ["extreme", "severe", "moderate", "minor", "unknown"] as const;
 export type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
 
@@ -117,7 +91,6 @@ export const WeatherAlertSchema = z.object({
   headline: z.string(),
   severity: z.enum(ALERT_SEVERITIES),
   areas: z.string(),
-  /** ISO 8601 with offset, as emitted upstream. */
   effective: z.string(),
   expires: z.string(),
   desc: z.string(),
@@ -125,7 +98,6 @@ export const WeatherAlertSchema = z.object({
 });
 export type WeatherAlert = z.infer<typeof WeatherAlertSchema>;
 
-/** Response shape for `GET /api/weather/forecast`. */
 export const WeatherForecastSchema = z.object({
   today: z.object({
     minC: z.number(),
@@ -137,21 +109,14 @@ export const WeatherForecastSchema = z.object({
     totalPrecipMm: z.number(),
     totalSnowCm: z.number(),
   }),
-  /** US EPA index, 1–6. `null` when upstream omits the air-quality block. */
   airQualityIndex: z.number().nullable(),
   forecast: z.array(ForecastDaySchema),
   astro: AstroSchema,
   hourly: z.array(HourlyForecastSchema),
-  /**
-   * Worst-first, capped at `MAX_ALERTS`. Empty when upstream returns none
-   * or the plan does not supply them — never `null`, so the client has one
-   * shape to render.
-   */
   alerts: z.array(WeatherAlertSchema),
 });
 export type WeatherForecast = z.infer<typeof WeatherForecastSchema>;
 
-/** Response shape for `GET /api/weather/yesterday`. */
 export const WeatherYesterdaySchema = z.object({
   yesterday: ForecastDaySchema.nullable(),
 });

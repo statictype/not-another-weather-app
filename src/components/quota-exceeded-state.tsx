@@ -1,15 +1,6 @@
 import { GaugeIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-/**
- * Dedicated state for the most interesting failure: the demo's free
- * weather API quota is exhausted.
- *
- * Treated specially because:
- *  - It's a global state (every fetch will fail until the quota resets).
- *  - It explains *why* the app is degraded in a portfolio context.
- *  - It's an opportunity to show the reader how to run with their own key.
- */
 export function QuotaExceededState() {
   return (
     <Card>

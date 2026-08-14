@@ -10,25 +10,6 @@ import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
 import { buildMenuModel, type MenuModel, type NavigableItem } from "./menu-model";
 
-/**
- * Search menu state machine.
- *
- * Owns the input value, focus state, and explicit row selection. Returns
- * the rendered `MenuModel`, ready-to-spread `inputProps`/`formProps`,
- * and a small set of imperative actions for the row-click handlers.
- *
- * Platform-agnostic — there is no `isDesktop` branch. Both layouts
- * consume the same state. Default focus always lands on the first
- * city row (recent or suggestion), so Enter always has something to
- * run when results exist; the old "Select a city from the list"
- * prompt is gone.
- *
- * After every commit (suggestion / recent / location / random) the
- * menu performs the same close: clear the input value and blur it.
- * On desktop that dismisses the dropdown; on mobile it closes the
- * overlay. Re-opening is a single user focus event.
- */
-
 export interface UseSearchMenuArgs {
   recentItems: HistoryItem[];
   suggestions: SuggestionItem[];
@@ -37,12 +18,6 @@ export interface UseSearchMenuArgs {
   onRecentSelect: (item: HistoryItem) => void;
   onLocationRequest: () => void;
   onRandomSelect: () => void;
-  /**
-   * Fires every time the input value changes (typing or close-on-commit).
-   * App-level code reads it to drive the debounced suggestion fetch via
-   * `useSuggestions`. Kept as a callback so the input value has exactly
-   * one owner — this hook — and the parent observes it.
-   */
   onValueChange?: (next: string) => void;
 }
 
@@ -60,16 +35,13 @@ export interface UseSearchMenuReturn {
     onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
   };
   formProps: { onSubmit: (e: FormEvent<HTMLFormElement>) => void };
-  /** Close + clear. Wired to Escape, mobile Cancel, and post-commit. */
   cancel: () => void;
-  /** Set the focused row by hover (desktop) or no-op (touch). */
   hoverKey: (key: string | null) => void;
-  /** Imperative commit helpers — wired to row onMouseDown so the row owns its own preventDefault. */
+  /** Wired to row onMouseDown so the row owns its own preventDefault. */
   selectRecent: (item: HistoryItem) => void;
   selectSuggestion: (item: SuggestionItem) => void;
   requestLocation: () => void;
   selectRandom: () => void;
-  /** Alert-dialog open state, exposed so clear-all confirmation can keep the menu visible. */
   isDialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
 }
@@ -94,10 +66,7 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
       ? selectedKey
       : model.defaultFocusKey;
 
-  // The dialog is itself a focus trap — when it opens, the input blurs
-  // and the menu would otherwise close. Treat the dialog as a held-open
-  // signal so the user returns to the same menu state when the dialog
-  // resolves.
+  // The dialog traps focus, blurring the input; treat it as a held-open signal.
   const isOpen = isFocused || isDialogOpen;
 
   const updateValue = (next: string) => {

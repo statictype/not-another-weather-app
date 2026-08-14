@@ -1,31 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 
-/**
- * Pending-removal state with a time-bounded undo window.
- *
- * Used by both single-item delete and "Clear all". The caller stages the
- * removal (the items are gone from history immediately), then either:
- *   - calls `undo()` before the timeout to restore them, or
- *   - lets the timeout fire, at which point `onCommit` runs (a no-op
- *     hook into analytics/telemetry — we already mutated history).
- *
- * Only one pending removal exists at a time. Staging a new removal
- * commits the previous one immediately so we never silently drop state.
- */
-
 export interface PendingRemoval<T> {
   items: T[];
-  /** Human-readable summary used by the toast. */
   label: string;
 }
 
 export interface UseUndoReturn<T> {
   pending: PendingRemoval<T> | null;
-  /** Stage a removal. The items must already be removed from the source. */
   stage: (removal: PendingRemoval<T>) => void;
-  /** Restore the pending removal and clear the timer. */
   undo: () => PendingRemoval<T> | null;
-  /** Commit immediately, dropping the pending removal. */
   commit: () => void;
 }
 
@@ -54,7 +37,6 @@ export function useUndo<T>(timeoutMs: number = DEFAULT_TIMEOUT_MS): UseUndoRetur
   };
 
   const stage = (removal: PendingRemoval<T>) => {
-    // Staging a new removal commits any prior one immediately.
     clearTimer();
     setBoth(removal);
     timerRef.current = setTimeout(() => {

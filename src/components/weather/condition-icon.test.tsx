@@ -2,13 +2,6 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ConditionIcon } from "./condition-icon";
 
-/**
- * Table-driven test for the regex chain inside `condition-icon.tsx`.
- * Asserts on the lucide class suffix (e.g. `lucide-cloud-lightning`)
- * which is stable across versions and cheaper than importing the icon
- * component identity.
- */
-
 const cases: Array<{ text: string; isDay: boolean; expected: string }> = [
   { text: "Thunderstorm", isDay: true, expected: "lucide-cloud-lightning" },
   { text: "Light snow", isDay: true, expected: "lucide-cloud-snow" },

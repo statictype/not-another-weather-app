@@ -10,10 +10,6 @@ interface AirComfortCardProps {
   visibilityKm: number;
 }
 
-/**
- * The numbers behind the hero's sentence. The hero says "Gentle breeze" and
- * leaves cloud cover out entirely; the reading itself lives here.
- */
 export function AirComfortCard({
   dewpointC,
   humidity,

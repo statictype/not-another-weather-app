@@ -2,17 +2,6 @@ import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
 import { MIN_SUGGESTION_LENGTH } from "./constants";
 
-/**
- * Pure description of the search menu's contents, given an input value
- * and the upstream data tiers. Both the desktop list and the mobile
- * chip-grid render directly off this model — the branching ladder
- * (recents above, suggestions below, keep-typing/no-results hints)
- * lives here, not duplicated across two layouts.
- *
- * Side-effect free: `buildMenuModel` is a pure function with no React
- * dependency, tested in isolation.
- */
-
 export type ActionKind = "location" | "random";
 
 export type NavigableItem =
@@ -20,11 +9,6 @@ export type NavigableItem =
   | { kind: "suggestion"; key: string; item: SuggestionItem }
   | { kind: "action"; key: string; action: ActionKind };
 
-/**
- * A renderable strip in the scrollable area of the menu. Actions live
- * separately in `MenuModel.actions` because both layouts render them
- * as a fixed footer rather than as a scrolling section.
- */
 export type MenuSection =
   | { kind: "recent"; items: HistoryItem[] }
   | { kind: "suggestions"; items: SuggestionItem[]; showHeader: boolean }
@@ -33,27 +17,13 @@ export type MenuSection =
   | { kind: "keep-typing" };
 
 export interface MenuModel {
-  /** Scrollable area, top-to-bottom. */
   sections: MenuSection[];
-  /** Fixed footer actions (`location`, `random`). Always two items. */
   actions: NavigableItem[];
-  /**
-   * Flat keyboard-nav order: all city rows in `sections`, followed by
-   * `actions`. The hook walks this list for arrow-key navigation; the
-   * default focus lands on the first item with `kind: "recent"` or
-   * `"suggestion"` (never an action — see `defaultFocusKey`).
-   */
   navigable: NavigableItem[];
-  /**
-   * The first city row's key, used as the default focus target. Null
-   * if there are no city rows (e.g. cold start with no history, or
-   * len ≥ 3 with no suggestions and no matching recents).
-   */
   defaultFocusKey: string | null;
 }
 
 export interface BuildMenuModelArgs {
-  /** Trimmed input value. */
   value: string;
   recentItems: HistoryItem[];
   suggestions: SuggestionItem[];

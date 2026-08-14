@@ -4,13 +4,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AlertSeverity, WeatherAlert } from "@/api/types";
 import { AlertsCard } from "./alerts-card";
 
-/**
- * The demo key will not produce a severe-weather alert on demand, so the
- * rendered result is proved from fixtures instead. These cover the shapes
- * providers actually send: one alert, several of mixed severity, empty
- * `instruction` / `areas`, and a multi-paragraph `desc`.
- */
-
 const TZ = "Europe/London";
 
 function alert(over: Partial<WeatherAlert> = {}): WeatherAlert {
@@ -37,8 +30,7 @@ function renderCard(alerts: WeatherAlert[] | undefined, isNight = false) {
   return render(<AlertsCard alerts={alerts} tz={TZ} isNight={isNight} />);
 }
 
-/** The plate's "Until …" line drops the date when the end falls on today in
- *  the city's zone, so today has to be fixed for those assertions. */
+/** The "Until …" line drops the date on same-day ends, so today is pinned. */
 function nowIs(iso: string) {
   vi.spyOn(Date, "now").mockReturnValue(Date.parse(iso));
 }
@@ -152,8 +144,7 @@ describe("AlertsCard modal", () => {
   });
 
   it("formats the window in the location's timezone, not the viewer's", async () => {
-    // 06:00+01:00 is 05:00 UTC; in Anchorage that is the previous evening, so
-    // a viewer-timezone bug changes both the date and the hour.
+    // 06:00+01:00 is the previous evening in Anchorage.
     const { dialog } = await openModal([
       alert({ effective: "2026-08-11T06:00:00+01:00", expires: "2026-08-11T21:00:00+01:00" }),
     ]);

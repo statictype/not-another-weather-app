@@ -36,7 +36,6 @@ describe("useUndo", () => {
     expect((restored as PendingRemoval<string> | null)?.items).toEqual(["a"]);
     expect(result.current.pending).toBeNull();
 
-    // Timer was cleared — advancing time should not trigger anything weird.
     act(() => {
       vi.advanceTimersByTime(10_000);
     });
@@ -51,8 +50,6 @@ describe("useUndo", () => {
 
     expect(result.current.pending?.items).toEqual(["second"]);
 
-    // Advance past the original's timeout but before the second's; the
-    // second should still be pending — proves the first timer was cleared.
     act(() => {
       vi.advanceTimersByTime(4999);
     });
