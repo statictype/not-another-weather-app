@@ -10,6 +10,7 @@ import { useReversibleHistory } from "@/hooks/use-reversible-history";
 import { setSearchParam, useSearchParam } from "@/hooks/use-search-param";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { useWeather } from "@/hooks/use-weather";
+import { cn } from "@/lib/utils";
 import { pickRandomCity } from "@/lib/random-cities";
 
 export function App() {
@@ -73,16 +74,13 @@ export function App() {
     void query.refetch();
   };
 
+  const isNight = query.data?.current.timeOfDay === "night";
+
   return (
     <div
-      className={`text-foreground relative min-h-screen overflow-x-hidden${
-        query.data?.current.timeOfDay === "night" ? " night" : ""
-      }`}
+      className={cn("text-foreground relative min-h-screen overflow-x-hidden", isNight && "night")}
     >
-      <div
-        className={`sky${query.data?.current.timeOfDay === "night" ? " night" : ""}`}
-        aria-hidden="true"
-      />
+      <div className={cn("sky", isNight && "night")} aria-hidden="true" />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
         <header className="relative z-30 mb-8 flex items-center gap-2 md:gap-6">
