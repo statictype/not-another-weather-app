@@ -76,7 +76,7 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         className={cn(
-          "swap-in swap-d-2 bento-tile group flex w-full flex-col justify-center p-6 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-12",
+          "swap-in swap-d-2 bento-tile group flex w-full flex-col justify-center p-6 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-4",
           tile,
         )}
       >

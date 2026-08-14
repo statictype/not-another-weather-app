@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { CurrentConditions, WeatherForecast, WeatherLocation } from "@/api/types";
-import { airComfort } from "@/lib/air-comfort";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
 import { PrecipStrip } from "./precip-strip";
@@ -21,19 +20,13 @@ const CLOCK = "font-light text-base md:text-lg";
 
 export function HeroCard({ location, current, today }: HeroCardProps) {
   const isDay = current.timeOfDay === "day";
-  const { sentence } = airComfort({
-    tempC: current.tempC,
-    feelsLikeC: current.feelsLikeC,
-    dewpointC: current.dewpointC,
-    humidity: current.humidity,
-  });
   const country = location.country;
   const now = useTicker();
 
   return (
     <section
       className={cn(
-        "swap-in swap-d-1 relative col-span-1 xl:order-1 overflow-hidden rounded-[2rem] p-7 text-white sm:col-span-12 sm:p-10 xl:col-span-8 xl:p-12",
+        "swap-in swap-d-1 relative col-span-1 xl:order-1 overflow-hidden rounded-[2rem] p-7 text-white sm:col-span-4 sm:p-10 xl:col-span-3 xl:p-12",
         isDay
           ? "bg-linear-to-tr from-blue-700 via-sky-800 to-sky-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_30px_60px_-25px_rgba(32,53,213,0.55)]"
           : "hero-night shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_30px_60px_-25px_rgba(8,8,24,0.85)]",
@@ -49,7 +42,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
       <div className="relative flex h-full flex-col">
         {/* Stacked below `sm`: side by side at 390 px the left column resolves
             to 117 px and the city name overflows it. */}
-        <div className="flex flex-col gap-7 sm:flex-row sm:items-start sm:justify-between sm:gap-10">
+        <div className="flex flex-1 flex-col gap-7 sm:flex-row sm:items-stretch sm:justify-between sm:gap-10">
           <div className="min-w-0">
             {country && <p className="label-section text-white leading-none">{country}</p>}
             <h2 className={cn(PEAK, "mt-1.5 text-balance md:mt-2")}>{location.name}</h2>
@@ -63,7 +56,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
             <PrecipStrip today={today} className="mt-4 md:mt-5" />
           </div>
 
-          <div className="flex min-w-0 shrink-0 flex-col items-end gap-2 text-right">
+          <div className="flex min-w-0 shrink-0 flex-col items-end gap-2 text-right sm:justify-end">
             <ConditionIcon
               text={current.conditionText}
               isDay={isDay}
@@ -74,8 +67,7 @@ export function HeroCard({ location, current, today }: HeroCardProps) {
               strokeWidth={1}
               aria-hidden="true"
             />
-            <p className={SPOKEN}>{current.conditionText}</p>
-            <p className={cn(SPOKEN, "text-balance")}>{sentence}</p>
+            <p className={cn(SPOKEN, "text-balance")}>{current.conditionText}</p>
           </div>
         </div>
       </div>

@@ -10,9 +10,9 @@ interface ExposureCardProps {
 
 export function ExposureCard({ uv, airQualityIndex, pressureMb, isDay }: ExposureCardProps) {
   return (
-    <section className="swap-in swap-d-6 bento-tile flex flex-col p-6 sm:col-span-12 xl:order-7 xl:col-span-6">
+    <section className="swap-in swap-d-6 bento-tile flex flex-col p-6 sm:col-span-4 xl:order-6 xl:col-span-3">
       <div className="flex flex-1 flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
-        <div className="flex flex-1 flex-col gap-4">
+        <div className="flex flex-1 flex-col gap-4 xl:contents">
           <MetricRow
             label="UV Index"
             value={isDay ? Math.round(uv) : null}
@@ -20,7 +20,7 @@ export function ExposureCard({ uv, airQualityIndex, pressureMb, isDay }: Exposur
             scale={isDay ? uvScale(uv) : null}
             dim={!isDay}
           />
-          <div className="h-px bg-foreground/8" />
+          <Rule />
           <MetricRow
             label="Air Quality"
             value={airQualityIndex}
@@ -29,6 +29,7 @@ export function ExposureCard({ uv, airQualityIndex, pressureMb, isDay }: Exposur
             dim={airQualityIndex == null}
           />
         </div>
+        <Rule className="hidden xl:block" />
         <PressureGauge pressureMb={pressureMb} />
       </div>
     </section>
@@ -38,6 +39,18 @@ export function ExposureCard({ uv, airQualityIndex, pressureMb, isDay }: Exposur
 interface Scale {
   pct: number;
   gradient: string;
+}
+
+function Rule({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "h-px w-full shrink-0 self-stretch bg-foreground/8 xl:h-auto xl:w-px",
+        className,
+      )}
+    />
+  );
 }
 
 function MetricRow({
@@ -54,7 +67,7 @@ function MetricRow({
   dim: boolean;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5", dim && "opacity-55")}>
+    <div className={cn("flex flex-col gap-1.5 xl:flex-1", dim && "opacity-55")}>
       <p className="label-section">{label}</p>
       <div className="flex items-baseline gap-2">
         <span className="text-3xl leading-[0.85] tracking-tight">{value ?? "—"}</span>
@@ -92,7 +105,7 @@ function PressureGauge({ pressureMb }: { pressureMb: number }) {
   const arcPath = `M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`;
 
   return (
-    <div className="relative flex shrink-0 flex-col items-center sm:w-[240px]">
+    <div className="relative flex w-full flex-col sm:w-[240px] sm:shrink-0 sm:self-center xl:w-auto xl:max-w-[260px] xl:flex-1">
       <p className="label-section">Pressure</p>
       <div className="relative mt-2 w-full">
         <svg viewBox="0 0 220 130" className="block w-full" aria-hidden="true">

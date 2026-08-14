@@ -91,7 +91,7 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
   };
 
   return (
-    <section className="swap-in swap-d-3 bento-tile flex flex-col p-6 sm:col-span-12 xl:order-3 xl:col-span-6">
+    <section className="swap-in swap-d-3 bento-tile flex flex-col p-6 sm:col-span-4 xl:order-3 xl:col-span-2">
       <div className="flex items-center justify-end gap-1">
         <StepButton dir={-1} disabled={!canLeft} onClick={() => step(-1)} />
         <StepButton dir={1} disabled={!canRight} onClick={() => step(1)} />

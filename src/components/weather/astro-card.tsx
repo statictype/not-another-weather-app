@@ -19,7 +19,7 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
   return (
     <section
       className={cn(
-        "swap-in swap-d-5 bento-tile relative overflow-hidden p-6 sm:col-span-6 xl:order-5 xl:col-span-3",
+        "swap-in swap-d-5 bento-tile relative overflow-hidden p-6 sm:col-span-4 lg:col-span-2 xl:order-5 xl:col-span-1",
         view === "sun" ? "tile-astro" : "tile-astro-moon",
       )}
     >
@@ -53,7 +53,7 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
         </div>
       </div>
 
-      <div key={`panel-${view}`} className="astro-fade relative mt-3">
+      <div key={`panel-${view}`} className="astro-fade relative mx-auto mt-3 w-full max-w-[400px]">
         {view === "sun" ? (
           <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} lat={lat} />
         ) : (

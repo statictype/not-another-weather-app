@@ -231,6 +231,17 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 .tile-wind  { background: linear-gradient(160deg, oklch(0.94 0.06 200 / 0.9), oklch(0.88 0.09 220 / 0.6)); }
+
+.tile-wind-sweep {
+  background-image: linear-gradient(
+    160deg,
+    oklch(0.96 0.07 196 / 0.95) 0%,
+    oklch(0.87 0.15 228 / 0.95) 50%,
+    oklch(0.93 0.09 202 / 0.92) 100%
+  );
+  background-size: 200% 200%;
+}
+
 .tile-astro {
   background:
     radial-gradient(60% 80% at 80% 100%, oklch(0.96 0.09 60 / 0.7), transparent 65%),
@@ -345,6 +356,14 @@ html, body { background: oklch(0.97 0.02 230); }
   background:
     linear-gradient(160deg, oklch(0.22 0.05 210 / 0.95), oklch(0.15 0.06 218 / 0.7));
   filter: grayscale(20%);
+}
+.night .tile-wind-sweep {
+  background-image: linear-gradient(
+    160deg,
+    oklch(0.17 0.05 210 / 0.95) 0%,
+    oklch(0.36 0.09 220 / 0.95) 50%,
+    oklch(0.20 0.06 212 / 0.95) 100%
+  );
 }
 .night .tile-astro {
   background:

@@ -28,7 +28,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
   const layout = LAYOUTS[days?.length ?? SKELETON_DAYS] ?? LAYOUTS[MAX_FUTURE_DAYS];
 
   return (
-    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center p-7 sm:col-span-12 xl:order-4 xl:col-span-6">
+    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center p-6 sm:col-span-4 lg:col-span-2 xl:order-4 xl:col-span-2">
       <div
         className={cn(
           "grid grid-cols-1 gap-4 sm:gap-0",
