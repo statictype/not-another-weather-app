@@ -555,6 +555,21 @@ html, body { background: oklch(0.97 0.02 230); }
   --hour-rule: color-mix(in oklab, var(--foreground) 10%, transparent);
   --hour-rule-col: color-mix(in oklab, var(--foreground) 6%, transparent);
   --hour-rule-break: color-mix(in oklab, var(--foreground) 22%, transparent);
+
+  /* An edge fades only while the table has content past it. At scroll 0 the
+     left fade is 0 and the right fade is one full column, so the last column's
+     label and three readings render at 0–100% mask alpha. That is the only
+     scroll cue on touch, where hover never fires. The left fade is 0.6 of a
+     column: it marks the cut without matching the right edge's weight. Both
+     are multiples of --hour-col-w, so the ratio holds at both breakpoints. */
+  --hour-fade-l-w: calc(var(--hour-col-w) * 0.6);
+  --hour-fade-r-w: var(--hour-col-w);
+  --hour-fade-l: 0px;
+  --hour-fade-r: 0px;
+
+  --hour-step-fill: oklch(1 0 0 / 0.86);
+  --hour-step-fill-hover: oklch(1 0 0 / 0.97);
+  --hour-step-rim: oklch(1 0 0 / 0.9);
 }
 
 @media (min-width: 640px) {
@@ -566,11 +581,16 @@ html, body { background: oklch(0.97 0.02 230); }
   --hour-rule: oklch(1 0 0 / 0.1);
   --hour-rule-col: oklch(1 0 0 / 0.06);
   --hour-rule-break: oklch(1 0 0 / 0.24);
+
+  --hour-step-fill: oklch(0.24 0.018 255 / 0.88);
+  --hour-step-fill-hover: oklch(0.3 0.02 255 / 0.96);
+  --hour-step-rim: oklch(1 0 0 / 0.14);
 }
 
 .hour-gutter {
   flex: none;
   width: var(--hour-gutter-w);
+  transition: opacity 0.18s ease;
 }
 .hour-gutter-head {
   height: var(--hour-head-h);
@@ -580,7 +600,6 @@ html, body { background: oklch(0.97 0.02 230); }
   align-items: center;
   justify-content: center;
   height: var(--hour-row-h);
-  border-top: 1px solid var(--hour-rule);
 }
 
 .hour-table {
@@ -655,6 +674,89 @@ html, body { background: oklch(0.97 0.02 230); }
     #000 calc(100% - var(--hour-fade-r, 0px)),
     transparent 100%
   );
+}
+.hour-fade[data-fade-l] {
+  --hour-fade-l: var(--hour-fade-l-w);
+}
+.hour-fade[data-fade-r] {
+  --hour-fade-r: var(--hour-fade-r-w);
+}
+
+/* Positioned over the edge it scrolls, inside the mask's fade zone. Hidden at
+   rest, so the table needs no control row above it: removing that row took the
+   tile from 259px to 215px. Revealed on hover and on focus-within; the
+   disabled direction stays at opacity 0, so the first and last scroll
+   positions show one arrow and every position between them shows two. */
+.hour-step {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  translate: 0 -50%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hour-step-rim);
+  border-radius: 999px;
+  background: var(--hour-step-fill);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: 0 8px 20px -8px oklch(0.3 0.12 240 / 0.28);
+  color: var(--foreground);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    background 0.18s ease;
+}
+/* The wrapper starts after the gutter, so the left button is pulled back
+   across it to sit the same distance from the tile edge as the right one. */
+.hour-step-l {
+  left: calc(var(--hour-gutter-w) * -1);
+}
+.hour-step-r {
+  right: 0;
+}
+
+@media (hover: hover) {
+  .hour-frame:hover .hour-step:not(:disabled) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+.hour-frame:focus-within .hour-step:not(:disabled) {
+  opacity: 1;
+  pointer-events: auto;
+}
+.hour-step:hover {
+  background: var(--hour-step-fill-hover);
+}
+.hour-step:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* The left button is pulled back over the 1.75rem gutter, so it lands on the
+   row icons. They yield to it under exactly the condition that reveals it —
+   the same :hover / :focus-within pair, gated on the same :not(:disabled) — so
+   the two states cannot drift apart. At scroll 0 the left button stays hidden
+   and the icons stay up. Opacity, not display: the gutter holds its 1.75rem
+   either way, so the table never shifts. */
+@media (hover: hover) {
+  .hour-frame:hover:has(.hour-step-l:not(:disabled)) .hour-gutter {
+    opacity: 0;
+  }
+}
+.hour-frame:focus-within:has(.hour-step-l:not(:disabled)) .hour-gutter {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hour-step,
+  .hour-gutter {
+    transition: none;
+  }
 }
 
 .scrollbar-none {

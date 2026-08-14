@@ -91,13 +91,8 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
   };
 
   return (
-    <section className="swap-in swap-d-3 bento-tile flex flex-col p-6 sm:col-span-4 xl:order-3 xl:col-span-2">
-      <div className="flex items-center justify-end gap-1">
-        <StepButton dir={-1} disabled={!canLeft} onClick={() => step(-1)} />
-        <StepButton dir={1} disabled={!canRight} onClick={() => step(1)} />
-      </div>
-
-      <div className="hour-frame mt-2 flex">
+    <section className="swap-in swap-d-3 bento-tile p-6 sm:col-span-4 xl:order-3 xl:col-span-2">
+      <div className="hour-frame flex">
         <div className="hour-gutter" aria-hidden="true">
           <div className="hour-gutter-head" />
           {ROWS.map((row) => {
@@ -110,17 +105,20 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
           })}
         </div>
 
-        <div
-          ref={ref}
-          className="hour-fade scrollbar-none min-w-0 flex-1 overflow-x-auto"
-          style={
-            {
-              "--hour-fade-l": canLeft ? "1.5rem" : "0px",
-              "--hour-fade-r": canRight ? "2rem" : "0px",
-            } as CSSProperties
-          }
-        >
-          {slots ? <HourTable slots={slots} /> : <HourTableSkeleton />}
+        {/* The step buttons overlay the two edges they operate on, so the
+            table costs no vertical space for its own controls. */}
+        <div className="relative min-w-0 flex-1">
+          <div
+            ref={ref}
+            className="hour-fade scrollbar-none overflow-x-auto"
+            data-fade-l={canLeft ? "" : undefined}
+            data-fade-r={canRight ? "" : undefined}
+          >
+            {slots ? <HourTable slots={slots} /> : <HourTableSkeleton />}
+          </div>
+
+          <StepButton dir={-1} disabled={!canLeft} onClick={() => step(-1)} />
+          <StepButton dir={1} disabled={!canRight} onClick={() => step(1)} />
         </div>
       </div>
     </section>
@@ -211,7 +209,7 @@ function StepButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={dir === -1 ? "Scroll to earlier hours" : "Scroll to later hours"}
-      className="flex size-9 items-center justify-center rounded-full text-foreground/55 transition-colors hover:bg-foreground/5 hover:text-foreground disabled:pointer-events-none disabled:text-foreground/25"
+      className={cn("hour-step", dir === -1 ? "hour-step-l" : "hour-step-r")}
     >
       <Icon className="size-[18px]" strokeWidth={2} aria-hidden="true" />
     </button>
