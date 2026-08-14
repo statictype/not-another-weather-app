@@ -229,14 +229,31 @@ html, body { background: oklch(0.97 0.02 230); }
 
 .tile-wind  { background: linear-gradient(160deg, oklch(0.94 0.06 200 / 0.9), oklch(0.88 0.09 220 / 0.6)); }
 
+/* Hover field for .tile-wind: the tile's own two stops, deepened. Two
+   monotonic stops only — the previous three ran 196° → 228° → 202°, and the
+   hue reversal at the midpoint drew a visible crease across the tile.
+   (Lightning CSS lowers `in oklab` to sRGB stops; at this delta the two
+   interpolations are indistinguishable.) */
 .tile-wind-sweep {
   background-image: linear-gradient(
-    160deg,
-    oklch(0.96 0.07 196 / 0.95) 0%,
-    oklch(0.87 0.15 228 / 0.95) 50%,
-    oklch(0.93 0.09 202 / 0.92) 100%
+    160deg in oklab,
+    oklch(0.925 0.075 202 / 0.92),
+    oklch(0.86 0.105 222 / 0.66)
   );
-  background-size: 200% 200%;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+.tile-wind:hover .tile-wind-sweep,
+.tile-wind:focus-visible .tile-wind-sweep {
+  opacity: 1;
+  transition-duration: 260ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-wind-sweep,
+  .tile-wind:hover .tile-wind-sweep,
+  .tile-wind:focus-visible .tile-wind-sweep {
+    transition: none;
+  }
 }
 
 .tile-astro {
@@ -253,68 +270,89 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 
-.tile-alert-fill {
-  background: var(--alert-fill);
-  border-color: oklch(1 0 0 / 0.14);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.25) inset,
-    0 12px 30px -18px oklch(0.4 0.15 240 / 0.25);
-  transition: background 0.2s ease;
+/* One neutral plate at every severity. The severity ramp is carried by the
+   icon and the count disc, not by the tile's field — so the plate is the same
+   slate at `extreme` as at `minor`, and only the marks on it change. */
+.tile-alert {
+  background: linear-gradient(160deg in oklab, var(--alert-plate-near), var(--alert-plate-far));
 }
-
-.tile-alert-fill:hover {
-  background: var(--alert-ink);
+.tile-alert-sweep {
+  background-image: linear-gradient(
+    160deg in oklab,
+    var(--alert-plate-near-lit),
+    var(--alert-plate-far-lit)
+  );
+  opacity: 0;
+  transition: opacity 150ms ease-out;
 }
-
-.tile-alert-tint {
-  background: linear-gradient(160deg, var(--alert-tile-near), var(--alert-tile-far));
-  border-color: var(--alert-rim);
-  transition: border-color 0.2s ease;
+.tile-alert:hover .tile-alert-sweep,
+.tile-alert:focus-visible .tile-alert-sweep {
+  opacity: 1;
+  transition-duration: 260ms;
 }
-.tile-alert-tint:hover {
-  border-color: var(--alert-rim-strong);
-}
-
-.tile-alert-plain {
-  border-color: color-mix(in oklab, var(--foreground) 14%, transparent);
-  transition: border-color 0.2s ease;
-}
-.tile-alert-plain:hover {
-  border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
+@media (prefers-reduced-motion: reduce) {
+  .tile-alert-sweep,
+  .tile-alert:hover .tile-alert-sweep,
+  .tile-alert:focus-visible .tile-alert-sweep {
+    transition: none;
+  }
 }
 
 /* Moon dark-side fill, per mode. */
 :root  { --moon-dark: oklch(0.36 0.05 265); }
 .night { --moon-dark: oklch(0.08 0.005 250); }
 
-/* Alert ramp. Contrast against the composited tile grounds, small text:
- *   day    fill/ink 5.20:1 · severe 5.86:1 · moderate 5.38:1
- *   night  fill/ink 6.71:1 · severe 8.84:1 · moderate 8.58:1
- * axe skips nodes behind backdrop-filter, so regressions here are invisible
- * to Lighthouse. */
+/* Severity ramp. Three hues, not three intensities of one: deep crimson at
+ * `extreme`, red at `severe`, orange at `moderate`. `-on` is the ink that
+ * reads on a surface filled with the color — near-white over the two reds,
+ * near-black over the orange, which is too light to carry white text at the
+ * lightness the hue needs to still read as orange.
+ *
+ * Measured against the composited plate (near stop, where the tile icon
+ * sits) and inside a filled badge:
+ *   day    icon 6.06 / 4.55 / 2.23:1 · badge ink 6.50 / 4.88 / 7.36:1
+ *   night  icon 4.86 / 6.22 / 9.14:1 · badge ink 5.70 / 7.30 / 10.40:1
+ * Badge text is small (4.5:1 floor) and clears it everywhere. The day
+ * `moderate` icon is 2.23:1, under the 3:1 graphic floor — a deliberate
+ * choice for a vivid orange. The severity is also spoken in the card's
+ * screen-reader text and printed as a word on the modal chip, so the hue is
+ * not the only carrier. axe skips nodes behind backdrop-filter, so
+ * regressions here are invisible to Lighthouse.
+ *
+ * The plate is the same slate at every severity, a step off the plain tile
+ * rather than a color of its own — the alert card is a control, and the step
+ * is what says so. `-lit` are the hover stops. */
 :root {
-  --alert-fill: oklch(0.55 0.21 27);
-  --alert-fill-ink: oklch(0.99 0.01 40);
-  --alert-ink: oklch(0.52 0.20 27);
-  --alert-ink-muted: oklch(0.53 0.13 35);
-  --alert-wash: oklch(0.55 0.21 27 / 0.09);
-  --alert-rim: oklch(0.55 0.21 27 / 0.22);
-  --alert-rim-strong: oklch(0.55 0.21 27 / 0.45);
-  /* Tile-scale stops; --alert-ink clears AA over both: 5.13:1 near, 4.95:1 far. */
-  --alert-tile-near: oklch(0.96 0.055 30 / 0.92);
-  --alert-tile-far: oklch(0.935 0.085 30 / 0.62);
+  --sev-extreme: oklch(0.485 0.215 22);
+  --sev-extreme-on: oklch(0.99 0.012 60);
+  --sev-severe: oklch(0.565 0.215 32);
+  --sev-severe-on: oklch(0.99 0.012 60);
+  --sev-moderate: oklch(0.734 0.179 56);
+  --sev-moderate-on: oklch(0.18 0.040 50);
+
+  --alert-plate-near: oklch(0.975 0.010 250 / 0.92);
+  --alert-plate-far: oklch(0.905 0.030 248 / 0.55);
+  --alert-plate-near-lit: oklch(0.955 0.014 250 / 0.94);
+  --alert-plate-far-lit: oklch(0.878 0.034 248 / 0.62);
+  /* Opaque match for the plate's near stop, where the icon sits. Strokes the
+     icon so the interior glyph knocks out of the solid silhouette without
+     drawing a ring around it. */
+  --alert-plate-solid: oklch(0.9635 0.0137 248);
 }
 .night {
-  --alert-fill: oklch(0.70 0.19 28);
-  --alert-fill-ink: oklch(0.16 0.03 30);
-  --alert-ink: oklch(0.80 0.16 32);
-  --alert-ink-muted: oklch(0.76 0.10 35);
-  --alert-wash: oklch(0.70 0.19 28 / 0.14);
-  --alert-rim: oklch(0.70 0.19 28 / 0.30);
-  --alert-rim-strong: oklch(0.70 0.19 28 / 0.50);
-  /* 7.81:1 near, 9.12:1 far against --alert-ink. */
-  --alert-tile-near: oklch(0.24 0.06 28 / 0.95);
-  --alert-tile-far: oklch(0.16 0.05 30 / 0.70);
+  --sev-extreme: oklch(0.660 0.200 22);
+  --sev-extreme-on: oklch(0.16 0.030 30);
+  --sev-severe: oklch(0.730 0.185 34);
+  --sev-severe-on: oklch(0.16 0.030 30);
+  --sev-moderate: oklch(0.820 0.150 68);
+  --sev-moderate-on: oklch(0.18 0.040 50);
+
+  /* Night lifts on hover instead of deepening, as .tile-wind does. */
+  --alert-plate-near: oklch(0.245 0.014 252 / 0.92);
+  --alert-plate-far: oklch(0.165 0.020 258 / 0.60);
+  --alert-plate-near-lit: oklch(0.285 0.016 252 / 0.94);
+  --alert-plate-far-lit: oklch(0.198 0.022 258 / 0.66);
+  --alert-plate-solid: oklch(0.236 0.0146 248);
 }
 
 /* Night overrides, scoped under .night (set on the App root). */
@@ -354,12 +392,12 @@ html, body { background: oklch(0.97 0.02 230); }
     linear-gradient(160deg, oklch(0.22 0.05 210 / 0.95), oklch(0.15 0.06 218 / 0.7));
   filter: grayscale(20%);
 }
+/* Night lifts instead of deepening: +0.04 lightness on the same two stops. */
 .night .tile-wind-sweep {
   background-image: linear-gradient(
-    160deg,
-    oklch(0.17 0.05 210 / 0.95) 0%,
-    oklch(0.36 0.09 220 / 0.95) 50%,
-    oklch(0.20 0.06 212 / 0.95) 100%
+    160deg in oklab,
+    oklch(0.26 0.055 210 / 0.95),
+    oklch(0.19 0.07 218 / 0.78)
   );
 }
 .night .tile-astro {
@@ -368,29 +406,8 @@ html, body { background: oklch(0.97 0.02 230); }
     linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
 
-.night .tile-alert-fill {
-  background: var(--alert-fill);
-  border-color: oklch(1 0 0 / 0.1);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.12) inset,
-    0 12px 30px -18px oklch(0 0 0 / 0.6);
-}
-.night .tile-alert-fill:hover {
-  background: var(--alert-ink);
-}
-.night .tile-alert-tint {
-  background: linear-gradient(160deg, var(--alert-tile-near), var(--alert-tile-far));
-  border-color: var(--alert-rim);
-}
-.night .tile-alert-tint:hover {
-  border-color: var(--alert-rim-strong);
-}
-.night .tile-alert-plain {
-  border-color: color-mix(in oklab, var(--foreground) 14%, transparent);
-}
-.night .tile-alert-plain:hover {
-  border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
-}
+/* .tile-alert reads its stops from tokens, so the night plate is the .night
+   token block above — no night rule of its own. */
 
 /* One light source at the lower-right corner, falling away to deep navy at the
    upper left. Two blooms only — earlier revisions used four or five, and the
@@ -791,10 +808,219 @@ html, body { background: oklch(0.97 0.02 230); }
   background: oklch(1 0 0 / 0.12);
 }
 
+/* ---------------------------------------------------------------------------
+   Dialogs
+
+   Three dialogs share this chrome: the Now readings panel, the alerts panel,
+   and the clear-history confirmation. All three portal onto <body>, outside
+   the app root, so the night cascade reaches them from <html> — App.tsx
+   mirrors the class there.
+
+   The vendored primitives set `bg-black/50`, `rounded-lg`, and their position
+   utilities on the same elements these rules target. Every rule below is
+   unlayered, so it wins over a utility whatever the source order — the
+   mechanic `.bento-tile` already uses.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --dialog-close-fill: oklch(1 0 0 / 0.42);
+  --dialog-close-fill-hover: oklch(1 0 0 / 0.62);
+  --dialog-close-rim: oklch(1 0 0 / 0.7);
+  --dialog-close-sheen: oklch(1 0 0 / 0.6);
+  --dialog-grabber: color-mix(in oklab, var(--foreground) 20%, transparent);
+}
+.night {
+  --dialog-close-fill: oklch(1 0 0 / 0.06);
+  --dialog-close-fill-hover: oklch(1 0 0 / 0.12);
+  --dialog-close-rim: oklch(1 0 0 / 0.12);
+  --dialog-close-sheen: oklch(1 0 0 / 0.05);
+  --dialog-grabber: oklch(1 0 0 / 0.22);
+}
+
+/* Scrim. The sky behind a dialog is the product's subject, so it goes out of
+   focus rather than under a black slab: an ink at the palette's own hue plus a
+   blur. `bg-black/50` flattened both cascades — it drained the day sky to grey
+   and closed the night page to near-black, leaving the panel with nothing to
+   sit against. */
+[data-slot="dialog-overlay"],
+[data-slot="alert-dialog-overlay"] {
+  background: oklch(0.34 0.055 250 / 0.34);
+  backdrop-filter: blur(6px) saturate(105%);
+  -webkit-backdrop-filter: blur(6px) saturate(105%);
+}
+.night [data-slot="dialog-overlay"],
+.night [data-slot="alert-dialog-overlay"] {
+  background: oklch(0.09 0.02 255 / 0.58);
+}
+
+/* One authored moment: the room drops back as the pane comes forward. Nothing
+   here existed before — the primitives carry `animate-in` / `zoom-in-95`
+   classes from a plugin this project does not install, so all three dialogs
+   appeared with no transition at all. */
+@keyframes dialog-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes dialog-scrim-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+/* The primitives centre with Tailwind v4's `translate-x/y` utilities, which
+   write the `translate` property — so these keyframes own `transform` alone and
+   never restate the centring. */
+@keyframes dialog-panel-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes dialog-panel-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(8px) scale(0.99); }
+}
+@keyframes dialog-sheet-in {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes dialog-sheet-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(100%); }
+}
+
+[data-slot="dialog-overlay"][data-state="open"],
+[data-slot="alert-dialog-overlay"][data-state="open"] {
+  animation: dialog-scrim-in 0.26s ease-out both;
+}
+[data-slot="dialog-overlay"][data-state="closed"],
+[data-slot="alert-dialog-overlay"][data-state="closed"] {
+  animation: dialog-scrim-out 0.18s ease-in both;
+}
+
+/* Exponential ease-out from an already-composed position. */
+.dialog-panel[data-state="open"] {
+  animation: dialog-panel-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dialog-panel[data-state="closed"] {
+  animation: dialog-panel-out 0.18s ease-in both;
+}
+
+/* The close control. The vendored button is a bare 16px glyph at 70% opacity
+   with a `focus:` (not `focus-visible:`) ring — and Radix focuses it on open,
+   so every mouse user saw the ring. It becomes a 36px pane in the system's own
+   rim language, and the ring returns only for keyboard focus. */
+[data-slot="dialog-content"] > [data-slot="dialog-close"] {
+  /* Optically aligned, not box-aligned: the 16px glyph sits on the header's own
+     24px text inset, so the 36px pane overhangs it by 10px on each side. */
+  top: 1.125rem;
+  right: 0.875rem;
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dialog-close-rim);
+  border-radius: 1rem;
+  background: var(--dialog-close-fill);
+  box-shadow: 0 1px 0 0 var(--dialog-close-sheen) inset;
+  color: color-mix(in oklab, var(--foreground) 70%, transparent);
+  opacity: 1;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+[data-slot="dialog-content"] > [data-slot="dialog-close"]:hover {
+  background: var(--dialog-close-fill-hover);
+  color: var(--foreground);
+}
+[data-slot="dialog-content"] > [data-slot="dialog-close"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* The scrolling body. Same edge-fade idiom as `.hour-fade`: the mask reads a
+   data attribute the component sets only while content sits past the edge, so
+   a panel that fits shows no fade and a panel that overflows never slices a
+   line of text against the rounded corner. */
+.dialog-scroll {
+  --dialog-fade-b: 0px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--dialog-fade-b)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--dialog-fade-b)),
+    transparent 100%
+  );
+}
+.dialog-scroll[data-fade-b] {
+  --dialog-fade-b: 2.75rem;
+}
+
+/* Below `sm` the two content dialogs are sheets, not centred cards: they take
+   the bottom edge, keep the panel radius on the top corners only, and put a
+   long alert under the thumb instead of floating it between two margins. The
+   search overlay already speaks this language on the same breakpoint. */
+@media (width < 40rem) {
+  .dialog-sheet {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(88svh, 100svh - 3rem);
+    translate: none;
+    transform: none;
+    border-radius: 2.25rem 2.25rem 0 0;
+  }
+  .dialog-sheet::before {
+    content: "";
+    position: absolute;
+    top: 0.75rem;
+    left: 50%;
+    z-index: 1;
+    height: 0.25rem;
+    width: 2.5rem;
+    translate: -50% 0;
+    border-radius: 999px;
+    background: var(--dialog-grabber);
+  }
+  .dialog-sheet [data-slot="dialog-header"] {
+    padding-top: 2rem;
+  }
+  .dialog-sheet > [data-slot="dialog-close"] {
+    top: 1.625rem;
+  }
+  .dialog-sheet .dialog-scroll {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  .dialog-sheet[data-state="open"] {
+    animation-name: dialog-sheet-in;
+    animation-duration: 0.4s;
+  }
+  .dialog-sheet[data-state="closed"] {
+    animation-name: dialog-sheet-out;
+    animation-duration: 0.22s;
+  }
+}
+
+@media (width >= 40rem) {
+  [data-slot="dialog-content"] > [data-slot="dialog-close"] {
+    top: 1.625rem;
+    right: 1.375rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-slot="dialog-overlay"],
   [data-slot="dialog-content"],
+  [data-slot="alert-dialog-overlay"],
+  [data-slot="alert-dialog-content"],
   .animate-pulse {
     animation: none !important;
+  }
+  [data-slot="dialog-content"] > [data-slot="dialog-close"] {
+    transition: none;
   }
 }

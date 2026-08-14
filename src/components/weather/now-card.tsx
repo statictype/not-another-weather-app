@@ -10,8 +10,8 @@ import {
   WindIcon,
   type LucideIcon,
 } from "lucide-react";
-import { motion, useReducedMotion, type Variants } from "motion/react";
 import type { CurrentConditions } from "@/api/types";
+import { DialogScroll } from "@/components/dialog-scroll";
 import {
   Dialog,
   DialogContent,
@@ -67,27 +67,15 @@ interface NowCardProps {
 
 export function NowCard({ current }: NowCardProps) {
   const [open, setOpen] = useState(false);
-  const reduced = useReducedMotion();
   const { sentence } = airComfort(current);
   const readings = readingsOf(current);
   const face = readings.filter((r) => FACE.has(r.key));
 
-  const sweep: Variants = reduced
-    ? { rest: { opacity: 0 }, lit: { opacity: 1 } }
-    : {
-        rest: { opacity: 0, backgroundPosition: "0% 0%" },
-        lit: { opacity: 1, backgroundPosition: "100% 100%" },
-      };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <motion.button
+        <button
           type="button"
-          initial="rest"
-          animate="rest"
-          whileHover="lit"
-          whileFocus="lit"
           className={cn(
             "swap-in swap-d-2 bento-tile tile-wind group relative w-full overflow-hidden p-6 text-left",
             "flex flex-col justify-center gap-5",
@@ -95,11 +83,9 @@ export function NowCard({ current }: NowCardProps) {
             "sm:col-span-4 xl:flex-1",
           )}
         >
-          <motion.span
+          <span
             aria-hidden="true"
             className="tile-wind-sweep pointer-events-none absolute inset-0"
-            variants={sweep}
-            transition={reduced ? { duration: 0.2 } : { duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
           />
 
           <span className="relative flex items-center justify-between gap-3">
@@ -112,13 +98,7 @@ export function NowCard({ current }: NowCardProps) {
           </span>
 
           <span className="relative flex flex-col gap-5 md:flex-row md:items-center md:gap-10 xl:flex-col xl:items-stretch xl:gap-5">
-            <span
-              className={cn(
-                "block text-lg leading-tight font-light tracking-tight text-balance",
-                "underline-offset-4 decoration-1 group-hover:underline",
-                "sm:text-xl md:flex-1",
-              )}
-            >
+            <span className="block text-lg leading-tight font-light tracking-tight text-balance sm:text-xl md:flex-1">
               {sentence}
             </span>
 
@@ -130,7 +110,7 @@ export function NowCard({ current }: NowCardProps) {
           </span>
 
           <span className="sr-only">Show all current readings</span>
-        </motion.button>
+        </button>
       </DialogTrigger>
 
       <NowDialog sentence={sentence} readings={readings} isNight={current.timeOfDay === "night"} />
@@ -163,12 +143,14 @@ function NowDialog({
   return (
     <DialogContent
       className={cn(
-        "glass-panel grid max-h-[85svh] grid-rows-[auto_minmax(0,1fr)] gap-0 rounded-[2.25rem]",
-        "border-0 p-0 text-foreground sm:max-w-md",
+        "glass-panel dialog-panel dialog-sheet grid max-h-[85svh] grid-rows-[auto_minmax(0,1fr)]",
+        "gap-0 rounded-[2.25rem] border-0 p-0 text-foreground sm:max-w-md",
         isNight && "night",
       )}
     >
-      <DialogHeader className="px-6 pt-6 pb-4 text-left sm:px-8 sm:pt-8">
+      {/* The title clears the close control's 36px pane rather than running
+          under it, and the rule is what the rows scroll beneath. */}
+      <DialogHeader className="border-b border-foreground/10 px-6 pt-6 pe-16 pb-5 text-left sm:px-8 sm:pt-8 sm:pe-20">
         <DialogTitle className="text-xl font-light tracking-tight text-balance">
           {sentence}
         </DialogTitle>
@@ -177,7 +159,7 @@ function NowDialog({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="min-h-0 overflow-y-auto px-6 pb-6 sm:px-8 sm:pb-8">
+      <DialogScroll className="px-6 pt-2 pb-6 sm:px-8 sm:pb-8">
         <dl className="divide-y divide-foreground/10">
           {readings.map(({ key, icon: Icon, label, value }) => (
             <div key={key} className="flex items-center justify-between gap-4 py-3.5">
@@ -189,11 +171,11 @@ function NowDialog({
                 />
                 <span className="label-sub">{label}</span>
               </dt>
-              <dd className="text-right text-base tracking-tight">{value}</dd>
+              <dd className="text-right text-base tracking-tight tabular-nums">{value}</dd>
             </div>
           ))}
         </dl>
-      </div>
+      </DialogScroll>
     </DialogContent>
   );
 }

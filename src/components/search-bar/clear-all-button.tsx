@@ -30,16 +30,28 @@ export function ClearAllButton({ onConfirm, open, onOpenChange }: ClearAllButton
           Clear
         </button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Clear all recent searches?</AlertDialogTitle>
-          <AlertDialogDescription>
+      {/* The panel is the same glass as the two content dialogs, at the same
+          2.25rem radius. `signal-red` is licensed for destructive confirmation,
+          so the committing button takes it — the vendored default put the
+          product's interactive blue on "delete everything". */}
+      <AlertDialogContent className="glass-panel dialog-panel gap-5 rounded-[2.25rem] border-0 p-6 text-foreground data-[size=default]:sm:max-w-md sm:p-8">
+        <AlertDialogHeader className="gap-2 place-items-start text-left">
+          <AlertDialogTitle className="text-xl font-light tracking-tight">
+            Clear all recent searches?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm leading-relaxed text-foreground/70">
             This removes every entry from your history. You'll be able to undo for a few seconds.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Clear all</AlertDialogAction>
+        <AlertDialogFooter className="gap-2">
+          {/* Ghost plus a rim. The `outline` variant fills with `bg-background`,
+              which is opaque and would sit as a solid chip on the glass. */}
+          <AlertDialogCancel variant="ghost" className="border border-foreground/15">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onConfirm}>
+            Clear all
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

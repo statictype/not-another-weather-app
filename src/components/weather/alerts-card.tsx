@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { InfoIcon, OctagonAlertIcon, TriangleAlertIcon, type LucideIcon } from "lucide-react";
 import type { AlertSeverity, WeatherAlert } from "@/api/types";
+import { DialogScroll } from "@/components/dialog-scroll";
 import {
   Dialog,
   DialogContent,
@@ -12,47 +13,50 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * `tile` classes live in `index.css`, not as utilities: `.bento-tile` sets
- * `background` and `border` unlayered, which a utility cannot override.
+ * The tile is one neutral plate at every severity (`.tile-alert`, declared in
+ * `index.css` because `.bento-tile` sets `background` and `border` unlayered,
+ * which a utility cannot override). Severity reaches the card through two
+ * marks on that plate:
+ *
+ * - `mark` colors the icon. On the card the icon is drawn solid and stroked
+ *   with the plate's own color, so the interior glyph knocks out of the
+ *   silhouette and no ring is drawn around it. In the modal it stays a line
+ *   icon — at 16px a knocked-out glyph is too small to read.
+ * - `badge` fills the "+N more alerts" disc, and the modal's severity chip.
  */
 const SEVERITY: Record<
   AlertSeverity,
-  { icon: LucideIcon; word: string | null; tile: string; chip: string; modalIcon: string }
+  { icon: LucideIcon; word: string | null; mark: string; badge: string }
 > = {
   extreme: {
     icon: OctagonAlertIcon,
     word: "Extreme",
-    tile: "tile-alert-fill text-[var(--alert-fill-ink)]",
-    chip: "bg-[var(--alert-fill)] text-[var(--alert-fill-ink)]",
-    modalIcon: "text-[var(--alert-ink)]",
+    mark: "text-[var(--sev-extreme)]",
+    badge: "bg-[var(--sev-extreme)] text-[var(--sev-extreme-on)]",
   },
   severe: {
     icon: TriangleAlertIcon,
     word: "Severe",
-    tile: "tile-alert-tint text-[var(--alert-ink)]",
-    chip: "bg-[var(--alert-wash)] text-[var(--alert-ink)]",
-    modalIcon: "text-[var(--alert-ink)]",
+    mark: "text-[var(--sev-severe)]",
+    badge: "bg-[var(--sev-severe)] text-[var(--sev-severe-on)]",
   },
   moderate: {
     icon: TriangleAlertIcon,
     word: "Moderate",
-    tile: "tile-alert-plain text-[var(--alert-ink-muted)]",
-    chip: "bg-[var(--alert-wash)] text-[var(--alert-ink-muted)]",
-    modalIcon: "text-[var(--alert-ink-muted)]",
+    mark: "text-[var(--sev-moderate)]",
+    badge: "bg-[var(--sev-moderate)] text-[var(--sev-moderate-on)]",
   },
   minor: {
     icon: InfoIcon,
     word: "Minor",
-    tile: "tile-alert-plain text-foreground/70",
-    chip: "bg-foreground/8 text-foreground/70",
-    modalIcon: "text-foreground/70",
+    mark: "text-foreground/70",
+    badge: "bg-foreground/70 text-background",
   },
   unknown: {
     icon: InfoIcon,
     word: null,
-    tile: "tile-alert-plain text-foreground/70",
-    chip: "bg-foreground/8 text-foreground/70",
-    modalIcon: "text-foreground/70",
+    mark: "text-foreground/70",
+    badge: "bg-foreground/70 text-background",
   },
 };
 
@@ -68,29 +72,42 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
   const top = alerts?.[0];
   if (!alerts || !top) return null;
 
-  const { icon: Icon, word, tile } = SEVERITY[top.severity];
+  const { icon: Icon, word, mark, badge } = SEVERITY[top.severity];
   const extra = alerts.length - 1;
   const until = formatUntil(top.expires, tz);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        className={cn(
-          "swap-in swap-d-2 bento-tile group flex w-full flex-col justify-center p-6 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-4",
-          tile,
-        )}
-      >
-        <span className="flex w-full items-start gap-3.5">
-          <Icon className="mt-0.5 size-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+      <DialogTrigger className="swap-in swap-d-2 bento-tile tile-alert relative flex w-full flex-col justify-center overflow-hidden p-6 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-4">
+        <span
+          aria-hidden="true"
+          className="tile-alert-sweep pointer-events-none absolute inset-0"
+        />
+
+        <span className="relative flex w-full items-start gap-3.5">
+          <Icon
+            className={cn("mt-0.5 size-6 shrink-0", mark)}
+            fill="currentColor"
+            stroke="var(--alert-plate-solid)"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
           <span className="min-w-0 flex-1">
-            <span className="line-clamp-2 text-lg leading-snug font-light tracking-tight underline-offset-4 decoration-1 group-hover:underline xl:text-xl">
+            <span className="line-clamp-2 text-lg leading-snug font-light tracking-tight xl:text-xl">
               {top.event}
             </span>
-            {/* Steps down by size, not alpha: over `--alert-fill`, fading drops below AA. */}
+            {/* Steps down by size, not alpha — see The Step-Down Rule. */}
             {until && <span className="mt-1.5 block text-sm tracking-tight">{until}</span>}
           </span>
           {extra > 0 && (
-            <span className="mt-0.5 shrink-0 text-sm tabular-nums" aria-hidden="true">
+            <span
+              className={cn(
+                "mt-1 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1",
+                "text-[0.625rem] tabular-nums",
+                badge,
+              )}
+              aria-hidden="true"
+            >
               +{extra}
             </span>
           )}
@@ -114,12 +131,12 @@ function AlertsDialog({
   return (
     <DialogContent
       className={cn(
-        "glass-panel grid max-h-[85svh] grid-rows-[auto_minmax(0,1fr)] gap-0 rounded-[2.25rem]",
-        "border-0 p-0 text-foreground sm:max-w-xl",
+        "glass-panel dialog-panel dialog-sheet grid max-h-[85svh] grid-rows-[auto_minmax(0,1fr)]",
+        "gap-0 rounded-[2.25rem] border-0 p-0 text-foreground sm:max-w-xl",
         isNight && "night",
       )}
     >
-      <DialogHeader className="px-6 pt-6 pb-4 text-left sm:px-8 sm:pt-8">
+      <DialogHeader className="border-b border-foreground/10 px-6 pt-6 pe-16 pb-5 text-left sm:px-8 sm:pt-8 sm:pe-20">
         <DialogTitle className="text-xl font-light tracking-tight">
           {alerts.length === 1 ? "Weather alert" : "Weather alerts"}
         </DialogTitle>
@@ -130,53 +147,58 @@ function AlertsDialog({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="min-h-0 overflow-y-auto px-6 pb-6 sm:px-8 sm:pb-8">
+      <DialogScroll className="px-6 pb-6 sm:px-8 sm:pb-8">
         <div className="divide-y divide-foreground/10">
           {alerts.map((alert, i) => (
             <AlertEntry key={`${alert.event}-${alert.effective}-${i}`} alert={alert} tz={tz} />
           ))}
         </div>
-      </div>
+      </DialogScroll>
     </DialogContent>
   );
 }
 
 function AlertEntry({ alert, tz }: { alert: WeatherAlert; tz: string }) {
-  const { icon: Icon, word, chip, modalIcon } = SEVERITY[alert.severity];
+  const { icon: Icon, word, mark, badge } = SEVERITY[alert.severity];
   const range = formatRange(alert.effective, alert.expires, tz);
 
   return (
-    <article className="py-5 first:pt-0 last:pb-0">
+    /* Tight inside an entry, generous between them: 6–16px internal steps
+       against a 44px gap and a rule at the seam. The severity word and the
+       window share one line — stacked, the chip sat alone on a line of its own
+       and every entry read as four evenly-spaced rows. */
+    <article className="py-5.5 first:pt-5 last:pb-1">
       <div className="flex items-start gap-2.5">
-        <Icon
-          className={cn("mt-1 size-4 shrink-0", modalIcon)}
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
+        <Icon className={cn("mt-1 size-4 shrink-0", mark)} strokeWidth={1.75} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <h3 className="text-base leading-snug tracking-tight text-balance">
             {alert.event || alert.headline || "Weather alert"}
           </h3>
-          {word && (
-            <span className={cn("mt-1.5 inline-block rounded-[0.75rem] px-2 py-0.5 text-xs", chip)}>
-              {word}
-            </span>
-          )}
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+            {word && (
+              <span className={cn("inline-block rounded-[0.75rem] px-2 py-0.5 text-xs", badge)}>
+                {word}
+              </span>
+            )}
+            {range && <span className="text-sm text-foreground/70">{range}</span>}
+          </div>
+
+          {alert.areas && <p className="mt-1.5 text-sm text-foreground/70">{alert.areas}</p>}
         </div>
       </div>
 
-      <div className="mt-3 space-y-1 pl-6.5">
-        {range && <p className="text-sm text-foreground/70">{range}</p>}
-        {alert.areas && <p className="text-sm text-foreground/70">{alert.areas}</p>}
-      </div>
-
       {alert.desc && (
-        <p className="mt-3 pl-6.5 text-sm leading-relaxed whitespace-pre-line">{alert.desc}</p>
+        <p className="mt-4 pl-6.5 text-sm leading-relaxed whitespace-pre-line">{alert.desc}</p>
       )}
+      {/* A 2rem mark, not a full-width rule: at the same width and weight as
+          the divider between entries, the "what to do" break read as a seam and
+          every panel looked like a stack of equal rules. */}
       {alert.instruction && (
-        <p className="mt-3 ml-6.5 border-t border-foreground/10 pt-3 text-sm leading-relaxed whitespace-pre-line">
-          {alert.instruction}
-        </p>
+        <div className="mt-4 ml-6.5">
+          <span aria-hidden="true" className="block h-px w-8 bg-foreground/25" />
+          <p className="mt-3.5 text-sm leading-relaxed whitespace-pre-line">{alert.instruction}</p>
+        </div>
       )}
     </article>
   );

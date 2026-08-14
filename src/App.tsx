@@ -76,6 +76,14 @@ export function App() {
 
   const isNight = query.data?.current.timeOfDay === "night";
 
+  // Dialog scrims, the clear-history confirmation and the toaster all portal
+  // onto <body>, outside the subtree below — so they read the day cascade on a
+  // night page. Mirroring the class onto <html> is what reaches them.
+  useEffect(() => {
+    document.documentElement.classList.toggle("night", isNight);
+    return () => document.documentElement.classList.remove("night");
+  }, [isNight]);
+
   return (
     <div
       className={cn("text-foreground relative min-h-screen overflow-x-hidden", isNight && "night")}

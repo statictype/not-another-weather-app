@@ -36,6 +36,15 @@ if (typeof Element !== "undefined") {
   }
 }
 
+// jsdom has no ResizeObserver; DialogScroll watches its content with one.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
+
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
 afterEach(() => {
