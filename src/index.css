@@ -1,17 +1,5 @@
 @import "tailwindcss";
-
-/* Scopes shadcn's `dark:` utilities to a `.dark` ancestor that this app never
- * applies. Day/night is driven by `.night` on the App root (see below), not by
- * the OS preference. Removing this line would let Tailwind's default
- * `prefers-color-scheme` dark variant fire on the 9 `dark:` utilities inside
- * src/components/ui/{button,input}.tsx and tint them out of the palette. */
 @custom-variant dark (&:is(.dark *));
-
-/*
- * The shadcn/tweakcn theme will inject @theme + @layer base blocks here
- * when you run the install commands. Don't hand-edit those blocks; rerun
- * the theme command to update tokens.
- */
 
 html,
 body,
@@ -24,9 +12,6 @@ body,
  */
 
 @theme inline {
-  /* One family. Work Sans is the only face index.html loads; the display /
-   * serif / mono aliases that used to sit here all resolved to it, so
-   * `font-serif` was not a serif and `font-mono` was not monospace. */
   --font-sans: "Work Sans", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --radius: 1.25rem;
@@ -132,21 +117,6 @@ body,
   }
 }
 
-/* ── Labels ───────────────────────────────────────────────────────
- * The small uppercase label appeared in 8 near-identical variants
- * (3 sizes × 5 tracking values × 6 opacities). These two are the whole
- * vocabulary: a tile header and a sub-label under it, separated by size
- * alone.
- *
- * The 70% alpha is a floor, not a taste call. Composited over the day
- * tile gradients, --foreground lands at 5.3–5.5:1 — the previous 40–60%
- * range measured 2.3–4.1:1 and failed WCAG AA everywhere in day mode.
- * Lighthouse scored a11y 100 regardless because axe cannot resolve a
- * background behind backdrop-filter and skips those nodes. Do not fade
- * these below 70% to create hierarchy; use the size step instead.
- *
- * In @layer components so a utility can still override one axis — e.g. the
- * clear-all button's hover:text-destructive. */
 @layer components {
   .label-section,
   .label-sub {
@@ -163,7 +133,6 @@ body,
   }
 }
 
-/* ---break--- sky atmosphere */
 html, body { background: oklch(0.97 0.02 230); }
 
 .sky {
@@ -180,7 +149,6 @@ html, body { background: oklch(0.97 0.02 230); }
   inset: 0;
   transition: opacity 1.2s ease;
 }
-/* Day layer */
 .sky::before {
   opacity: 1;
   background:
@@ -190,7 +158,7 @@ html, body { background: oklch(0.97 0.02 230); }
     radial-gradient(45vw 45vw at 0% 100%, oklch(0.94 0.05 320 / 0.6), transparent 60%),
     linear-gradient(180deg, oklch(0.97 0.02 230), oklch(0.95 0.03 220));
 }
-/* Night layer — very dark, barely tinted */
+/* Night layer */
 .sky::after {
   opacity: 0;
   background:
@@ -276,21 +244,7 @@ html, body { background: oklch(0.97 0.02 230); }
   transition: background 0.4s ease;
 }
 
-/* Alert tile — the alerts card is the plate itself, with no pane around it,
- * so the severity ramp is the tile's own field rather than a badge sitting on
- * glass. Three steps, matching the ramp: filled for `extreme`, a warm-tinted
- * field for `severe`, and a visible neutral rim for `moderate` and below,
- * which take no warm hue at all and would otherwise be indistinguishable from
- * the plain tiles beside them.
- *
- * Declared here beside .tile-wind and .tile-astro because .bento-tile sets
- * `background` and `border` unlayered: a Tailwind bg-* or border-* utility
- * loses to it regardless of order, so a tile's field belongs in this block.
- *
- * Hover never moves the field's luminance on the tinted and plain steps — the
- * rim carries it, with the underline on the hazard name. Deepening the tint
- * instead measured 4.34:1 in day and 4.67:1 in night, both worse than the
- * resting state and one of them below AA. */
+
 .tile-alert-fill {
   background: var(--alert-fill);
   border-color: oklch(1 0 0 / 0.14);
@@ -299,9 +253,7 @@ html, body { background: oklch(0.97 0.02 230); }
     0 12px 30px -18px oklch(0.4 0.15 240 / 0.25);
   transition: background 0.2s ease;
 }
-/* Along the ramp, never a fade: day steps 0.55 → 0.52 lightness and night
- * steps 0.70 → 0.80, so contrast with --alert-fill-ink rises in both —
- * 5.20 → 5.89:1 in day, 6.71 → 9.02:1 in night. */
+
 .tile-alert-fill:hover {
   background: var(--alert-ink);
 }
@@ -323,23 +275,15 @@ html, body { background: oklch(0.97 0.02 230); }
   border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
 }
 
-/* Moon dark-side fill — adapts per mode so the unlit hemisphere
- * has clear contrast against the card background. */
+/* Moon dark-side fill, per mode. */
 :root  { --moon-dark: oklch(0.36 0.05 265); }
 .night { --moon-dark: oklch(0.08 0.005 250); }
 
-/* ── Alert ramp ───────────────────────────────────────────────────
- * The one warm hue in the system, at three intensities. It is the
- * exception the One Hue Family Rule names: signal-red is licensed for
- * destructive confirmation and for severe-weather alerts, and nothing
- * else. Colour is never the only carrier — the icon shape and the
- * severity word say it too.
- *
- * Measured against the composited tile grounds, small-text pairs:
+/* Alert ramp. Contrast against the composited tile grounds, small text:
  *   day    fill/ink 5.20:1 · severe 5.86:1 · moderate 5.38:1
  *   night  fill/ink 6.71:1 · severe 8.84:1 · moderate 8.58:1
- * axe cannot resolve a background behind backdrop-filter and skips
- * these nodes, so a regression here will not show up in Lighthouse. */
+ * axe skips nodes behind backdrop-filter, so regressions here are invisible
+ * to Lighthouse. */
 :root {
   --alert-fill: oklch(0.55 0.21 27);
   --alert-fill-ink: oklch(0.99 0.01 40);
@@ -348,11 +292,7 @@ html, body { background: oklch(0.97 0.02 230); }
   --alert-wash: oklch(0.55 0.21 27 / 0.09);
   --alert-rim: oklch(0.55 0.21 27 / 0.22);
   --alert-rim-strong: oklch(0.55 0.21 27 / 0.45);
-  /* The tinted tile's own field. --alert-wash was calibrated for a badge on
-   * white glass; the same 9% across a whole tile is invisible next to the
-   * plain tiles beside it. These are the tile-scale stops, built like
-   * .tile-wind's, and held light enough that --alert-ink still clears AA
-   * over the darker one: 5.13:1 near, 4.95:1 far. */
+  /* Tile-scale stops; --alert-ink clears AA over both: 5.13:1 near, 4.95:1 far. */
   --alert-tile-near: oklch(0.96 0.055 30 / 0.92);
   --alert-tile-far: oklch(0.935 0.085 30 / 0.62);
 }
@@ -369,8 +309,7 @@ html, body { background: oklch(0.97 0.02 230); }
   --alert-tile-far: oklch(0.16 0.05 30 / 0.70);
 }
 
-/* ── Night overrides ─────────────────────────────────────────────── */
-/* Scoped under .night (applied on the App root when current is night). */
+/* Night overrides, scoped under .night (set on the App root). */
 .night {
   --foreground: oklch(0.95 0.008 240);
   --background: oklch(0.13 0.008 250);
@@ -384,7 +323,6 @@ html, body { background: oklch(0.97 0.02 230); }
   --input: oklch(1 0 0 / 0.08);
 }
 
-/* Search input / glass surfaces */
 .night .card-surface {
   background:
     linear-gradient(180deg, oklch(0.22 0.015 250 / 0.85), oklch(0.18 0.02 255 / 0.55));
@@ -395,7 +333,6 @@ html, body { background: oklch(0.97 0.02 230); }
     0 8px 24px -12px oklch(0 0 0 / 0.35);
 }
 
-/* Generic tiles — only a touch lighter than the page bg */
 .night .bento-tile {
   background:
     linear-gradient(160deg, oklch(0.17 0.012 255 / 0.9), oklch(0.15 0.015 260 / 0.6));
@@ -404,23 +341,17 @@ html, body { background: oklch(0.97 0.02 230); }
     0 1px 0 0 oklch(1 0 0 / 0.04) inset,
     0 12px 30px -18px oklch(0 0 0 / 0.6);
 }
-/* Wind tile: dark teal-petrol */
 .night .tile-wind {
   background:
     linear-gradient(160deg, oklch(0.22 0.05 210 / 0.95), oklch(0.15 0.06 218 / 0.7));
   filter: grayscale(20%);
 }
-/* Astro tile night: deep observatory indigo with a faint moonlit lift */
 .night .tile-astro {
   background:
     radial-gradient(55% 70% at 78% 0%, oklch(0.32 0.06 270 / 0.6), transparent 65%),
     linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
-/* Alert tile night. Every value here already switches cascade through the
- * --alert-* tokens, so these rules exist for specificity alone: `.night
- * .bento-tile` is two classes and comes first, and would otherwise put the
- * night glass gradient back over all three alert steps. Same reason
- * `.night .tile-wind` exists. Only the fill's rim and shadow differ. */
+
 .night .tile-alert-fill {
   background: var(--alert-fill);
   border-color: oklch(1 0 0 / 0.1);
@@ -445,7 +376,6 @@ html, body { background: oklch(0.97 0.02 230); }
   border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
 }
 
-/* Hero night: cooler deep blues */
 .hero-night {
   background:
     linear-gradient(45deg,
@@ -456,17 +386,7 @@ html, body { background: oklch(0.97 0.02 230); }
     linear-gradient(135deg, #00060f 0%, #01132b 100%);
 }
 
-/* Hero precipitation chips.
- *
- * Day is a rim and nothing else. The hero has no headroom for a lighter
- * field: white over the day gradient measures 5.05–5.35:1 where the strip
- * sits, and compositing white at 8% alpha over that ground takes it to
- * 4.12:1 — under AA at body size. A rim leaves the ground untouched, and it
- * is the system's own depth mechanic anyway (see The Edge-Lit Rule).
- *
- * Night inverts the problem. #00060f–#01132b has all the headroom there is
- * (white measures 18:1 over it), and a bare white rim on near-black reads
- * faint, so the chip takes a 5% fill and a quieter rim. */
+
 .hero-chip {
   border-color: oklch(1 0 0 / 0.3);
 }
@@ -475,13 +395,11 @@ html, body { background: oklch(0.97 0.02 230); }
   background: oklch(1 0 0 / 0.05);
 }
 
-/* Tighter dividers and borders in dark tiles */
 .night .divide-foreground\/6 > :not([hidden]) ~ :not([hidden]),
 .night .border-foreground\/6 {
   border-color: oklch(1 0 0 / 0.06) !important;
 }
 
-/* ── Search dropdown (shared glass — desktop dropdown + mobile menu panel) ── */
 .search-dropdown-desktop,
 .glass-panel {
   background:
@@ -494,9 +412,7 @@ html, body { background: oklch(0.97 0.02 230); }
     0 40px 80px -24px oklch(0.3 0.12 240 / 0.28),
     0 16px 32px -10px oklch(0.3 0.12 240 / 0.14);
 }
-/* `.night.glass-panel` is not a typo: a Radix portal mounts on <body>,
- * outside the .night root, so a portalled panel carries the class itself
- * instead of inheriting it. */
+
 .night .search-dropdown-desktop,
 .night .glass-panel,
 .night.glass-panel {
@@ -535,7 +451,6 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 
-/* ── Entrance animations ────────────────────────────────────────── */
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: none; }
@@ -561,15 +476,7 @@ html, body { background: oklch(0.97 0.02 230); }
 .swap-d-5 { animation-delay: 0.20s; }
 .swap-d-6 { animation-delay: 0.25s; }
 
-/* Mobile search backdrop. Covers the full viewport, with the input and
- * Cancel button stacked above it via z-index. The opening animation
- * fades it from 0 → 1 over ~200ms while the input slides leftward over
- * the emoji — during that brief window the overlay is still
- * translucent, so the emoji's yellow shines through the input's
- * backdrop-filter. Once the overlay opacifies, the input reads as a
- * uniform frosted pill on the tinted overlay (the old behaviour). The
- * alpha is a touch lower than the original (0.85 vs 0.97) so the
- * overlay registers as glass rather than fully opaque. */
+
 .mobile-search-overlay {
   background: oklch(0.97 0.02 230 / 0.85);
   backdrop-filter: blur(20px) saturate(140%);
@@ -579,47 +486,100 @@ html, body { background: oklch(0.97 0.02 230); }
   background: oklch(0.13 0.008 250 / 0.85);
 }
 
-/* ── Hourly strip ────────────────────────────────────────────────
- *
- * The strip is a table and the rules are its structure: a hairline between
- * every pair of columns, one under every column head, meeting at the corners.
- * No column carries a field of its own — every hour sits on the tile's own
- * surface, so nothing in the grid is picked out over anything else, and the
- * only marks are the rules.
- *
- * 8% of the foreground in day, 7% white in night. These are not the
- * `divide-foreground/6` utility, which `.night .divide-foreground\/6` rewrites
- * with `!important` and would take the day-break rule's weight with it. */
-.hour-col + .hour-col {
-  border-left: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
-}
-.night .hour-col + .hour-col {
-  border-left-color: oklch(1 0 0 / 0.07);
+.hour-frame {
+  --hour-gutter-w: 1.75rem;
+
+  --hour-head-h: 4.6rem;
+  --hour-row-h: 1.9rem;
+  --hour-col-w: 4.5rem;
+  --hour-rule: color-mix(in oklab, var(--foreground) 10%, transparent);
+  --hour-rule-col: color-mix(in oklab, var(--foreground) 6%, transparent);
+  --hour-rule-break: color-mix(in oklab, var(--foreground) 22%, transparent);
 }
 
-.hour-head {
-  border-bottom: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+@media (min-width: 640px) {
+  .hour-frame {
+    --hour-col-w: 4rem;
+  }
 }
-.night .hour-head {
-  border-bottom-color: oklch(1 0 0 / 0.07);
-}
-
-/* The date rollover, at roughly three times the weight of the hairlines
- * around it. It is the one boundary in 24 hours that a reader has to see
- * without looking for it, and against 23 identical rules only weight
- * separates it. The column beside it names the new day. */
-.hour-col + .hour-col.hour-daybreak {
-  border-left-color: color-mix(in oklab, var(--foreground) 24%, transparent);
-}
-.night .hour-col + .hour-col.hour-daybreak {
-  border-left-color: oklch(1 0 0 / 0.24);
+.night .hour-frame {
+  --hour-rule: oklch(1 0 0 / 0.1);
+  --hour-rule-col: oklch(1 0 0 / 0.06);
+  --hour-rule-break: oklch(1 0 0 / 0.24);
 }
 
-/* The strip's content runs under the tile's padding at both ends, so without
- * a soft edge a column is hard-cut mid-word wherever there are more hours
- * behind it. Driven by the same two flags as the arrow buttons: a strip with
- * nothing to scroll to has square edges, and each end fades only while there
- * is something past it. */
+.hour-gutter {
+  flex: none;
+  width: var(--hour-gutter-w);
+}
+.hour-gutter-head {
+  height: var(--hour-head-h);
+}
+.hour-gutter-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--hour-row-h);
+  border-top: 1px solid var(--hour-rule);
+}
+
+.hour-table {
+  width: calc(var(--hour-cols, 24) * var(--hour-col-w));
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.hour-gut-cell {
+  width: 0;
+  padding: 0;
+}
+
+.hour-head-cell {
+  height: var(--hour-head-h);
+  padding: 0;
+  font-weight: inherit;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.hour-head-inner {
+  display: flex;
+  height: var(--hour-head-h);
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  gap: 1.1rem;
+}
+
+.hour-cell {
+  height: var(--hour-row-h);
+  padding: 0;
+  border-top: 1px solid var(--hour-rule);
+  color: color-mix(in oklab, var(--foreground) 70%, transparent);
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  vertical-align: middle;
+}
+
+
+.hour-cell-lead {
+  color: var(--foreground);
+}
+
+.hour-head-cell:nth-child(n + 3),
+.hour-cell:nth-child(n + 3) {
+  border-left: 1px solid var(--hour-rule-col);
+}
+
+.hour-head-cell.hour-daybreak,
+.hour-cell.hour-daybreak {
+  border-left: 1px solid var(--hour-rule-break);
+}
+
 .hour-fade {
   -webkit-mask-image: linear-gradient(
     to right,
@@ -669,18 +629,6 @@ html, body { background: oklch(0.97 0.02 230); }
   background: oklch(1 0 0 / 0.12);
 }
 
-/* ── Reduced motion ───────────────────────────────────────────────
- * PRODUCT.md marks prefers-reduced-motion a hard requirement and the app
- * did not honour it anywhere. This closes the gap for the motion this
- * feature introduces — the alert modal's fade/zoom entrance, which comes
- * from the vendored dialog primitive. The sky crossfade, the tile swap-in
- * and the astro fade are older and are not in scope here.
- *
- * The skeleton pulse is covered too. It is not new — the hourly strip and the
- * forecast row already shimmer — but the hero's precipitation strip adds
- * another instance, and DESIGN.md asks new motion to close the gap rather
- * than widen it. Stilling it leaves a static placeholder bar, which is the
- * standard reduced-motion treatment for a skeleton. */
 @media (prefers-reduced-motion: reduce) {
   [data-slot="dialog-overlay"],
   [data-slot="dialog-content"],

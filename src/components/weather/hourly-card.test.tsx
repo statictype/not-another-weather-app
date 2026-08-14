@@ -1,17 +1,9 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HourlyForecast } from "@/api/types";
 import { HourlyCard } from "./hourly-card";
 
-/**
- * The demo key will not produce a snowy hour on request, and the strip picks
- * its 24 columns against the wall clock, so both are pinned here: a frozen
- * system time and fixtures built off it.
- *
- * Frozen at 14:30 UTC, so the strip runs 3pm today through 2pm tomorrow and
- * the date rollover lands on column 9.
- */
+/** Frozen at 14:30 UTC: the rollover lands on column 9. */
 
 const TZ = "UTC";
 const NOW = "2026-08-12T14:30:00Z";
@@ -37,7 +29,6 @@ function hour(at: Date, over: Partial<HourlyForecast> = {}): HourlyForecast {
   };
 }
 
-/** The next 24 hours from the frozen clock, keyed by column index. */
 function hourly(overrides: Record<number, Partial<HourlyForecast>> = {}): HourlyForecast[] {
   const base = new Date(NOW);
   base.setUTCMinutes(0, 0, 0);
@@ -46,12 +37,13 @@ function hourly(overrides: Record<number, Partial<HourlyForecast>> = {}): Hourly
   );
 }
 
-function columns(): HTMLElement[] {
-  return screen.getAllByRole("img");
+function headers(): HTMLElement[] {
+  return screen.getAllByRole("columnheader");
 }
 
-async function showPrecip() {
-  await userEvent.click(screen.getByRole("button", { name: /hourly precipitation/i }));
+function row(name: string): HTMLElement[] {
+  const tr = screen.getByRole("row", { name: new RegExp(`^${name}`) });
+  return within(tr).getAllByRole("cell");
 }
 
 beforeEach(() => {
@@ -63,45 +55,47 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("HourlyCard — Temp mode", () => {
-  it("prints both readings, including where they agree", () => {
+describe("HourlyCard — the matrix", () => {
+  it("puts all three readings on screen at once, one row each", () => {
     render(
       <HourlyCard
-        hourly={hourly({
-          0: { tempC: 18, feelsLikeC: 18.4 },
-          1: { tempC: 18, feelsLikeC: 19 },
-        })}
+        hourly={hourly({ 0: { tempC: 26, feelsLikeC: 33, chanceOfRain: 45 } })}
         tz={TZ}
       />,
     );
 
-    // Two readings that round to the same number is a fact about the hour,
-    // not a gap in the table.
-    expect(columns()[0]).toHaveAccessibleName(
-      "3 pm, Partly cloudy, 18 degrees, feels like 18 degrees",
-    );
-    expect(columns()[0]?.textContent).toBe("3pm18°18°");
+    expect(row("Temperature")[0]).toHaveTextContent("26°");
+    expect(row("Feels like")[0]).toHaveTextContent("33°");
+    expect(row("Chance of precipitation")[0]).toHaveTextContent("45%");
+  });
 
-    expect(columns()[1]).toHaveAccessibleName(
-      "4 pm, Partly cloudy, 18 degrees, feels like 19 degrees",
-    );
+  it("keeps the temperature the headline even when the feels-like is higher", () => {
+    render(<HourlyCard hourly={hourly({ 0: { tempC: 26, feelsLikeC: 33 } })} tz={TZ} />);
+
+    expect(row("Temperature")[0]).toHaveClass("hour-cell-lead");
+    expect(row("Feels like")[0]).not.toHaveClass("hour-cell-lead");
+  });
+
+  it("prints both temperatures where they agree", () => {
+    render(<HourlyCard hourly={hourly({ 0: { tempC: 18, feelsLikeC: 18.4 } })} tz={TZ} />);
+
+    expect(row("Temperature")[0]).toHaveTextContent("18°");
+    expect(row("Feels like")[0]).toHaveTextContent("18°");
   });
 
   it("keeps a 1° gap, which the old 2° collapse swallowed", () => {
     render(<HourlyCard hourly={hourly({ 0: { tempC: 12, feelsLikeC: 11 } })} tz={TZ} />);
 
-    expect(columns()[0]?.textContent).toBe("3pm12°11°");
+    expect(row("Temperature")[0]).toHaveTextContent("12°");
+    expect(row("Feels like")[0]).toHaveTextContent("11°");
   });
 
-  it("leads with the temperature even when the feels-like is higher", () => {
-    render(<HourlyCard hourly={hourly({ 0: { tempC: 26, feelsLikeC: 33 } })} tz={TZ} />);
+  it("names every column by its hour and its condition", () => {
+    render(<HourlyCard hourly={hourly()} tz={TZ} />);
 
-    // The pair is a reading and its interpretation, not a high and a low: the
-    // 33 must not take the headline off the 26.
-    expect(columns()[0]).toHaveAccessibleName(
-      "3 pm, Partly cloudy, 26 degrees, feels like 33 degrees",
-    );
-    expect(columns()[0]?.textContent).toMatch(/26°.*33°/s);
+    expect(headers()).toHaveLength(24);
+    expect(headers()[0]).toHaveTextContent("3pm");
+    expect(headers()[0]).toHaveAccessibleName("3 pm, Partly cloudy");
   });
 
   it("names the new day where the date rolls over", () => {
@@ -110,38 +104,32 @@ describe("HourlyCard — Temp mode", () => {
     const expected = new Date("2026-08-13T12:00:00").toLocaleDateString(undefined, {
       weekday: "short",
     });
-    expect(columns()[ROLLOVER_INDEX]).toHaveTextContent(expected);
-    expect(columns()[ROLLOVER_INDEX]).toHaveAccessibleName(/^Thursday, 12 am,/);
-    expect(columns()[ROLLOVER_INDEX - 1]).toHaveTextContent("11pm");
+    expect(headers()[ROLLOVER_INDEX]).toHaveTextContent(expected);
+    expect(headers()[ROLLOVER_INDEX]).toHaveAccessibleName(/^Thursday, 12 am,/);
+    expect(headers()[ROLLOVER_INDEX - 1]).toHaveTextContent("11pm");
   });
 });
 
-describe("HourlyCard — Precip mode", () => {
-  it("prints a dry hour as 0%, in the same place as every other chance", async () => {
+describe("HourlyCard — precipitation", () => {
+  it("prints a dry hour as 0%, in the same place as every other chance", () => {
     render(<HourlyCard hourly={hourly()} tz={TZ} />);
-    await showPrecip();
 
-    expect(columns()[0]).toHaveTextContent("0%");
-    expect(columns()[0]).toHaveAccessibleName("3 pm, Partly cloudy, 0 percent chance of rain");
+    expect(row("Chance of precipitation")[0]).toHaveTextContent("0%");
   });
 
-  it("prints rain as a chance and an amount", async () => {
+  it("prints the chance and nothing else, amount included", () => {
     render(
       <HourlyCard
         hourly={hourly({ 0: { chanceOfRain: 60, willItRain: true, precipMm: 2.4 } })}
         tz={TZ}
       />,
     );
-    await showPrecip();
 
-    expect(columns()[0]).toHaveTextContent("60%");
-    expect(columns()[0]).toHaveTextContent("2.4mm");
-    expect(columns()[0]).toHaveAccessibleName(
-      "3 pm, Partly cloudy, 60 percent chance of rain, 2.4 millimetres",
-    );
+    const cell = row("Chance of precipitation")[0];
+    expect(cell?.textContent).toBe("60%");
   });
 
-  it("renders a snowy hour in cm, never mm", async () => {
+  it("reads the snow chance, not the rain chance, on a snowy hour", () => {
     render(
       <HourlyCard
         hourly={hourly({
@@ -159,18 +147,12 @@ describe("HourlyCard — Precip mode", () => {
         tz={TZ}
       />,
     );
-    await showPrecip();
 
-    expect(columns()[0]).toHaveTextContent("3cm");
-    expect(columns()[0]).not.toHaveTextContent("mm");
-    expect(columns()[0]).toHaveAccessibleName(
-      "3 pm, Light snow, 80 percent chance of snow, 3 centimetres",
-    );
+    expect(row("Chance of precipitation")[0]?.textContent).toBe("80%");
   });
 
-  it("reads the snow chance when upstream reports no chance of rain", async () => {
-    // The failure the card used to have: an hour below freezing with snow
-    // falling reported `chanceOfRain: 0` and rendered as a struck-out droplet.
+  it("reads the snow chance when upstream reports no chance of rain", () => {
+    // Regression: a sub-zero hour with snow falling reports `chanceOfRain: 0`.
     render(
       <HourlyCard
         hourly={hourly({
@@ -187,58 +169,45 @@ describe("HourlyCard — Precip mode", () => {
         tz={TZ}
       />,
     );
-    await showPrecip();
 
-    expect(columns()[0]).toHaveTextContent("70%");
-    expect(columns()[0]).toHaveAccessibleName(/70 percent chance of snow$/);
+    expect(row("Chance of precipitation")[0]?.textContent).toBe("70%");
   });
 
-  it("prints the chance alone when the flag says no precipitation lands", async () => {
+  it("prints the chance even when the flag says no precipitation lands", () => {
     render(
       <HourlyCard
         hourly={hourly({ 0: { chanceOfRain: 70, willItRain: false, precipMm: 4 } })}
         tz={TZ}
       />,
     );
-    await showPrecip();
 
-    expect(columns()[0]).toHaveAccessibleName("3 pm, Partly cloudy, 70 percent chance of rain");
-    expect(columns()[0]).not.toHaveTextContent("mm");
+    expect(row("Chance of precipitation")[0]?.textContent).toBe("70%");
   });
 });
 
-describe("HourlyCard — the mode switch", () => {
-  it("marks the active mode and defaults to Temp", async () => {
+describe("HourlyCard — the scroll controls", () => {
+  it("offers both directions and starts with nowhere to go back to", () => {
     render(<HourlyCard hourly={hourly()} tz={TZ} />);
 
-    const temp = screen.getByRole("button", { name: /hourly temperature/i });
-    const precip = screen.getByRole("button", { name: /hourly precipitation/i });
-
-    expect(temp).toHaveAttribute("aria-pressed", "true");
-    expect(precip).toHaveAttribute("aria-pressed", "false");
-
-    await showPrecip();
-
-    expect(temp).toHaveAttribute("aria-pressed", "false");
-    expect(precip).toHaveAttribute("aria-pressed", "true");
+    // jsdom reports every element as 0×0, so neither end has anything past it.
+    expect(screen.getByRole("button", { name: /earlier hours/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /later hours/i })).toBeDisabled();
   });
 
-  it("keeps the same 24 columns across a switch", async () => {
+  it("leaves no view switch behind", () => {
     render(<HourlyCard hourly={hourly()} tz={TZ} />);
-    expect(columns()).toHaveLength(24);
 
-    await showPrecip();
-    expect(columns()).toHaveLength(24);
+    expect(screen.queryByRole("button", { pressed: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { pressed: false })).not.toBeInTheDocument();
   });
 
-  it("hides every icon from the accessible names", async () => {
+  it("hides every icon from the accessible names", () => {
     const { container } = render(
       <HourlyCard
         hourly={hourly({ 0: { chanceOfRain: 60, willItRain: true, precipMm: 2.4 } })}
         tz={TZ}
       />,
     );
-    await showPrecip();
 
     const icons = container.querySelectorAll("svg");
     expect(icons.length).toBeGreaterThan(24);
@@ -250,7 +219,7 @@ describe("HourlyCard — before the forecast tier lands", () => {
   it("shimmers instead of rendering columns", () => {
     render(<HourlyCard hourly={undefined} tz={TZ} />);
 
-    expect(screen.queryAllByRole("img")).toHaveLength(0);
-    expect(screen.getByText("Hourly")).toBeInTheDocument();
+    expect(screen.queryAllByRole("columnheader")).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /later hours/i })).toBeInTheDocument();
   });
 });
