@@ -182,7 +182,7 @@ describe("Oasis (integration)", () => {
     renderAppAt("/?city=London");
 
     await screen.findByRole("heading", { name: /london/i });
-    expect(screen.getAllByText(/12°C/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/12°/).length).toBeGreaterThan(0);
     expect(screen.getByText(/feels like/i)).toBeInTheDocument();
   });
 

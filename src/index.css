@@ -225,6 +225,21 @@ html, body { background: oklch(0.97 0.02 230); }
     0 1px 0 0 oklch(1 0 0 / 0.7) inset,
     0 12px 30px -18px oklch(0.4 0.15 240 / 0.25);
   border-radius: 1.75rem;
+  --tile-pad: 1.25rem;
+  padding: var(--tile-pad);
+}
+
+/* Every tile reads its padding from `--tile-pad`, so the eight of them can't
+   drift apart. 24px is the full-width value; it drops back to 20px at `lg`,
+   where the narrowest card in the grid is ~226px wide. */
+@media (width >= 40rem) {
+  .bento-tile { --tile-pad: 1.5rem; }
+}
+@media (width >= 64rem) {
+  .bento-tile { --tile-pad: 1.25rem; }
+}
+@media (width >= 80rem) {
+  .bento-tile { --tile-pad: 1.5rem; }
 }
 
 .tile-wind {

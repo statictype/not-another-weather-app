@@ -9,7 +9,7 @@ interface WindCardProps {
 
 export function WindCard({ windKph, windDir, windDegree, gustKph }: WindCardProps) {
   return (
-    <section className="swap-in swap-d-7 bento-tile flex flex-col p-6 sm:col-span-4 lg:col-span-2 xl:order-7 xl:col-span-1">
+    <section className="swap-in swap-d-7 bento-tile flex flex-col sm:col-span-4 md:col-span-2 lg:col-span-4 xl:order-7 xl:col-span-1">
       <div className="flex items-start justify-between gap-3">
         <p className="label-section">Wind</p>
         <div className="text-right">

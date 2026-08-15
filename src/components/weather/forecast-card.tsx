@@ -29,10 +29,10 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
   const layout = LAYOUTS[days?.length ?? SKELETON_DAYS] ?? LAYOUTS[MAX_DAYS];
 
   return (
-    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center p-6 sm:col-span-4 lg:col-span-2 xl:order-4 xl:col-span-2">
+    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center sm:col-span-4 lg:col-span-4 xl:order-4 xl:col-span-2">
       {/* Days are a divided list below `sm` and a column matrix above it, so
           the rule between them turns and the row padding folds away. `-my-3`
-          pulls the outer rows' padding back off the tile's own `p-6`. */}
+          cancels the outer rows' own `py-3`. */}
       <div
         className={cn(
           "-my-3 grid grid-cols-1 divide-y divide-foreground/10",

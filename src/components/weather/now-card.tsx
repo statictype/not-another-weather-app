@@ -39,7 +39,7 @@ const FACE = new Set(["temp", "feels", "wind"]);
 function readingsOf(c: CurrentConditions): Reading[] {
   const precip = precipAmount(c.precipMm, "mm");
   return [
-    { key: "temp", icon: ThermometerIcon, label: "Temperature", value: `${Math.round(c.tempC)}°C` },
+    { key: "temp", icon: ThermometerIcon, label: "Temperature", value: `${Math.round(c.tempC)}°` },
     {
       key: "feels",
       icon: PersonStandingIcon,
@@ -93,10 +93,10 @@ export function NowCard({ current }: NowCardProps) {
         <button
           type="button"
           className={cn(
-            "swap-in swap-d-2 bento-tile tile-wind group relative w-full overflow-hidden p-6 text-left",
+            "swap-in swap-d-2 bento-tile tile-wind group relative w-full overflow-hidden text-left",
             "flex flex-col justify-center gap-5",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-            "xl:flex-1",
+            "lg:flex-1",
           )}
         >
           <span
@@ -113,18 +113,12 @@ export function NowCard({ current }: NowCardProps) {
             />
           </span>
 
-          <span className="relative flex flex-col gap-5 md:flex-row md:items-center md:gap-10 xl:flex-col xl:items-stretch xl:gap-5">
-            {/* The dashboard's second voice after the hero city, and the one
-                thing on it that answers the question in words. 24px at every
-                width, because the figures are 24px at every width and no
-                figure outranks the sentence. No `tracking-tight` either: this
-                is the only light type the system sets at 24px across a full
-                line, and -0.055em closed the words up. */}
-            <span className="block text-2xl leading-tight font-light text-balance md:flex-1">
+          <span className="relative flex flex-col gap-5 md:flex-row md:items-center md:gap-10 lg:flex-col lg:items-stretch lg:gap-5">
+            <span className="block text-2xl leading-tight font-light text-balance md:flex-1 lg:text-xl xl:text-2xl">
               {sentence}
             </span>
 
-            <span className="block divide-y divide-foreground/10 md:w-[340px] md:shrink-0 xl:w-auto">
+            <span className="block divide-y divide-foreground/10 md:w-[340px] md:shrink-0 lg:w-auto">
               {face.map((r) => (
                 <FaceRow key={r.key} reading={r} />
               ))}
@@ -141,14 +135,17 @@ export function NowCard({ current }: NowCardProps) {
 }
 
 function FaceRow({ reading }: { reading: Reading }) {
-  const { icon: Icon, label, value } = reading;
+  const { icon: Icon, key, label, value } = reading;
   return (
     <span className="flex items-center justify-between gap-3 py-3">
-      <span className="flex items-center gap-2.5">
+      <span className="flex items-center gap-2.5 lg:gap-1.5 xl:gap-2.5">
         <Icon className="size-4 shrink-0 text-foreground/70" strokeWidth={1.5} aria-hidden="true" />
         <span className="label-sub">{label}</span>
       </span>
-      <span className="text-base tracking-tight">{value}</span>
+      {/* Wind is the one worded value on the face; the others are figures. */}
+      <span className={cn("text-base tracking-tight", key === "wind" && "text-sm xl:text-base")}>
+        {value}
+      </span>
     </span>
   );
 }

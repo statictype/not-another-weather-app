@@ -91,7 +91,7 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
   };
 
   return (
-    <section className="swap-in swap-d-3 bento-tile p-6 sm:col-span-4 xl:order-3 xl:col-span-2">
+    <section className="swap-in swap-d-3 bento-tile sm:col-span-4 lg:col-span-4 xl:order-3 xl:col-span-2">
       <div className="hour-frame flex">
         <div className="hour-gutter" aria-hidden="true">
           <div className="hour-gutter-head" />
