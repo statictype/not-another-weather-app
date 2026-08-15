@@ -1,5 +1,4 @@
 import { useId } from "react";
-import { beaufort } from "@/lib/air-comfort";
 
 interface WindCardProps {
   windKph: number;
@@ -11,20 +10,18 @@ interface WindCardProps {
 export function WindCard({ windKph, windDir, windDegree, gustKph }: WindCardProps) {
   return (
     <section className="swap-in swap-d-7 bento-tile flex flex-col p-6 sm:col-span-4 lg:col-span-2 xl:order-7 xl:col-span-1">
-      <p className="label-section">Wind</p>
-      <div className="flex flex-1 flex-col justify-center gap-4">
-        <Compass windKph={windKph} windDir={windDir} windDegree={windDegree} />
-        <div>
-          <div aria-hidden="true" className="h-px w-full bg-foreground/8" />
-          <div className="mt-3 flex items-baseline justify-between gap-3 px-1">
-            <span className="text-sm tracking-tight">{beaufort(windKph)}</span>
-            <span className="shrink-0 text-sm tracking-tight">
-              <span className="label-sub mr-2">Gusts</span>
-              {Math.round(gustKph)}
-              <span className="ml-1 text-foreground/70">km/h</span>
-            </span>
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <p className="label-section">Wind</p>
+        <div className="text-right">
+          <p className="label-sub">Gusts</p>
+          <p className="mt-0.5 text-sm leading-tight tracking-tight">
+            {Math.round(gustKph)}
+            <span className="ml-1 text-foreground/70">km/h</span>
+          </p>
         </div>
+      </div>
+      <div className="flex flex-1 flex-col justify-center">
+        <Compass windKph={windKph} windDir={windDir} windDegree={windDegree} />
       </div>
     </section>
   );

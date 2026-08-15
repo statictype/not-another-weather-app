@@ -42,7 +42,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
           tz={c.location.tz}
           isNight={c.current.timeOfDay === "night"}
         />
-        <NowCard current={c.current} chanceOfRain={forecast.data?.today.chanceOfRain} />
+        <NowCard current={c.current} />
       </div>
       <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
       <ForecastCard forecast={forecast.data?.forecast} />

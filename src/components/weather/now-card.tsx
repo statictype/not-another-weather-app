@@ -8,8 +8,8 @@ import {
   Maximize2Icon,
   PersonStandingIcon,
   ThermometerIcon,
+  ThermometerSnowflakeIcon,
   ThermometerSunIcon,
-  UmbrellaIcon,
   WindIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { airComfort } from "@/lib/air-comfort";
+import { airComfort, beaufort } from "@/lib/air-comfort";
 import { precipAmount } from "@/lib/precip";
 import { cn } from "@/lib/utils";
 
@@ -34,9 +34,9 @@ interface Reading {
   value: string;
 }
 
-const FACE = new Set(["temp", "feels", "windchill"]);
+const FACE = new Set(["temp", "feels", "wind"]);
 
-function readingsOf(c: CurrentConditions, chanceOfRain: number | undefined): Reading[] {
+function readingsOf(c: CurrentConditions): Reading[] {
   const precip = precipAmount(c.precipMm, "mm");
   return [
     { key: "temp", icon: ThermometerIcon, label: "Temperature", value: `${Math.round(c.tempC)}°C` },
@@ -46,9 +46,10 @@ function readingsOf(c: CurrentConditions, chanceOfRain: number | undefined): Rea
       label: "Feels like",
       value: `${Math.round(c.feelsLikeC)}°`,
     },
+    { key: "wind", icon: WindIcon, label: "Wind", value: beaufort(c.windKph) },
     {
       key: "windchill",
-      icon: WindIcon,
+      icon: ThermometerSnowflakeIcon,
       label: "Wind chill",
       value: `${Math.round(c.windchillC)}°`,
     },
@@ -67,16 +68,6 @@ function readingsOf(c: CurrentConditions, chanceOfRain: number | undefined): Rea
       label: "Precipitation",
       value: precip ? precip.text : "0mm",
     },
-    ...(chanceOfRain === undefined
-      ? []
-      : [
-          {
-            key: "rain-chance",
-            icon: UmbrellaIcon,
-            label: "Chance of rain",
-            value: `${chanceOfRain}%`,
-          },
-        ]),
     {
       key: "visibility",
       icon: EyeIcon,
@@ -88,14 +79,12 @@ function readingsOf(c: CurrentConditions, chanceOfRain: number | undefined): Rea
 
 interface NowCardProps {
   current: CurrentConditions;
-  /** From the forecast tier, so it is absent until the second request lands. */
-  chanceOfRain: number | undefined;
 }
 
-export function NowCard({ current, chanceOfRain }: NowCardProps) {
+export function NowCard({ current }: NowCardProps) {
   const [open, setOpen] = useState(false);
   const { sentence } = airComfort(current);
-  const readings = readingsOf(current, chanceOfRain);
+  const readings = readingsOf(current);
   const face = readings.filter((r) => FACE.has(r.key));
 
   return (
