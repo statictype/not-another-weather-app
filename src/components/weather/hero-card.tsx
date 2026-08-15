@@ -17,12 +17,6 @@ interface HeroCardProps {
 const PEAK =
   "font-light tracking-tight text-[2.125rem] sm:text-[2.5rem] md:text-[3rem] xl:text-[3.5rem] leading-[1.05]";
 
-/** The condition and the local time are peers, both at the body rung. The
- *  condition used to run at 24px light, the same rung as the Now tile's comfort
- *  sentence beside it — two headlines answering the same question, and the
- *  hero's was the less informative one. Regular, not light: at 16–18px over the
- *  day gradient, Work Sans Light has too little stem left to hold against a
- *  saturated ground (see "Light Is a Display Weight"). */
 const LINE = "text-base md:text-lg leading-snug";
 
 export function HeroCard({ location, current }: HeroCardProps) {
@@ -42,21 +36,23 @@ export function HeroCard({ location, current }: HeroCardProps) {
     >
       {/* Stacked below `sm`: side by side at 390px the words column resolves to
           117px and the city name overflows it. */}
-      <div className="flex h-full flex-col gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-10">
-        {/* Two groups, not four lines: the place, then what it is there now.
-            4px inside a group, 20–24px between them. */}
-        <div className="flex min-w-0 flex-col">
-          {country && <p className="label-section leading-none text-white">{country}</p>}
-          <h2 className={cn(PEAK, "mt-1 text-balance")}>{location.name}</h2>
+      <div className="flex h-full flex-col justify-between gap-8 sm:flex-row sm:items-center sm:gap-10">
+        <div className="contents sm:flex sm:min-w-0 sm:flex-col">
+          <div>
+            {country && <p className="label-section leading-none text-white">{country}</p>}
+            <h2 className={cn(PEAK, "mt-1 text-balance")}>{location.name}</h2>
+          </div>
 
-          <p className={cn(LINE, "mt-5 md:mt-6")}>{current.conditionText}</p>
-          <p className={cn(LINE, "mt-1")}>
-            <time dateTime={new Date(now).toISOString()}>{formatTime(now, location.tz)}</time>
-            <span className="px-2 text-white/50" aria-hidden="true">
-              ·
-            </span>
-            {formatDate(now, location.tz)}
-          </p>
+          <div className="order-1 sm:order-none sm:mt-5 md:mt-6">
+            <p className={cn(LINE)}>{current.conditionText}</p>
+            <p className={cn(LINE, "mt-1")}>
+              {formatDate(now, location.tz)}
+              <span className="px-2 text-white/50" aria-hidden="true">
+                ·
+              </span>
+              <time dateTime={new Date(now).toISOString()}>{formatTime(now, location.tz)}</time>
+            </p>
+          </div>
         </div>
 
         {/* `stroke-width` comes down as the icon goes up so the drawn line
@@ -66,8 +62,8 @@ export function HeroCard({ location, current }: HeroCardProps) {
           text={current.conditionText}
           isDay={isDay}
           className={cn(
-            "size-36 shrink-0 self-end [stroke-width:1.1]",
-            "sm:size-44 sm:self-center sm:[stroke-width:0.9]",
+            "size-36 shrink-0 self-center [stroke-width:1.1]",
+            "sm:size-44 sm:[stroke-width:0.9]",
             "xl:size-56 xl:[stroke-width:0.72]",
             isDay ? "text-white/90" : "text-[oklch(0.62_0.03_250)]",
           )}
