@@ -152,8 +152,8 @@ html, body { background: oklch(0.97 0.02 230); }
 .sky::before {
   opacity: 1;
   background: radial-gradient(125% 125% at 50% 10% in oklab,
-    oklch(0.9321 0.0330 223.41) 40%,
-    oklch(0.8546 0.0803 239.96) 100%);
+    #D2EEF9 40%,
+    #B4D9EF 100%);
 }
 /* Night layer */
 .sky::after {
@@ -227,31 +227,51 @@ html, body { background: oklch(0.97 0.02 230); }
   border-radius: 1.75rem;
 }
 
-.tile-wind  { background: linear-gradient(160deg, oklch(0.94 0.06 200 / 0.9), oklch(0.88 0.09 220 / 0.6)); }
+.tile-wind {
+  background:
+    radial-gradient(128% 92% at 42% -16% in oklab,
+      #FFFFFF4D 0%,
+      #FFFFFF45 20%,
+      #FFFFFF21 54%,
+      #FFFFFF08 80%,
+      #FFFFFF00 100%),
+    radial-gradient(86% 76% at 100% 106% in oklab,
+      #1866E10A 0%,
+      #1866E108 22%,
+      #1866E104 58%,
+      #1866E101 82%,
+      #1866E100 100%),
+    linear-gradient(168deg in oklab,
+      #F5F7F8 0%,
+      #EAEDF2 100%);
+}
 
-/* Hover field for .tile-wind: the tile's own two stops, deepened. Two
-   monotonic stops only — the previous three ran 196° → 228° → 202°, and the
-   hue reversal at the midpoint drew a visible crease across the tile.
-   (Lightning CSS lowers `in oklab` to sRGB stops; at this delta the two
-   interpolations are indistinguishable.) */
 .tile-wind-sweep {
-  background-image: linear-gradient(
-    160deg in oklab,
-    oklch(0.925 0.075 202 / 0.92),
-    oklch(0.86 0.105 222 / 0.66)
-  );
+  background-image: radial-gradient(160% 132% at 42% -16% in oklab,
+    #FFFFFF9E 0%,
+    #FFFFFF8F 20%,
+    #FFFFFF52 54%,
+    #FFFFFF21 80%,
+    #FFFFFF00 100%);
   opacity: 0;
-  transition: opacity 150ms ease-out;
+  transform: scale(var(--sweep-scale, 0.96));
+  transform-origin: 42% 0%;
+  transition:
+    opacity 240ms ease-out,
+    transform 240ms ease-out;
 }
 .tile-wind:hover .tile-wind-sweep,
 .tile-wind:focus-visible .tile-wind-sweep {
+  --sweep-scale: 1;
   opacity: 1;
-  transition-duration: 260ms;
+  transition-duration: 420ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (prefers-reduced-motion: reduce) {
   .tile-wind-sweep,
   .tile-wind:hover .tile-wind-sweep,
   .tile-wind:focus-visible .tile-wind-sweep {
+    --sweep-scale: 1;
     transition: none;
   }
 }
@@ -394,6 +414,7 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 /* Night lifts instead of deepening: +0.04 lightness on the same two stops. */
 .night .tile-wind-sweep {
+  --sweep-scale: 1;
   background-image: linear-gradient(
     160deg in oklab,
     oklch(0.26 0.055 210 / 0.95),
