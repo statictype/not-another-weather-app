@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { InfoIcon, OctagonAlertIcon, TriangleAlertIcon, type LucideIcon } from "lucide-react";
+import {
+  InfoIcon,
+  Maximize2Icon,
+  OctagonAlertIcon,
+  TriangleAlertIcon,
+  type LucideIcon,
+} from "lucide-react";
 import type { AlertSeverity, WeatherAlert } from "@/api/types";
 import { DialogScroll } from "@/components/dialog-scroll";
 import {
@@ -13,48 +19,46 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * The tile is one neutral plate at every severity (`.tile-alert`, declared in
- * `index.css` because `.bento-tile` sets `background` and `border` unlayered,
- * which a utility cannot override). Severity reaches the card through two
- * marks on that plate:
- *
- * - `mark` colors the icon. On the card the icon is drawn solid and stroked
- *   with the plate's own color, so the interior glyph knocks out of the
- *   silhouette and no ring is drawn around it. In the modal it stays a line
- *   icon — at 16px a knocked-out glyph is too small to read.
- * - `badge` fills the "+N more alerts" disc, and the modal's severity chip.
+ * `rail` is the card's; `mark` and `badge` are the modal's. The plate itself is
+ * `.tile-alert` in `index.css`, because `.bento-tile` sets `background` and
+ * `border` unlayered and a utility cannot override those.
  */
 const SEVERITY: Record<
   AlertSeverity,
-  { icon: LucideIcon; word: string | null; mark: string; badge: string }
+  { icon: LucideIcon; word: string | null; rail: string; mark: string; badge: string }
 > = {
   extreme: {
     icon: OctagonAlertIcon,
     word: "Extreme",
+    rail: "[--alert-rail:var(--sev-extreme)]",
     mark: "text-[var(--sev-extreme)]",
     badge: "bg-[var(--sev-extreme)] text-[var(--sev-extreme-on)]",
   },
   severe: {
     icon: TriangleAlertIcon,
     word: "Severe",
+    rail: "[--alert-rail:var(--sev-severe)]",
     mark: "text-[var(--sev-severe)]",
     badge: "bg-[var(--sev-severe)] text-[var(--sev-severe-on)]",
   },
   moderate: {
     icon: TriangleAlertIcon,
     word: "Moderate",
+    rail: "[--alert-rail:var(--sev-moderate)]",
     mark: "text-[var(--sev-moderate)]",
     badge: "bg-[var(--sev-moderate)] text-[var(--sev-moderate-on)]",
   },
   minor: {
     icon: InfoIcon,
     word: "Minor",
+    rail: "[--alert-rail:color-mix(in_oklab,var(--foreground)_45%,transparent)]",
     mark: "text-foreground/70",
     badge: "bg-foreground/70 text-background",
   },
   unknown: {
     icon: InfoIcon,
     word: null,
+    rail: "[--alert-rail:color-mix(in_oklab,var(--foreground)_45%,transparent)]",
     mark: "text-foreground/70",
     badge: "bg-foreground/70 text-background",
   },
@@ -72,48 +76,55 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
   const top = alerts?.[0];
   if (!alerts || !top) return null;
 
-  const { icon: Icon, word, mark, badge } = SEVERITY[top.severity];
+  const { word, rail } = SEVERITY[top.severity];
   const extra = alerts.length - 1;
   const until = formatUntil(top.expires, tz);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="swap-in swap-d-2 bento-tile tile-alert relative flex w-full flex-col justify-center overflow-hidden p-6 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-4">
+      <DialogTrigger
+        className={cn(
+          "swap-in swap-d-2 bento-tile tile-alert group relative flex w-full items-center gap-4",
+          "overflow-hidden p-5 text-left",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+          rail,
+        )}
+      >
         <span
           aria-hidden="true"
           className="tile-alert-sweep pointer-events-none absolute inset-0"
         />
+        <span
+          aria-hidden="true"
+          className="tile-alert-rail pointer-events-none absolute inset-y-0 start-0 w-[3px]"
+        />
 
-        <span className="relative flex w-full items-start gap-3.5">
-          <Icon
-            className={cn("mt-0.5 size-6 shrink-0", mark)}
-            fill="currentColor"
-            stroke="var(--alert-plate-solid)"
-            strokeWidth={2}
+        <span className="relative flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1">
+          {/* One size at every width: light is the headline weight, and it
+              needs 20px to hold its stems. */}
+          <span className="line-clamp-2 min-w-0 text-xl leading-snug font-light tracking-tight">
+            {top.event}
+          </span>
+          {/* Steps down by size, not alpha — see The Step-Down Rule. */}
+          {until && <span className="text-sm tracking-tight">{until}</span>}
+        </span>
+
+        <span className="relative flex shrink-0 items-center gap-3">
+          {extra > 0 && (
+            <>
+              <span className="text-sm tabular-nums text-foreground/70" aria-hidden="true">
+                +{extra}
+              </span>
+              <span aria-hidden="true" className="h-4 w-px bg-foreground/15" />
+            </>
+          )}
+          <Maximize2Icon
+            className="size-4 shrink-0 text-foreground/70 transition-colors group-hover:text-foreground"
+            strokeWidth={1.75}
             aria-hidden="true"
           />
-          <span className="min-w-0 flex-1">
-            {/* One size at every width: light is the headline weight, and it
-                needs 20px to hold its stems. */}
-            <span className="line-clamp-2 text-xl leading-snug font-light tracking-tight">
-              {top.event}
-            </span>
-            {/* Steps down by size, not alpha — see The Step-Down Rule. */}
-            {until && <span className="mt-1.5 block text-sm tracking-tight">{until}</span>}
-          </span>
-          {extra > 0 && (
-            <span
-              className={cn(
-                "mt-1 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1",
-                "text-[0.625rem] tabular-nums",
-                badge,
-              )}
-              aria-hidden="true"
-            >
-              +{extra}
-            </span>
-          )}
         </span>
+
         <span className="sr-only">
           {word ? `${word} severity. ` : ""}
           {alerts.length === 1 ? "1 active alert" : `${alerts.length} active alerts`}. Show details.

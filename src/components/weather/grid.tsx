@@ -32,9 +32,9 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
     >
       <HeroCard location={c.location} current={c.current} />
 
-      {/* `contents` keeps both tiles as direct grid children below `xl`; at
-          `xl` the wrapper becomes the one cell they stack inside. */}
-      <div className="contents xl:order-2 xl:col-span-1 xl:flex xl:flex-col xl:gap-6">
+      {/* One cell at every width: `auto-rows` floors a row at 150px, which is
+          taller than the alert strip. */}
+      <div className="flex flex-col gap-5 sm:col-span-4 sm:gap-6 xl:order-2 xl:col-span-1">
         <AlertsCard
           alerts={demoAlerts() ?? forecast.data?.alerts}
           tz={c.location.tz}

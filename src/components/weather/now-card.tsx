@@ -80,7 +80,7 @@ export function NowCard({ current }: NowCardProps) {
             "swap-in swap-d-2 bento-tile tile-wind group relative w-full overflow-hidden p-6 text-left",
             "flex flex-col justify-center gap-5",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-            "sm:col-span-4 xl:flex-1",
+            "xl:flex-1",
           )}
         >
           <span

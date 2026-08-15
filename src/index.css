@@ -290,34 +290,6 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 
-/* One neutral plate at every severity. The severity ramp is carried by the
-   icon and the count disc, not by the tile's field — so the plate is the same
-   slate at `extreme` as at `minor`, and only the marks on it change. */
-.tile-alert {
-  background: linear-gradient(160deg in oklab, var(--alert-plate-near), var(--alert-plate-far));
-}
-.tile-alert-sweep {
-  background-image: linear-gradient(
-    160deg in oklab,
-    var(--alert-plate-near-lit),
-    var(--alert-plate-far-lit)
-  );
-  opacity: 0;
-  transition: opacity 150ms ease-out;
-}
-.tile-alert:hover .tile-alert-sweep,
-.tile-alert:focus-visible .tile-alert-sweep {
-  opacity: 1;
-  transition-duration: 260ms;
-}
-@media (prefers-reduced-motion: reduce) {
-  .tile-alert-sweep,
-  .tile-alert:hover .tile-alert-sweep,
-  .tile-alert:focus-visible .tile-alert-sweep {
-    transition: none;
-  }
-}
-
 /* Moon dark-side fill, per mode. */
 :root  { --moon-dark: oklch(0.36 0.05 265); }
 .night { --moon-dark: oklch(0.08 0.005 250); }
@@ -328,15 +300,16 @@ html, body { background: oklch(0.97 0.02 230); }
  * near-black over the orange, which is too light to carry white text at the
  * lightness the hue needs to still read as orange.
  *
- * Measured against the composited plate (near stop, where the tile icon
+ * Measured against the composited plate (near stop, where the card's rail
  * sits) and inside a filled badge:
- *   day    icon 6.06 / 4.55 / 2.23:1 · badge ink 6.50 / 4.88 / 7.36:1
- *   night  icon 4.86 / 6.22 / 9.14:1 · badge ink 5.70 / 7.30 / 10.40:1
+ *   day    rail 6.06 / 4.55 / 2.23:1 · badge ink 6.50 / 4.88 / 7.36:1
+ *   night  rail 4.86 / 6.22 / 9.14:1 · badge ink 5.70 / 7.30 / 10.40:1
  * Badge text is small (4.5:1 floor) and clears it everywhere. The day
- * `moderate` icon is 2.23:1, under the 3:1 graphic floor — a deliberate
- * choice for a vivid orange. The severity is also spoken in the card's
- * screen-reader text and printed as a word on the modal chip, so the hue is
- * not the only carrier. axe skips nodes behind backdrop-filter, so
+ * `moderate` rail is 2.23:1, under the 3:1 graphic floor — a deliberate
+ * choice for a vivid orange, and the rail is 3px wide, so it is a thinner
+ * carrier than the filled icon it replaced. The severity is also spoken in
+ * the card's screen-reader text and printed as a word on the modal chip, so
+ * the hue is not the only carrier. axe skips nodes behind backdrop-filter, so
  * regressions here are invisible to Lighthouse.
  *
  * The plate is the same slate at every severity, a step off the plain tile
@@ -354,10 +327,6 @@ html, body { background: oklch(0.97 0.02 230); }
   --alert-plate-far: oklch(0.905 0.030 248 / 0.55);
   --alert-plate-near-lit: oklch(0.955 0.014 250 / 0.94);
   --alert-plate-far-lit: oklch(0.878 0.034 248 / 0.62);
-  /* Opaque match for the plate's near stop, where the icon sits. Strokes the
-     icon so the interior glyph knocks out of the solid silhouette without
-     drawing a ring around it. */
-  --alert-plate-solid: oklch(0.9635 0.0137 248);
 }
 .night {
   --sev-extreme: oklch(0.660 0.200 22);
@@ -372,7 +341,6 @@ html, body { background: oklch(0.97 0.02 230); }
   --alert-plate-far: oklch(0.165 0.020 258 / 0.60);
   --alert-plate-near-lit: oklch(0.285 0.016 252 / 0.94);
   --alert-plate-far-lit: oklch(0.198 0.022 258 / 0.66);
-  --alert-plate-solid: oklch(0.236 0.0146 248);
 }
 
 /* Night overrides, scoped under .night (set on the App root). */
@@ -412,14 +380,13 @@ html, body { background: oklch(0.97 0.02 230); }
     linear-gradient(160deg, oklch(0.22 0.05 210 / 0.95), oklch(0.15 0.06 218 / 0.7));
   filter: grayscale(20%);
 }
-/* Night lifts instead of deepening: +0.04 lightness on the same two stops. */
 .night .tile-wind-sweep {
-  --sweep-scale: 1;
-  background-image: linear-gradient(
-    160deg in oklab,
-    oklch(0.26 0.055 210 / 0.95),
-    oklch(0.19 0.07 218 / 0.78)
-  );
+  background-image: radial-gradient(160% 132% at 42% -16% in oklab,
+    #DCEBFF07 0%,
+    #DCEBFF06 20%,
+    #DCEBFF04 54%,
+    #DCEBFF02 80%,
+    #DCEBFF00 100%);
 }
 .night .tile-astro {
   background:
@@ -427,8 +394,36 @@ html, body { background: oklch(0.97 0.02 230); }
     linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
 
-/* .tile-alert reads its stops from tokens, so the night plate is the .night
-   token block above — no night rule of its own. */
+/* Two classes, and below `.night .bento-tile`: that rule sets `background` as a
+   shorthand and wins at one class. */
+.bento-tile.tile-alert {
+  background: linear-gradient(160deg in oklab, var(--alert-plate-near), var(--alert-plate-far));
+  border-radius: 1.25rem;
+}
+.tile-alert-rail {
+  background: var(--alert-rail, transparent);
+}
+.tile-alert-sweep {
+  background-image: linear-gradient(
+    160deg in oklab,
+    var(--alert-plate-near-lit),
+    var(--alert-plate-far-lit)
+  );
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+.tile-alert:hover .tile-alert-sweep,
+.tile-alert:focus-visible .tile-alert-sweep {
+  opacity: 1;
+  transition-duration: 260ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-alert-sweep,
+  .tile-alert:hover .tile-alert-sweep,
+  .tile-alert:focus-visible .tile-alert-sweep {
+    transition: none;
+  }
+}
 
 /* One light source at the lower-right corner, falling away to deep navy at the
    upper left. Two blooms only — earlier revisions used four or five, and the
