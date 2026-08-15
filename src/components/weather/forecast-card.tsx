@@ -64,11 +64,13 @@ function DayColumn({ day, label }: { day: ForecastDay; label: string }) {
   return (
     <div className="fc-day min-w-0">
       <span className="fc-name label-section truncate">{label}</span>
+      {/* 1.05 at 40px draws the same 1.75px line as the hourly icons at
+          28px/1.5. */}
       <ConditionIcon
         text={day.conditionText}
         isDay={day.isDay}
         className="fc-icon size-10 shrink-0 text-foreground/60"
-        strokeWidth={1.5}
+        strokeWidth={1.05}
         aria-hidden="true"
       />
       <span className="fc-temp text-2xl leading-none tracking-tight tabular-nums whitespace-nowrap">

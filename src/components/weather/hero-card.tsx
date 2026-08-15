@@ -56,15 +56,15 @@ export function HeroCard({ location, current }: HeroCardProps) {
         </div>
 
         {/* `stroke-width` comes down as the icon goes up so the drawn line
-            stays ~6.7px — the weight it had at 160px/stroke 1 — rather than
-            thickening with the size. */}
+            stays ~5px from `sm` up, rather than thickening with the size.
+            Below `sm` it draws at ~3.5px. */}
         <ConditionIcon
           text={current.conditionText}
           isDay={isDay}
           className={cn(
-            "size-36 shrink-0 self-center [stroke-width:1.1]",
-            "sm:size-44 sm:[stroke-width:0.9]",
-            "xl:size-56 xl:[stroke-width:0.72]",
+            "size-36 shrink-0 self-center [stroke-width:0.58]",
+            "sm:size-44 sm:[stroke-width:0.68]",
+            "xl:size-56 xl:[stroke-width:0.53]",
             isDay ? "text-white/90" : "text-[oklch(0.62_0.03_250)]",
           )}
           aria-hidden="true"
