@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import type { ComponentType, CSSProperties, ReactNode, SVGProps } from "react";
 import type { HourlyForecast } from "@/api/types";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { formatHour, formatWeekday, spokenHour } from "@/lib/clock";
+import { read, type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
 
@@ -22,7 +25,7 @@ interface HourRow {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   name: string;
   lead?: boolean;
-  cell: (slot: HourlyForecast) => ReactNode;
+  cell: (slot: HourlyForecast, system: UnitSystem) => ReactNode;
 }
 
 const ROWS: HourRow[] = [
@@ -31,13 +34,13 @@ const ROWS: HourRow[] = [
     icon: ThermometerIcon,
     name: "Temperature",
     lead: true,
-    cell: (slot) => `${Math.round(slot.tempC)}°`,
+    cell: (slot, system) => read(slot.temp, system).text,
   },
   {
     key: "feels",
     icon: PersonStandingIcon,
     name: "Feels like",
-    cell: (slot) => `${Math.round(slot.feelsLikeC)}°`,
+    cell: (slot, system) => read(slot.feelsLike, system).text,
   },
   {
     key: "precip",
@@ -131,6 +134,7 @@ interface Column {
 }
 
 function HourTable({ slots }: { slots: HourlyForecast[] }) {
+  const system = useUnitSystem();
   const columns: Column[] = slots.map((slot, i) => {
     const prev = slots[i - 1];
     return { slot, isBreak: prev !== undefined && dateOf(slot.time) !== dateOf(prev.time) };
@@ -151,7 +155,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
             >
               <span className="hour-head-inner">
                 <span aria-hidden="true" className={cn("label-sub", isBreak && "text-foreground")}>
-                  {isBreak ? weekdayLabel(slot.time) : formatHourLabel(slot.time)}
+                  {isBreak ? weekdayLabel(slot.time, system) : hourLabel(slot.time, system)}
                 </span>
                 <ConditionIcon
                   text={slot.conditionText}
@@ -162,7 +166,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
                 />
               </span>
               <span className="sr-only">
-                {spokenHour(slot.time, isBreak)}, {slot.conditionText}
+                {spokenColumn(slot.time, isBreak, system)}, {slot.conditionText}
               </span>
             </th>
           ))}
@@ -183,7 +187,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
                   isBreak && "hour-daybreak",
                 )}
               >
-                {row.cell(slot)}
+                {row.cell(slot, system)}
               </td>
             ))}
           </tr>
@@ -312,27 +316,19 @@ function dateOf(time: string): string {
   return time.split(" ")[0] ?? time;
 }
 
-function formatHourLabel(time: string): string {
-  const hour = hourOf(time);
-  if (hour === 0) return "12am";
-  if (hour === 12) return "12pm";
-  return hour < 12 ? `${hour}am` : `${hour - 12}pm`;
+function hourLabel(time: string, system: UnitSystem): string {
+  return formatHour(hourOf(time), system);
 }
 
-function weekdayLabel(time: string): string {
-  const parsed = new Date(`${dateOf(time)}T12:00:00`);
-  if (Number.isNaN(parsed.getTime())) return formatHourLabel(time);
-  return parsed.toLocaleDateString(undefined, { weekday: "short" });
+function weekdayLabel(time: string, system: UnitSystem): string {
+  return formatWeekday(dateOf(time), system) ?? hourLabel(time, system);
 }
 
-function spokenHour(time: string, withDay: boolean): string {
-  const hour = hourOf(time);
-  const clock =
-    hour === 0 ? "12 am" : hour === 12 ? "12 pm" : hour < 12 ? `${hour} am` : `${hour - 12} pm`;
+function spokenColumn(time: string, withDay: boolean, system: UnitSystem): string {
+  const clock = spokenHour(hourOf(time), system);
   if (!withDay) return clock;
-  const parsed = new Date(`${dateOf(time)}T12:00:00`);
-  if (Number.isNaN(parsed.getTime())) return clock;
-  return `${parsed.toLocaleDateString(undefined, { weekday: "long" })}, ${clock}`;
+  const day = formatWeekday(dateOf(time), system, "long");
+  return day ? `${day}, ${clock}` : clock;
 }
 
 function hourOf(time: string): number {

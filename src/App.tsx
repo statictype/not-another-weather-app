@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner";
 import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
+import { UnitToggle } from "@/components/unit-toggle";
 
 const Toaster = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import { pickRandomCity } from "@/lib/random-cities";
 
 export function App() {
   const [inputValue, setInputValue] = useState("");
+  const [isSearchOverlayOpen, setSearchOverlayOpen] = useState(false);
 
   const activeQuery = useSearchParam("city");
 
@@ -114,8 +116,10 @@ export function App() {
                 onRecentClearAll={clearAllWithUndo}
                 onLocationRequest={handleLocationRequest}
                 onRandomSelect={handleRandomSelect}
+                onOpenChange={setSearchOverlayOpen}
               />
             </div>
+            <UnitToggle collapsed={isSearchOverlayOpen} />
           </header>
 
           <main className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>

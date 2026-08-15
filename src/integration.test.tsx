@@ -6,7 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
 import type { SuggestionItem, WeatherCurrent, WeatherForecast } from "@/api/types";
 import { __resetHistoryStoreForTests } from "@/hooks/use-history";
+import { __resetUnitSystemForTests } from "@/hooks/use-unit-system";
 import { server } from "@/test/msw-server";
+import { distance, pressure, speed, temperature } from "@/worker/format";
+import { precipAmountPair, precipPair } from "@/worker/precip";
 
 const londonCurrent: WeatherCurrent = {
   location: {
@@ -19,81 +22,71 @@ const londonCurrent: WeatherCurrent = {
     lon: -0.11,
   },
   current: {
-    tempC: 12.3,
-    feelsLikeC: 11.1,
-    heatIndexC: 12.3,
-    windchillC: 11.1,
+    temp: temperature(12.3, 54.1),
+    feelsLike: temperature(11.1, 52),
+    heatIndex: temperature(12.3, 54.1),
+    windchill: temperature(11.1, 52),
+    dewpoint: temperature(6.2, 43.2),
     conditionText: "Partly cloudy",
     conditionCode: 1003,
     timeOfDay: "day",
-    windKph: 14,
+    wind: speed(14, 8.7),
+    gust: speed(22, 13.7),
     windDir: "WSW",
     windDegree: 240,
-    gustKph: 22,
     humidity: 67,
     pressureMb: 1015,
-    visibilityKm: 10,
+    pressure: pressure(1015, 29.97),
+    visibility: distance(10, 6),
     uv: 4,
     cloud: 40,
-    dewpointC: 6.2,
-    precipMm: 0,
+    precip: precipAmountPair(0, "mm"),
+    comfort: { thermal: "Cool", air: "Slightly dry", sentence: "Cool but slightly dry" },
+    beaufort: "Gentle breeze",
   },
 };
 
 const londonForecast: WeatherForecast = {
-  today: {
-    minC: 8,
-    maxC: 15.5,
-    chanceOfRain: 20,
-    willItRain: false,
-    chanceOfSnow: 0,
-    willItSnow: false,
-    totalPrecipMm: 0,
-    totalSnowCm: 0,
-  },
   airQualityIndex: 2,
   forecast: [
     {
       date: "2026-04-07",
-      minC: 8,
-      maxC: 15.5,
-      avgC: 11.7,
+      min: temperature(8, 46.4),
+      max: temperature(15.5, 59.9),
       chanceOfRain: 20,
       willItRain: false,
       chanceOfSnow: 0,
       willItSnow: false,
-      totalPrecipMm: 0,
-      totalSnowCm: 0,
+      totalPrecip: precipPair(0, "mm"),
+      totalSnow: precipPair(0, "cm"),
       conditionText: "Partly cloudy",
       conditionCode: 1003,
       isDay: true,
     },
     {
       date: "2026-04-08",
-      minC: 9,
-      maxC: 16.5,
-      avgC: 12.7,
+      min: temperature(9, 48.2),
+      max: temperature(16.5, 61.7),
       chanceOfRain: 30,
       willItRain: true,
       chanceOfSnow: 0,
       willItSnow: false,
-      totalPrecipMm: 2.4,
-      totalSnowCm: 0,
+      totalPrecip: precipPair(2.4, "mm"),
+      totalSnow: precipPair(0, "cm"),
       conditionText: "Light rain",
       conditionCode: 1183,
       isDay: true,
     },
     {
       date: "2026-04-09",
-      minC: 10,
-      maxC: 17.5,
-      avgC: 13.7,
+      min: temperature(10, 50),
+      max: temperature(17.5, 63.5),
       chanceOfRain: 10,
       willItRain: false,
       chanceOfSnow: 0,
       willItSnow: false,
-      totalPrecipMm: 0,
-      totalSnowCm: 0,
+      totalPrecip: precipPair(0, "mm"),
+      totalSnow: precipPair(0, "cm"),
       conditionText: "Sunny",
       conditionCode: 1000,
       isDay: true,
@@ -123,6 +116,7 @@ const londonSuggestion: SuggestionItem = {
 
 function renderAppAt(url: string) {
   __resetHistoryStoreForTests();
+  __resetUnitSystemForTests("metric");
   window.history.replaceState(null, "", url);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(
@@ -134,6 +128,7 @@ function renderAppAt(url: string) {
 
 beforeEach(() => {
   __resetHistoryStoreForTests();
+  __resetUnitSystemForTests("metric");
   window.history.replaceState(null, "", "/");
 
   // Desktop layout: the mobile overlay remounts the input on focus.
@@ -314,6 +309,74 @@ describe("Oasis (integration)", () => {
     expect(document.querySelector("[aria-hidden='true'].animate-pulse")).toBeInTheDocument();
 
     await screen.findByText(/^tomorrow$/i);
+  });
+
+  it("switches every reading on the toggle without a network request", async () => {
+    let weatherCalls = 0;
+    let forecastCalls = 0;
+    server.use(
+      http.get("/api/weather", () => {
+        weatherCalls += 1;
+        return HttpResponse.json(londonCurrent);
+      }),
+      http.get("/api/weather/forecast", () => {
+        forecastCalls += 1;
+        return HttpResponse.json(londonForecast);
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderAppAt("/?city=London");
+
+    await screen.findByRole("heading", { name: /london/i });
+    await screen.findByText(/^tomorrow$/i);
+    const callsBefore = [weatherCalls, forecastCalls];
+
+    expect(screen.getAllByText("12°").length).toBeGreaterThan(0);
+    expect(screen.getByRole("img", { name: "14 kilometres per hour" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "1015 millibars" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /imperial units/i }));
+
+    expect(screen.getAllByText("54°").length).toBeGreaterThan(0);
+    expect(screen.getByRole("img", { name: "9 miles per hour" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "29.97 inches of mercury" })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "14 kilometres per hour" })).not.toBeInTheDocument();
+
+    expect([weatherCalls, forecastCalls]).toEqual(callsBefore);
+  });
+
+  it("leaves every classified word and the needle angle where they were", async () => {
+    const user = userEvent.setup();
+    renderAppAt("/?city=London");
+
+    await screen.findByRole("heading", { name: /london/i });
+
+    const sentence = () => screen.getAllByText("Cool but slightly dry");
+    const beaufort = () => screen.getAllByText("Gentle breeze");
+    const band = () => screen.getByText("Normal");
+    const needle = () =>
+      document.querySelector("[transform^='rotate(']")?.getAttribute("transform");
+
+    const before = [sentence().length, beaufort().length, band().textContent, needle()];
+
+    await user.click(screen.getByRole("button", { name: /imperial units/i }));
+
+    expect([sentence().length, beaufort().length, band().textContent, needle()]).toEqual(before);
+  });
+
+  it("dashes a reading whose pair a stale body never carried", async () => {
+    const stale = structuredClone(londonCurrent) as unknown as {
+      current: Record<string, unknown>;
+    };
+    delete stale.current.visibility;
+    delete stale.current.temp;
+    server.use(http.get("/api/weather", () => HttpResponse.json(stale)));
+
+    renderAppAt("/?city=London");
+
+    await screen.findByRole("heading", { name: /london/i });
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
   });
 
   it("removes a history item, shows undo toast, and restores it", async () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { airComfort, type AirLabel, type ThermalLabel } from "./air-comfort";
+import type { AirLabel, ThermalLabel } from "@/lib/schemas";
+import { airComfort } from "./air-comfort";
 
 interface Row {
   location: string;

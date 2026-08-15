@@ -1,9 +1,12 @@
 import { useId, useState } from "react";
 import { MoonIcon, SunIcon } from "lucide-react";
 import type { Astro } from "@/api/types";
+import { TabButton } from "@/components/tab-button";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { formatClock, parseClockMinutes } from "@/lib/clock";
 import { moonGeometry, moonLitPath } from "@/lib/moon";
+import { type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
-import { TabButton } from "./tab-button";
 
 type AstroView = "sun" | "moon";
 
@@ -15,6 +18,7 @@ interface AstroCardProps {
 
 export function AstroCard({ astro, lat }: AstroCardProps) {
   const [view, setView] = useState<AstroView>("sun");
+  const system = useUnitSystem();
 
   return (
     <section
@@ -55,7 +59,13 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
 
       <div key={`panel-${view}`} className="astro-fade relative mx-auto mt-3 w-full max-w-[400px]">
         {view === "sun" ? (
-          <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} lat={lat} />
+          <ArcPanel
+            kind="sun"
+            rise={astro?.sunrise}
+            set={astro?.sunset}
+            lat={lat}
+            system={system}
+          />
         ) : (
           <ArcPanel
             kind="moon"
@@ -63,6 +73,7 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
             set={astro?.moonset}
             astro={astro}
             lat={lat}
+            system={system}
           />
         )}
       </div>
@@ -106,10 +117,11 @@ interface ArcPanelProps {
   rise: string | undefined;
   set: string | undefined;
   lat: number;
+  system: UnitSystem;
   astro?: Astro | undefined;
 }
 
-function ArcPanel({ kind, rise, set, lat, astro }: ArcPanelProps) {
+function ArcPanel({ kind, rise, set, lat, system, astro }: ArcPanelProps) {
   const labels =
     kind === "sun" ? { rise: "Sunrise", set: "Sunset" } : { rise: "Moonrise", set: "Moonset" };
 
@@ -119,7 +131,7 @@ function ArcPanel({ kind, rise, set, lat, astro }: ArcPanelProps) {
       <div className="mt-2 flex items-end justify-between">
         <div>
           {rise ? (
-            <p className="text-base leading-none tracking-tight">{formatClock(rise)}</p>
+            <p className="text-base leading-none tracking-tight">{formatClock(rise, system)}</p>
           ) : (
             <Skeleton />
           )}
@@ -127,7 +139,7 @@ function ArcPanel({ kind, rise, set, lat, astro }: ArcPanelProps) {
         </div>
         <div className="text-right">
           {set ? (
-            <p className="text-base leading-none tracking-tight">{formatClock(set)}</p>
+            <p className="text-base leading-none tracking-tight">{formatClock(set, system)}</p>
           ) : (
             <Skeleton />
           )}
@@ -339,15 +351,6 @@ function Skeleton() {
   return <div className="h-4 w-14 animate-pulse rounded bg-foreground/10" aria-hidden="true" />;
 }
 
-function formatClock(t: string): string {
-  const [time, ampm] = t.trim().split(" ");
-  if (!time) return t;
-  const [h, m] = time.split(":");
-  const hour = Number.parseInt(h ?? "0", 10);
-  const suffix = ampm ? ampm.toLowerCase() : "";
-  return `${hour}:${m}${suffix ? ` ${suffix}` : ""}`;
-}
-
 function computeDayLength(sunrise: string, sunset: string): string {
   const rise = parseClockMinutes(sunrise);
   const setM = parseClockMinutes(sunset);
@@ -357,17 +360,4 @@ function computeDayLength(sunrise: string, sunset: string): string {
   const h = Math.floor(diff / 60);
   const m = diff % 60;
   return `${h}h ${m}m`;
-}
-
-function parseClockMinutes(t: string): number | null {
-  const [time, ampm] = t.trim().split(" ");
-  if (!time) return null;
-  const [hStr, mStr] = time.split(":");
-  let hour = Number.parseInt(hStr ?? "", 10);
-  const min = Number.parseInt(mStr ?? "", 10);
-  if (Number.isNaN(hour) || Number.isNaN(min)) return null;
-  const ampmU = (ampm ?? "").toUpperCase();
-  if (ampmU === "PM" && hour < 12) hour += 12;
-  if (ampmU === "AM" && hour === 12) hour = 0;
-  return hour * 60 + min;
 }

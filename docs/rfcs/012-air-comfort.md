@@ -103,7 +103,7 @@ Every air label other than `Comfortable` always joins with `and`,
 including at the thermal extremes (`Dangerously hot and very humid`,
 `Very cold and damp`).
 
-The rule lives in `COMFORT_JOIN` in `src/lib/air-comfort.ts`, an
+The rule lives in `COMFORT_JOIN` in `src/worker/air-comfort.ts`, an
 exhaustive `Record<ThermalLabel, …>`, keyed by thermal label.
 
 ## Edge cases
@@ -161,11 +161,18 @@ them.
 ## Code organization
 
 ```
-src/lib/air-comfort.ts                       # pure labeler — labels + sentence
-src/lib/air-comfort.test.ts                  # 26 reference rows + boundary rows
-src/components/weather/hero-card.tsx         # sentence, at peak weight
-src/components/weather/air-comfort-card.tsx  # raw metrics (no labeler)
+src/worker/air-comfort.ts                    # pure labeler — labels + sentence
+src/worker/air-comfort.test.ts               # 26 reference rows + boundary rows
+src/components/weather/now-card.tsx          # sentence, at peak weight
 ```
+
+Issue 006 moved both files out of `src/lib`. The labeler reads canonical
+Celsius, and the published comfort bands are round Celsius numbers
+(-5/4/10/16/22/29/35/40) that someone writing in Fahrenheit would not have
+picked — so classifying per display system would change the word when a viewer
+flips the °C/°F toggle. The Worker classifies once and ships
+`comfort: { thermal, air, sentence }` on the `current` tier; `beaufort` moved
+with it for the same reason.
 
 ### Function shape
 
@@ -213,13 +220,13 @@ function airComfort(input: AirComfortInput): AirComfort;
 the sentence does not speak; `sentence` is the only field that applies
 `COMFORT_JOIN`.
 
-The hero consumes `sentence`. `thermal` and `air` stay on the return type
+The Now card consumes `sentence`. `thermal` and `air` stay on the return type
 because the bands are the reading; nothing renders them directly today.
-Separation of concerns: lib = labeling logic, card = presentation.
+Separation of concerns: worker = labeling logic, card = presentation.
 
 ## Tests
 
-`src/lib/air-comfort.test.ts` covers:
+`src/worker/air-comfort.test.ts` covers:
 
 - **Reference rows (26):** parameterized `it.each` table — every row
   from the Reference Data section below, asserting `{ thermal, air }`.

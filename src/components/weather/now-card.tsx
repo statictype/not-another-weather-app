@@ -23,8 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { airComfort, beaufort } from "@/lib/air-comfort";
-import { precipAmount } from "@/lib/precip";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { read, type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 interface Reading {
@@ -36,43 +36,42 @@ interface Reading {
 
 const FACE = new Set(["temp", "feels", "wind"]);
 
-function readingsOf(c: CurrentConditions): Reading[] {
-  const precip = precipAmount(c.precipMm, "mm");
+function readingsOf(c: CurrentConditions, system: UnitSystem): Reading[] {
   return [
-    { key: "temp", icon: ThermometerIcon, label: "Temperature", value: `${Math.round(c.tempC)}°` },
+    { key: "temp", icon: ThermometerIcon, label: "Temperature", value: read(c.temp, system).text },
     {
       key: "feels",
       icon: PersonStandingIcon,
       label: "Feels like",
-      value: `${Math.round(c.feelsLikeC)}°`,
+      value: read(c.feelsLike, system).text,
     },
-    { key: "wind", icon: WindIcon, label: "Wind", value: beaufort(c.windKph) },
+    { key: "wind", icon: WindIcon, label: "Wind", value: c.beaufort ?? "—" },
     {
       key: "windchill",
       icon: ThermometerSnowflakeIcon,
       label: "Wind chill",
-      value: `${Math.round(c.windchillC)}°`,
+      value: read(c.windchill, system).text,
     },
     {
       key: "heatindex",
       icon: ThermometerSunIcon,
       label: "Heat index",
-      value: `${Math.round(c.heatIndexC)}°`,
+      value: read(c.heatIndex, system).text,
     },
-    { key: "dew", icon: BubblesIcon, label: "Dew", value: `${Math.round(c.dewpointC)}°` },
+    { key: "dew", icon: BubblesIcon, label: "Dew", value: read(c.dewpoint, system).text },
     { key: "humidity", icon: DropletsIcon, label: "Humidity", value: `${c.humidity}%` },
     { key: "cloud", icon: CloudIcon, label: "Cloud cover", value: `${c.cloud}%` },
     {
       key: "precip",
       icon: CloudRainIcon,
       label: "Precipitation",
-      value: precip ? precip.text : "0mm",
+      value: read(c.precip, system).text,
     },
     {
       key: "visibility",
       icon: EyeIcon,
       label: "Visibility",
-      value: `${Math.round(c.visibilityKm)} km`,
+      value: read(c.visibility, system).text,
     },
   ];
 }
@@ -83,8 +82,9 @@ interface NowCardProps {
 
 export function NowCard({ current }: NowCardProps) {
   const [open, setOpen] = useState(false);
-  const { sentence } = airComfort(current);
-  const readings = readingsOf(current);
+  const system = useUnitSystem();
+  const sentence = current.comfort?.sentence ?? "—";
+  const readings = readingsOf(current, system);
   const face = readings.filter((r) => FACE.has(r.key));
 
   return (

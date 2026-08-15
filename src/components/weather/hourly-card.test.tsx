@@ -1,9 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HourlyForecast } from "@/api/types";
+import { __resetUnitSystemForTests } from "@/hooks/use-unit-system";
+import { temperature } from "@/worker/format";
 import { HourlyCard } from "./hourly-card";
 
-/** Frozen at 14:30 UTC: the rollover lands on column 9. */
+/** Frozen at 14:30 UTC: the rollover lands on column 9. The default unit
+ *  system in this environment is metric, so the columns read 24-hour. */
 
 const TZ = "UTC";
 const NOW = "2026-08-12T14:30:00Z";
@@ -13,8 +16,8 @@ function hour(at: Date, over: Partial<HourlyForecast> = {}): HourlyForecast {
   const iso = at.toISOString();
   return {
     time: `${iso.slice(0, 10)} ${iso.slice(11, 13)}:00`,
-    tempC: 18,
-    feelsLikeC: 18,
+    temp: temperature(18, 64.4),
+    feelsLike: temperature(18, 64.4),
     conditionText: "Partly cloudy",
     conditionCode: 1003,
     isDay: true,
@@ -22,8 +25,6 @@ function hour(at: Date, over: Partial<HourlyForecast> = {}): HourlyForecast {
     chanceOfSnow: 0,
     willItRain: false,
     willItSnow: false,
-    precipMm: 0,
-    snowCm: 0,
     cloud: 25,
     ...over,
   };
@@ -47,6 +48,7 @@ function row(name: string): HTMLElement[] {
 }
 
 beforeEach(() => {
+  __resetUnitSystemForTests("metric");
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(NOW));
 });
@@ -59,7 +61,9 @@ describe("HourlyCard — the matrix", () => {
   it("puts all three readings on screen at once, one row each", () => {
     render(
       <HourlyCard
-        hourly={hourly({ 0: { tempC: 26, feelsLikeC: 33, chanceOfRain: 45 } })}
+        hourly={hourly({
+          0: { temp: temperature(26, 78.8), feelsLike: temperature(33, 91.4), chanceOfRain: 45 },
+        })}
         tz={TZ}
       />,
     );
@@ -70,21 +74,36 @@ describe("HourlyCard — the matrix", () => {
   });
 
   it("keeps the temperature the headline even when the feels-like is higher", () => {
-    render(<HourlyCard hourly={hourly({ 0: { tempC: 26, feelsLikeC: 33 } })} tz={TZ} />);
+    render(
+      <HourlyCard
+        hourly={hourly({ 0: { temp: temperature(26, 78.8), feelsLike: temperature(33, 91.4) } })}
+        tz={TZ}
+      />,
+    );
 
     expect(row("Temperature")[0]).toHaveClass("hour-cell-lead");
     expect(row("Feels like")[0]).not.toHaveClass("hour-cell-lead");
   });
 
   it("prints both temperatures where they agree", () => {
-    render(<HourlyCard hourly={hourly({ 0: { tempC: 18, feelsLikeC: 18.4 } })} tz={TZ} />);
+    render(
+      <HourlyCard
+        hourly={hourly({ 0: { temp: temperature(18, 64.4), feelsLike: temperature(18.4, 65.1) } })}
+        tz={TZ}
+      />,
+    );
 
     expect(row("Temperature")[0]).toHaveTextContent("18°");
     expect(row("Feels like")[0]).toHaveTextContent("18°");
   });
 
   it("keeps a 1° gap, which the old 2° collapse swallowed", () => {
-    render(<HourlyCard hourly={hourly({ 0: { tempC: 12, feelsLikeC: 11 } })} tz={TZ} />);
+    render(
+      <HourlyCard
+        hourly={hourly({ 0: { temp: temperature(12, 53.6), feelsLike: temperature(11, 51.8) } })}
+        tz={TZ}
+      />,
+    );
 
     expect(row("Temperature")[0]).toHaveTextContent("12°");
     expect(row("Feels like")[0]).toHaveTextContent("11°");
@@ -94,19 +113,16 @@ describe("HourlyCard — the matrix", () => {
     render(<HourlyCard hourly={hourly()} tz={TZ} />);
 
     expect(headers()).toHaveLength(24);
-    expect(headers()[0]).toHaveTextContent("3pm");
-    expect(headers()[0]).toHaveAccessibleName("3 pm, Partly cloudy");
+    expect(headers()[0]).toHaveTextContent("15");
+    expect(headers()[0]).toHaveAccessibleName("15:00, Partly cloudy");
   });
 
   it("names the new day where the date rolls over", () => {
     render(<HourlyCard hourly={hourly()} tz={TZ} />);
 
-    const expected = new Date("2026-08-13T12:00:00").toLocaleDateString(undefined, {
-      weekday: "short",
-    });
-    expect(headers()[ROLLOVER_INDEX]).toHaveTextContent(expected);
-    expect(headers()[ROLLOVER_INDEX]).toHaveAccessibleName(/^Thursday, 12 am,/);
-    expect(headers()[ROLLOVER_INDEX - 1]).toHaveTextContent("11pm");
+    expect(headers()[ROLLOVER_INDEX]).toHaveTextContent("Thu");
+    expect(headers()[ROLLOVER_INDEX]).toHaveAccessibleName(/^Thursday, 00:00,/);
+    expect(headers()[ROLLOVER_INDEX - 1]).toHaveTextContent("23");
   });
 });
 
@@ -118,12 +134,7 @@ describe("HourlyCard — precipitation", () => {
   });
 
   it("prints the chance and nothing else, amount included", () => {
-    render(
-      <HourlyCard
-        hourly={hourly({ 0: { chanceOfRain: 60, willItRain: true, precipMm: 2.4 } })}
-        tz={TZ}
-      />,
-    );
+    render(<HourlyCard hourly={hourly({ 0: { chanceOfRain: 60, willItRain: true } })} tz={TZ} />);
 
     const cell = row("Chance of precipitation")[0];
     expect(cell?.textContent).toBe("60%");
@@ -134,14 +145,12 @@ describe("HourlyCard — precipitation", () => {
       <HourlyCard
         hourly={hourly({
           0: {
-            tempC: -4,
+            temp: temperature(-4, 24.8),
             conditionText: "Light snow",
             chanceOfRain: 10,
             chanceOfSnow: 80,
             willItRain: true,
             willItSnow: true,
-            precipMm: 2,
-            snowCm: 3,
           },
         })}
         tz={TZ}
@@ -157,13 +166,12 @@ describe("HourlyCard — precipitation", () => {
       <HourlyCard
         hourly={hourly({
           0: {
-            tempC: -4,
+            temp: temperature(-4, 24.8),
             conditionText: "Light snow",
             chanceOfRain: 0,
             chanceOfSnow: 70,
             willItRain: false,
             willItSnow: false,
-            snowCm: 3,
           },
         })}
         tz={TZ}
@@ -174,12 +182,7 @@ describe("HourlyCard — precipitation", () => {
   });
 
   it("prints the chance even when the flag says no precipitation lands", () => {
-    render(
-      <HourlyCard
-        hourly={hourly({ 0: { chanceOfRain: 70, willItRain: false, precipMm: 4 } })}
-        tz={TZ}
-      />,
-    );
+    render(<HourlyCard hourly={hourly({ 0: { chanceOfRain: 70, willItRain: false } })} tz={TZ} />);
 
     expect(row("Chance of precipitation")[0]?.textContent).toBe("70%");
   });
@@ -203,10 +206,7 @@ describe("HourlyCard — the scroll controls", () => {
 
   it("hides every icon from the accessible names", () => {
     const { container } = render(
-      <HourlyCard
-        hourly={hourly({ 0: { chanceOfRain: 60, willItRain: true, precipMm: 2.4 } })}
-        tz={TZ}
-      />,
+      <HourlyCard hourly={hourly({ 0: { chanceOfRain: 60, willItRain: true } })} tz={TZ} />,
     );
 
     const icons = container.querySelectorAll("svg");

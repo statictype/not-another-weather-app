@@ -1,7 +1,11 @@
+import type { MeasurePair } from "@/api/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { read } from "@/lib/units";
 
 interface PressureCardProps {
   pressureMb: number;
+  pressure: MeasurePair;
 }
 
 // The scale is centred on the Normal band: (980 + 1050) / 2 lands at 1015.
@@ -56,8 +60,10 @@ const BANDS: readonly [PressureBand, ...PressureBand[]] = [
   },
 ];
 
-export function PressureCard({ pressureMb }: PressureCardProps) {
+export function PressureCard({ pressureMb, pressure }: PressureCardProps) {
+  const system = useUnitSystem();
   const band = bandFor(pressureMb);
+  const reading = read(pressure, system);
 
   return (
     <section className="swap-in swap-d-8 bento-tile flex flex-col sm:col-span-4 md:col-span-2 lg:col-span-4 xl:order-8 xl:col-span-1">
@@ -78,9 +84,13 @@ export function PressureCard({ pressureMb }: PressureCardProps) {
           </svg>
 
           <div className="pointer-events-none absolute inset-x-0 bottom-1 flex flex-col items-center">
-            <p className="text-2xl leading-none tracking-tight">
-              {Math.round(pressureMb)}
-              <span className="ml-1 text-sm text-foreground/70">mb</span>
+            <p
+              role="img"
+              aria-label={reading.spoken}
+              className="text-2xl leading-none tracking-tight"
+            >
+              {reading.value}
+              <span className="ml-1 text-sm text-foreground/70">{reading.suffix}</span>
             </p>
             <Tooltip>
               <TooltipTrigger className="label-sub pointer-events-auto mt-1.5 cursor-help underline decoration-dotted underline-offset-4">

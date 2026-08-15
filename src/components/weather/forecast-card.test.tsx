@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { ForecastDay } from "@/api/types";
+import { __resetUnitSystemForTests } from "@/hooks/use-unit-system";
+import { temperature } from "@/worker/format";
+import { precipPair } from "@/worker/precip";
 import { ForecastCard } from "./forecast-card";
 
 /** Index 0 of the payload is today, which the card leads with. It renders that
@@ -10,15 +13,14 @@ import { ForecastCard } from "./forecast-card";
 function day(date: string, over: Partial<ForecastDay> = {}): ForecastDay {
   return {
     date,
-    minC: 8,
-    maxC: 15.5,
-    avgC: 11.7,
+    min: temperature(8, 46.4),
+    max: temperature(15.5, 59.9),
     chanceOfRain: 20,
     willItRain: false,
     chanceOfSnow: 0,
     willItSnow: false,
-    totalPrecipMm: 0,
-    totalSnowCm: 0,
+    totalPrecip: null,
+    totalSnow: null,
     conditionText: "Partly cloudy",
     conditionCode: 1003,
     isDay: true,
@@ -35,6 +37,10 @@ function labels(): string[] {
     .queryAllByText(/^(today|tomorrow|mon|tue|wed|thu|fri|sat|sun)$/i)
     .map((el) => el.textContent!);
 }
+
+beforeEach(() => {
+  __resetUnitSystemForTests("metric");
+});
 
 describe("ForecastCard", () => {
   it("leads with today, then the 2 future days a free key returns", () => {
@@ -64,7 +70,7 @@ describe("ForecastCard", () => {
     render(
       <ForecastCard
         forecast={[
-          day(TODAY, { chanceOfRain: 60, willItRain: true, totalPrecipMm: 4 }),
+          day(TODAY, { chanceOfRain: 60, willItRain: true, totalPrecip: precipPair(4, "mm") }),
           day(DAYS[0]!, { chanceOfRain: 5 }),
           day(DAYS[1]!, { chanceOfRain: 30 }),
         ]}

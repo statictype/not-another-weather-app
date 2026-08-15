@@ -24,6 +24,8 @@ interface SearchBarProps {
   onRecentClearAll: () => void;
   onLocationRequest: () => void;
   onRandomSelect: () => void;
+  /** Fires with the mobile overlay's state, which spans the whole header. */
+  onOpenChange?: (isMobileOverlay: boolean) => void;
 }
 
 const cancelTransition = { type: "spring" as const, stiffness: 400, damping: 30 };
@@ -70,6 +72,7 @@ export function SearchBar({
   onRecentClearAll,
   onLocationRequest,
   onRandomSelect,
+  onOpenChange,
 }: SearchBarProps) {
   const inputId = useId();
   const errorId = `${inputId}-error`;
@@ -105,6 +108,10 @@ export function SearchBar({
 
   const isMobileOverlay = !isDesktop && isOpen;
   const slideLeft = isMobileOverlay ? (isMd ? SLIDE_MD : isSm ? SLIDE_SM : SLIDE_XS) : 0;
+
+  useEffect(() => {
+    onOpenChange?.(isMobileOverlay);
+  }, [isMobileOverlay, onOpenChange]);
 
   useEffect(() => {
     if (!isMobileOverlay) return;

@@ -5,6 +5,24 @@
  */
 
 import { z } from "zod";
+import type { UnitSystem } from "@/lib/units";
+
+export const MeasureSchema = z.object({
+  text: z.string(),
+  value: z.string(),
+  suffix: z.string(),
+  spoken: z.string(),
+});
+export type Measure = z.infer<typeof MeasureSchema>;
+
+export type MeasurePair = Record<UnitSystem, Measure>;
+
+/** Annotated rather than inferred, so a new `UnitSystem` member fails here
+ *  until the schema gains its row. */
+export const MeasurePairSchema: z.ZodType<MeasurePair> = z.object({
+  metric: MeasureSchema,
+  imperial: MeasureSchema,
+});
 
 export const WeatherLocationSchema = z.object({
   name: z.string(),
@@ -17,33 +35,68 @@ export const WeatherLocationSchema = z.object({
 });
 export type WeatherLocation = z.infer<typeof WeatherLocationSchema>;
 
+export const THERMAL_LABELS = [
+  "Very cold",
+  "Cold",
+  "Chilly",
+  "Cool",
+  "Mild",
+  "Warm",
+  "Hot",
+  "Very hot",
+  "Dangerously hot",
+] as const;
+export type ThermalLabel = (typeof THERMAL_LABELS)[number];
+
+export const AIR_LABELS = [
+  "Very dry",
+  "Dry",
+  "Slightly dry",
+  "Comfortable",
+  "Slightly humid",
+  "Humid",
+  "Very humid",
+  "Damp",
+] as const;
+export type AirLabel = (typeof AIR_LABELS)[number];
+
+export const AirComfortSchema = z.object({
+  thermal: z.enum(THERMAL_LABELS),
+  air: z.enum(AIR_LABELS),
+  sentence: z.string(),
+});
+export type AirComfort = z.infer<typeof AirComfortSchema>;
+
 export const CurrentConditionsSchema = z.object({
-  tempC: z.number(),
-  feelsLikeC: z.number(),
-  heatIndexC: z.number(),
-  windchillC: z.number(),
+  temp: MeasurePairSchema,
+  feelsLike: MeasurePairSchema,
+  heatIndex: MeasurePairSchema,
+  windchill: MeasurePairSchema,
+  dewpoint: MeasurePairSchema,
   conditionText: z.string(),
   conditionCode: z.number(),
   timeOfDay: z.enum(["day", "night"]),
-  windKph: z.number(),
+  wind: MeasurePairSchema,
+  gust: MeasurePairSchema,
   windDir: z.string(),
   /** Compass bearing the wind blows *from*, 0–359. */
   windDegree: z.number(),
-  gustKph: z.number(),
   humidity: z.number(),
   pressureMb: z.number(),
-  visibilityKm: z.number(),
+  pressure: MeasurePairSchema,
+  visibility: MeasurePairSchema,
   uv: z.number(),
   cloud: z.number(),
-  dewpointC: z.number(),
-  precipMm: z.number(),
+  precip: MeasurePairSchema,
+  comfort: AirComfortSchema,
+  beaufort: z.string(),
 });
 export type CurrentConditions = z.infer<typeof CurrentConditionsSchema>;
 
 export const HourlyForecastSchema = z.object({
   time: z.string(),
-  tempC: z.number(),
-  feelsLikeC: z.number(),
+  temp: MeasurePairSchema,
+  feelsLike: MeasurePairSchema,
   conditionText: z.string(),
   conditionCode: z.number(),
   isDay: z.boolean(),
@@ -52,30 +105,27 @@ export const HourlyForecastSchema = z.object({
   /** Upstream's own call on whether precipitation lands, not a threshold on the chance. */
   willItRain: z.boolean(),
   willItSnow: z.boolean(),
-  precipMm: z.number(),
-  snowCm: z.number(),
   cloud: z.number(),
 });
 export type HourlyForecast = z.infer<typeof HourlyForecastSchema>;
 
-/** A day's precipitation totals. Shared by every forecast day and by `today`,
- *  so the readout under a day column takes one shape wherever it renders. */
+/** `totalPrecip` / `totalSnow` are `null` when the figure rounds to zero in
+ *  *either* system, so the toggle never adds or removes an element. */
 export const DayPrecipSchema = z.object({
   chanceOfRain: z.number(),
   /** Upstream's own call on whether precipitation lands, not a threshold on the chance. */
   willItRain: z.boolean(),
   chanceOfSnow: z.number(),
   willItSnow: z.boolean(),
-  totalPrecipMm: z.number(),
-  totalSnowCm: z.number(),
+  totalPrecip: MeasurePairSchema.nullable(),
+  totalSnow: MeasurePairSchema.nullable(),
 });
 export type DayPrecip = z.infer<typeof DayPrecipSchema>;
 
 export const ForecastDaySchema = z.object({
   date: z.string(),
-  minC: z.number(),
-  maxC: z.number(),
-  avgC: z.number(),
+  min: MeasurePairSchema,
+  max: MeasurePairSchema,
   ...DayPrecipSchema.shape,
   conditionText: z.string(),
   conditionCode: z.number(),
@@ -115,11 +165,6 @@ export const WeatherAlertSchema = z.object({
 export type WeatherAlert = z.infer<typeof WeatherAlertSchema>;
 
 export const WeatherForecastSchema = z.object({
-  today: z.object({
-    minC: z.number(),
-    maxC: z.number(),
-    ...DayPrecipSchema.shape,
-  }),
   airQualityIndex: z.number().nullable(),
   forecast: z.array(ForecastDaySchema),
   astro: AstroSchema,

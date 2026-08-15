@@ -55,12 +55,12 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         isDay={c.current.timeOfDay === "day"}
       />
       <WindCard
-        windKph={c.current.windKph}
+        wind={c.current.wind}
         windDir={c.current.windDir}
         windDegree={c.current.windDegree}
-        gustKph={c.current.gustKph}
+        gust={c.current.gust}
       />
-      <PressureCard pressureMb={c.current.pressureMb} />
+      <PressureCard pressureMb={c.current.pressureMb} pressure={c.current.pressure} />
     </div>
   );
 }

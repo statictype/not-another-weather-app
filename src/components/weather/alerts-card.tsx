@@ -8,6 +8,9 @@ import {
 } from "lucide-react";
 import type { AlertSeverity, WeatherAlert } from "@/api/types";
 import { DialogScroll } from "@/components/dialog-scroll";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { formatStamp } from "@/lib/clock";
+import type { UnitSystem } from "@/lib/units";
 import {
   Dialog,
   DialogContent,
@@ -73,12 +76,13 @@ interface AlertsCardProps {
 
 export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
   const [open, setOpen] = useState(false);
+  const system = useUnitSystem();
   const top = alerts?.[0];
   if (!alerts || !top) return null;
 
   const { word, rail } = SEVERITY[top.severity];
   const extra = alerts.length - 1;
-  const until = formatUntil(top.expires, tz);
+  const until = formatUntil(top.expires, tz, system);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -131,7 +135,7 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
         </span>
       </DialogTrigger>
 
-      <AlertsDialog alerts={alerts} tz={tz} isNight={isNight} />
+      <AlertsDialog alerts={alerts} tz={tz} isNight={isNight} system={system} />
     </Dialog>
   );
 }
@@ -140,7 +144,11 @@ function AlertsDialog({
   alerts,
   tz,
   isNight,
-}: Omit<AlertsCardProps, "alerts"> & { alerts: readonly WeatherAlert[] }) {
+  system,
+}: Omit<AlertsCardProps, "alerts"> & {
+  alerts: readonly WeatherAlert[];
+  system: UnitSystem;
+}) {
   return (
     <DialogContent
       className={cn(
@@ -163,7 +171,12 @@ function AlertsDialog({
       <DialogScroll className="px-6 pb-6 sm:px-8 sm:pb-8">
         <div className="divide-y divide-foreground/10">
           {alerts.map((alert, i) => (
-            <AlertEntry key={`${alert.event}-${alert.effective}-${i}`} alert={alert} tz={tz} />
+            <AlertEntry
+              key={`${alert.event}-${alert.effective}-${i}`}
+              alert={alert}
+              tz={tz}
+              system={system}
+            />
           ))}
         </div>
       </DialogScroll>
@@ -171,9 +184,17 @@ function AlertsDialog({
   );
 }
 
-function AlertEntry({ alert, tz }: { alert: WeatherAlert; tz: string }) {
+function AlertEntry({
+  alert,
+  tz,
+  system,
+}: {
+  alert: WeatherAlert;
+  tz: string;
+  system: UnitSystem;
+}) {
   const { icon: Icon, word, mark, badge } = SEVERITY[alert.severity];
-  const range = formatRange(alert.effective, alert.expires, tz);
+  const range = formatRange(alert.effective, alert.expires, tz, system);
 
   return (
     /* Tight inside an entry, generous between them: 6–16px internal steps
@@ -217,21 +238,26 @@ function AlertEntry({ alert, tz }: { alert: WeatherAlert; tz: string }) {
   );
 }
 
-function formatRange(effective: string, expires: string, tz: string): string | null {
+function formatRange(
+  effective: string,
+  expires: string,
+  tz: string,
+  system: UnitSystem,
+): string | null {
   const from = parseInstant(effective);
   const to = parseInstant(expires);
   if (from === null && to === null) return null;
-  if (from === null) return `Until ${formatStamp(to as number, tz, true)}`;
-  if (to === null) return `From ${formatStamp(from, tz, true)}`;
+  if (from === null) return `Until ${formatStamp(to as number, tz, system, true)}`;
+  if (to === null) return `From ${formatStamp(from, tz, system, true)}`;
   const sameDay = formatDay(from, tz) === formatDay(to, tz);
-  return `${formatStamp(from, tz, true)} – ${formatStamp(to, tz, !sameDay)}`;
+  return `${formatStamp(from, tz, system, true)} – ${formatStamp(to, tz, system, !sameDay)}`;
 }
 
-function formatUntil(expires: string, tz: string): string | null {
+function formatUntil(expires: string, tz: string, system: UnitSystem): string | null {
   const to = parseInstant(expires);
   if (to === null) return null;
   const sameDay = formatDay(Date.now(), tz) === formatDay(to, tz);
-  const stamp = formatStamp(to, tz, !sameDay);
+  const stamp = formatStamp(to, tz, system, !sameDay);
   return stamp === "—" ? null : `Until ${stamp}`;
 }
 
@@ -246,29 +272,5 @@ function formatDay(t: number, tz: string): string {
     return new Date(t).toLocaleDateString("en-CA", { timeZone: tz });
   } catch {
     return "";
-  }
-}
-
-function formatStamp(t: number, tz: string, withDate: boolean): string {
-  const d = new Date(t);
-  try {
-    const time = d
-      .toLocaleTimeString("en-US", {
-        timeZone: tz,
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })
-      .toLowerCase();
-    if (!withDate) return time;
-    const date = d.toLocaleDateString("en-US", {
-      timeZone: tz,
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-    return `${date}, ${time}`;
-  } catch {
-    return "—";
   }
 }

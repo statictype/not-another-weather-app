@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { distance, pressure, speed, temperature } from "@/worker/format";
+import { precipAmountPair, precipPair } from "@/worker/precip";
 import {
   ALERT_SEVERITIES,
   AstroSchema,
   CurrentConditionsSchema,
   ForecastDaySchema,
   HourlyForecastSchema,
+  MeasurePairSchema,
   WeatherAlertSchema,
   WeatherCurrentSchema,
   WeatherForecastSchema,
@@ -22,37 +25,39 @@ const location = {
 };
 
 const current = {
-  tempC: 12.3,
-  feelsLikeC: 11.1,
-  heatIndexC: 12.3,
-  windchillC: 11.1,
+  temp: temperature(12.3, 54.1),
+  feelsLike: temperature(11.1, 52),
+  heatIndex: temperature(12.3, 54.1),
+  windchill: temperature(11.1, 52),
+  dewpoint: temperature(6.2, 43.2),
   conditionText: "Partly cloudy",
   conditionCode: 1003,
   timeOfDay: "day" as const,
-  windKph: 14.4,
+  wind: speed(14.4, 8.9),
+  gust: speed(22, 13.7),
   windDir: "WSW",
   windDegree: 240,
-  gustKph: 22,
   humidity: 67,
   pressureMb: 1015,
-  visibilityKm: 10,
+  pressure: pressure(1015, 29.97),
+  visibility: distance(10, 6),
   uv: 4,
   cloud: 40,
-  dewpointC: 6.2,
-  precipMm: 0,
+  precip: precipAmountPair(0, "mm"),
+  comfort: { thermal: "Cool" as const, air: "Slightly dry" as const, sentence: "Cool" },
+  beaufort: "Gentle breeze",
 };
 
 const forecastDay = {
   date: "2026-04-07",
-  minC: 8,
-  maxC: 15.5,
-  avgC: 11.7,
+  min: temperature(8, 46.4),
+  max: temperature(15.5, 59.9),
   chanceOfRain: 20,
   willItRain: false,
   chanceOfSnow: 0,
   willItSnow: false,
-  totalPrecipMm: 0,
-  totalSnowCm: 0,
+  totalPrecip: null,
+  totalSnow: null,
   conditionText: "Partly cloudy",
   conditionCode: 1003,
   isDay: true,
@@ -67,6 +72,33 @@ const astro = {
   moonIllumination: 72,
 };
 
+function without(obj: object, field: string): Record<string, unknown> {
+  const copy: Record<string, unknown> = { ...obj };
+  delete copy[field];
+  return copy;
+}
+
+describe("MeasurePairSchema", () => {
+  it("parses a pair the worker produced", () => {
+    const pair = speed(14.4, 8.9);
+    expect(MeasurePairSchema.parse(pair)).toEqual(pair);
+  });
+
+  it("rejects a pair missing a system — the client indexes it by the stored value", () => {
+    expect(() => MeasurePairSchema.parse(without(speed(14.4, 8.9), "imperial"))).toThrow();
+    expect(() => MeasurePairSchema.parse(without(speed(14.4, 8.9), "metric"))).toThrow();
+  });
+
+  it("rejects a numeric value — the wire carries formatted strings", () => {
+    expect(() =>
+      MeasurePairSchema.parse({
+        metric: { text: "14 km/h", value: 14, suffix: "km/h", spoken: "14 kilometres per hour" },
+        imperial: speed(14.4, 8.9).imperial,
+      }),
+    ).toThrow();
+  });
+});
+
 describe("WeatherLocationSchema", () => {
   it("parses a canonical fixture", () => {
     expect(WeatherLocationSchema.parse(location)).toEqual(location);
@@ -80,11 +112,24 @@ describe("CurrentConditionsSchema", () => {
   it("parses a canonical fixture", () => {
     expect(CurrentConditionsSchema.parse(current)).toEqual(current);
   });
-  it("rejects a string tempC", () => {
-    expect(() => CurrentConditionsSchema.parse({ ...current, tempC: "hot" })).toThrow();
+  it("rejects a bare number for temp", () => {
+    expect(() => CurrentConditionsSchema.parse({ ...current, temp: 12.3 })).toThrow();
   });
   it("rejects a bogus timeOfDay", () => {
     expect(() => CurrentConditionsSchema.parse({ ...current, timeOfDay: "twilight" })).toThrow();
+  });
+  it("rejects a comfort label outside the closed union", () => {
+    expect(() =>
+      CurrentConditionsSchema.parse({
+        ...current,
+        comfort: { ...current.comfort, thermal: "Balmy" },
+      }),
+    ).toThrow();
+  });
+  it("keeps the fields that feed a colour, a bar width or an angle as numbers", () => {
+    for (const field of ["pressureMb", "uv", "windDegree", "humidity", "cloud"]) {
+      expect(() => CurrentConditionsSchema.parse({ ...current, [field]: "12" })).toThrow();
+    }
   });
 });
 
@@ -92,8 +137,16 @@ describe("ForecastDaySchema", () => {
   it("parses a canonical fixture", () => {
     expect(ForecastDaySchema.parse(forecastDay)).toEqual(forecastDay);
   });
-  it("rejects a null minC", () => {
-    expect(() => ForecastDaySchema.parse({ ...forecastDay, minC: null })).toThrow();
+  it("parses a day carrying both amounts", () => {
+    const wet = {
+      ...forecastDay,
+      totalPrecip: precipPair(4, "mm"),
+      totalSnow: precipPair(2, "cm"),
+    };
+    expect(ForecastDaySchema.parse(wet)).toEqual(wet);
+  });
+  it("rejects a null min — every column prints a high and a low", () => {
+    expect(() => ForecastDaySchema.parse({ ...forecastDay, min: null })).toThrow();
   });
   it("requires the precipitation fields — every day column renders them", () => {
     for (const field of [
@@ -101,8 +154,8 @@ describe("ForecastDaySchema", () => {
       "willItRain",
       "chanceOfSnow",
       "willItSnow",
-      "totalPrecipMm",
-      "totalSnowCm",
+      "totalPrecip",
+      "totalSnow",
     ]) {
       expect(() => ForecastDaySchema.parse(without(forecastDay, field))).toThrow();
     }
@@ -131,8 +184,8 @@ describe("WeatherCurrentSchema", () => {
 
 const hourlyEntry = {
   time: "2026-04-07 15:00",
-  tempC: 13.2,
-  feelsLikeC: 12.0,
+  temp: temperature(13.2, 55.8),
+  feelsLike: temperature(12, 53.6),
   conditionText: "Partly cloudy",
   conditionCode: 1003,
   isDay: true,
@@ -140,20 +193,7 @@ const hourlyEntry = {
   chanceOfSnow: 0,
   willItRain: false,
   willItSnow: false,
-  precipMm: 0,
-  snowCm: 0,
   cloud: 45,
-};
-
-const today = {
-  minC: 8,
-  maxC: 15.5,
-  chanceOfRain: 20,
-  willItRain: false,
-  chanceOfSnow: 0,
-  willItSnow: false,
-  totalPrecipMm: 0,
-  totalSnowCm: 0,
 };
 
 const weatherAlert = {
@@ -167,20 +207,19 @@ const weatherAlert = {
   instruction: "Secure loose objects and avoid coastal paths.",
 };
 
-function without(obj: object, field: string): Record<string, unknown> {
-  const copy: Record<string, unknown> = { ...obj };
-  delete copy[field];
-  return copy;
-}
-
 describe("HourlyForecastSchema", () => {
   it("requires the precipitation fields", () => {
-    for (const field of ["chanceOfSnow", "willItRain", "willItSnow", "precipMm", "snowCm"]) {
+    for (const field of ["chanceOfSnow", "willItRain", "willItSnow"]) {
       expect(() => HourlyForecastSchema.parse(without(hourlyEntry, field))).toThrow();
     }
   });
   it("rejects a numeric willItRain — the wire carries booleans, not upstream's 0/1", () => {
     expect(() => HourlyForecastSchema.parse({ ...hourlyEntry, willItRain: 1 })).toThrow();
+  });
+  it("carries no raw amount — the hourly row prints a chance only", () => {
+    const parsed = HourlyForecastSchema.parse(hourlyEntry);
+    expect(parsed).not.toHaveProperty("precipMm");
+    expect(parsed).not.toHaveProperty("snowCm");
   });
 });
 
@@ -204,7 +243,6 @@ describe("WeatherAlertSchema", () => {
 describe("WeatherForecastSchema", () => {
   it("parses a canonical fixture", () => {
     const fixture = {
-      today,
       airQualityIndex: 2,
       forecast: [forecastDay],
       astro,
@@ -215,7 +253,6 @@ describe("WeatherForecastSchema", () => {
   });
   it("accepts a null airQualityIndex", () => {
     const fixture = {
-      today,
       airQualityIndex: null,
       forecast: [forecastDay],
       astro,
@@ -224,39 +261,18 @@ describe("WeatherForecastSchema", () => {
     };
     expect(WeatherForecastSchema.parse(fixture)).toEqual(fixture);
   });
-  it("rejects a string chanceOfRain in today", () => {
+  it("rejects a string chanceOfRain in a forecast day", () => {
     const fixture = {
-      today: { ...today, chanceOfRain: "high" },
       airQualityIndex: null,
-      forecast: [forecastDay],
+      forecast: [{ ...forecastDay, chanceOfRain: "high" }],
       astro,
       hourly: [],
       alerts: [],
     };
     expect(() => WeatherForecastSchema.parse(fixture)).toThrow();
   });
-  it("requires the snow and precipitation totals in today", () => {
-    for (const field of [
-      "willItRain",
-      "chanceOfSnow",
-      "willItSnow",
-      "totalPrecipMm",
-      "totalSnowCm",
-    ]) {
-      const fixture = {
-        today: without(today, field),
-        airQualityIndex: null,
-        forecast: [forecastDay],
-        astro,
-        hourly: [],
-        alerts: [],
-      };
-      expect(() => WeatherForecastSchema.parse(fixture)).toThrow();
-    }
-  });
   it("rejects a null alerts array — the worker always sends a list", () => {
     const fixture = {
-      today,
       airQualityIndex: null,
       forecast: [forecastDay],
       astro,

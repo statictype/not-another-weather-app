@@ -1,37 +1,13 @@
-/** RFC 012. Bands are lower-inclusive, upper-exclusive. */
+/** RFC 012. Bands are lower-inclusive, upper-exclusive, and read canonical
+ *  Celsius / kph, so a viewer flipping the toggle cannot change the wording. */
 
-export type ThermalLabel =
-  | "Very cold"
-  | "Cold"
-  | "Chilly"
-  | "Cool"
-  | "Mild"
-  | "Warm"
-  | "Hot"
-  | "Very hot"
-  | "Dangerously hot";
-
-export type AirLabel =
-  | "Very dry"
-  | "Dry"
-  | "Slightly dry"
-  | "Comfortable"
-  | "Slightly humid"
-  | "Humid"
-  | "Very humid"
-  | "Damp";
+import type { AirComfort, AirLabel, ThermalLabel } from "@/lib/schemas";
 
 export interface AirComfortInput {
   tempC: number;
   feelsLikeC: number;
   dewpointC: number;
   humidity: number;
-}
-
-export interface AirComfort {
-  thermal: ThermalLabel;
-  air: AirLabel;
-  sentence: string;
 }
 
 export function airComfort({

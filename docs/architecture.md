@@ -9,6 +9,9 @@ src/
 │   ├── tiers.ts              # SERVER_TIERS table (ttl/fetch) + createTierHandler factory — one row per weather tier
 │   ├── search-handler.ts     # GET /api/search              (autocomplete, no edge cache — `useSuggestions` keeps a 60 s client-side stale window)
 │   ├── weather-api.ts        # Upstream client + DTO shaping + error mapping
+│   ├── format.ts             # temperature / speed / distance / pressure → MeasurePair
+│   ├── precip.ts             # Precipitation pairs + the joint null decided for both systems
+│   ├── air-comfort.ts        # Two-axis (thermal × air) labeler + beaufort — reads canonical °C / kph (RFC 012)
 │   ├── cache.ts              # Cache API helpers (per-endpoint TTL)
 │   ├── respond.ts            # Shared JSON / cache-header response builders
 │   ├── errors.ts             # WeatherApiError + upstream-code → kind mapping
@@ -24,6 +27,7 @@ src/
 │   ├── use-undo.ts              # Pending-removal state machine (generic primitive)
 │   ├── use-weather.ts           # Two TanStack Query hooks: current / forecast
 │   ├── use-reversible-history.ts # useHistory + useUndo + sonner toast, one call per action
+│   ├── use-unit-system.ts       # In-module pub/sub over localStorage — °C/°F, defaulted from the locale's region
 │   └── use-history/             # Reducer + in-module pub/sub over localStorage
 ├── components/
 │   ├── search-bar/        # Composite search input — single Input + useSearchMenu state machine + one Menu renderer
@@ -37,7 +41,7 @@ src/
 │   │   └── clear-all-button.tsx # lazy-loaded alert-dialog confirmation
 │   ├── weather/           # The card grid — composed in grid.tsx
 │   │   ├── grid.tsx                  # row layout + calls useWeatherForecast
-│   │   ├── hero-card.tsx             # LCP card — city, temperature, comfort sentence (uses air-comfort.ts)
+│   │   ├── hero-card.tsx             # LCP card — city, condition, location-local date and time
 │   │   ├── air-comfort-card.tsx      # raw metrics tile — dew, humidity, cloud, wind, visibility
 │   │   ├── exposure-card.tsx         # UV + AQI tile
 │   │   ├── wind-card.tsx             # compass — speed, Beaufort, direction, bearing
@@ -59,7 +63,8 @@ src/
 │   ├── tiers.ts           # WeatherTier union + route paths — wire-spanning identity for both tiers
 │   ├── query.ts           # normalizeQuery — shared by worker cache key + frontend query key
 │   ├── query-client.ts    # TanStack Query config + retry policy
-│   ├── air-comfort.ts     # Two-axis (thermal × air) labeler — drives the hero sentence (RFC 012)
+│   ├── units.ts           # UnitSystem union + read(pair, system) — wire-spanning identity for the toggle
+│   ├── clock.ts           # Every time and date the client formats, off one CLOCK locale table
 │   ├── random-cities.ts   # Pool for the "surprise me" button
 │   └── utils.ts           # cn() helper
 ├── test/                  # MSW server + setup (frontend project only)
@@ -73,6 +78,10 @@ src/
 - **Single Cloudflare Worker hosts both surfaces.** The same `wrangler deploy` ships the SPA bundle (via the static-asset binding) and the three `/api/*` endpoints. The upstream API key lives only on the server side and never reaches the browser, and proxy + frontend share an origin so there's no CORS to wire up.
 - **Two-tier weather pipeline.** Rather than one fat `/api/weather` call, the worker exposes `current` and `forecast` as independent endpoints with TTLs sized to their volatility (10 min / 1 h). The hero paints from `current` alone (LCP-critical) and the forecast tier streams in inside the grid. Both tiers are defined as a single named concept (`WeatherTier` in `src/lib/tiers.ts`) — worker-side `SERVER_TIERS` and client-side `CLIENT_TIERS` tables are both keyed by this union so adding or renaming a tier is a one-row change on each side rather than a new file. A third `yesterday` tier shipped originally and was removed once the forecast card dropped its history column; RFC 001 describes the three-tier design as built.
 - **Shaped DTOs defined once, in zod.** `src/lib/schemas.ts` is the single source of truth for every wire shape. The worker value-imports the schemas to validate upstream responses; the frontend type-imports only, so zod's runtime is tree-shaken out of the client bundle. An ESLint rule blocks runtime zod imports in `src/{api,hooks,components}`. See RFC 008.
+- **Both unit systems arrive on the wire, pre-formatted.** Upstream returns imperial beside metric in one response, so the worker formats both and the client picks one. Every display quantity is a `MeasurePair` — `{ metric, imperial }`, each a `{ text, value, suffix, spoken }` — and switching is `read(pair, system)`, with no refetch, no remount and no arithmetic on the client. `read` returns a dash when a pair is absent, which is what a browser holding a pre-bump body (`max-age` is 10 min / 1 h) would otherwise turn into a property access on `undefined`. The raw `tempC` / `windKph` / `visibilityKm` family stopped shipping; what stayed a number is what feeds a colour, a bar width or an SVG angle (`pressureMb`, `uv`, `airQualityIndex`, `windDegree`, `humidity`, `cloud`). See issue 006.
+- **A classification reads one canonical field.** `airComfort` and `beaufort` moved to `src/worker/` with the formatters. The reason is not theoretical: the published Beaufort tables are independently rounded per unit — force 3 is 12–19 km/h and 8–12 mph — so any wind in the 1.6 km/h gap between 12 mph and 13 mph would read "Gentle breeze" to one viewer and "Moderate breeze" to another if each classified in their own display system. Toggling changes no word, no colour and no needle angle.
+- **The worker formats what comes from the payload; the client formats what comes from the clock.** The hero ticks every second, so a string baked into a body cached for 10 minutes cannot show the current time. Astro times, hourly labels and alert stamps _are_ payload — but two producers implementing one rule is how three date conventions accumulated in the first place, so all 11 sites moved to `src/lib/clock.ts` instead. One `CLOCK` table maps metric to `en-GB` (24-hour, `Fri 15 Aug`) and imperial to `en-US` (12-hour, `Fri Aug 15`). Tying the clock to a °C/°F toggle misfits the UK, which is metric-leaning and reads 12-hour; it is still an improvement, because every viewer previously got `en-US` regardless of locale.
+- **Units are a viewer preference, not view state.** The store is a third `createSubscription` over localStorage, defaulted from `new Intl.Locale(navigator.language).region` (`US`, `LR`, `MM` → imperial). Not the URL: a shared `?city=` link should read in the recipient's units, not the sender's. The stored string indexes the DTO, so it is validated against the union on read rather than trusted.
 - **Edge cache with query normalization.** Each weather endpoint caches successful responses at the edge (10 min / 1 h), keyed on a normalized query (trimmed, lowercased, internal whitespace collapsed). `London`, `london`, `LONDON`, and `London ` all share one cache entry per endpoint. The autocomplete endpoint (`/api/search`) is intentionally not edge-cached — results are ephemeral and the client-side debounce + 60 s `staleTime` keeps the upstream call rate low. `normalizeQuery` in `src/lib/query.ts` is shared by the worker's cache key and the frontend's TanStack Query key so the two sides can't drift.
 - **Closed error union end-to-end.** Both worker and frontend client model errors as a discriminated union (`not_found | quota_exceeded | invalid_query | upstream | network`) defined in a single table (`src/lib/errors.ts`) that derives the kind ↔ status ↔ default-message mappings. Adding a kind is a one-row change that TypeScript propagates.
 - **Retry policy follows the error taxonomy.** `src/lib/query-client.ts` skips retry on the three user-meaningful kinds (`not_found`, `invalid_query`, `quota_exceeded`) so the UI reacts instantly. Transient network and upstream failures retry up to 2 times with exponential backoff capped at 5 s. `CLIENT_TIERS` (in `src/hooks/use-weather.ts`) carries no per-tier override, so this table is the whole policy.

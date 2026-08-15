@@ -11,8 +11,11 @@ import type {
   WeatherLocation,
 } from "./types";
 import { defaultMessage, type WeatherErrorKind } from "@/lib/errors";
+import { airComfort, beaufort } from "./air-comfort";
 import { normalizeSeverity, sortAndCapAlerts } from "./alerts";
 import { WeatherApiError } from "./errors";
+import { distance, pressure, speed, temperature } from "./format";
+import { precipAmountPair, precipPair } from "./precip";
 
 /* Upstream (WeatherAPI.com) shapes, private to this file. */
 
@@ -28,22 +31,32 @@ const UpstreamLocationSchema = z.object({
 
 const UpstreamCurrentBlockSchema = z.object({
   temp_c: z.number(),
+  temp_f: z.number(),
   feelslike_c: z.number(),
+  feelslike_f: z.number(),
   heatindex_c: z.number().nullish(),
+  heatindex_f: z.number().nullish(),
   windchill_c: z.number().nullish(),
+  windchill_f: z.number().nullish(),
   is_day: z.union([z.literal(0), z.literal(1)]),
   condition: z.object({ text: z.string(), code: z.number() }),
   wind_kph: z.number(),
+  wind_mph: z.number(),
   wind_dir: z.string(),
   wind_degree: z.number(),
   gust_kph: z.number().nullish(),
+  gust_mph: z.number().nullish(),
   humidity: z.number(),
   pressure_mb: z.number().nullish(),
+  pressure_in: z.number().nullish(),
   vis_km: z.number().nullish(),
+  vis_miles: z.number().nullish(),
   uv: z.number().nullish(),
   cloud: z.number().nullish(),
   dewpoint_c: z.number().nullish(),
+  dewpoint_f: z.number().nullish(),
   precip_mm: z.number().nullish(),
+  precip_in: z.number().nullish(),
   air_quality: z
     .object({
       "us-epa-index": z.number(),
@@ -60,15 +73,15 @@ const UpstreamCurrentResponseSchema = z.object({
 const UpstreamHourSchema = z.object({
   time: z.string(),
   temp_c: z.number(),
+  temp_f: z.number(),
   feelslike_c: z.number(),
+  feelslike_f: z.number(),
   is_day: z.union([z.literal(0), z.literal(1)]),
   condition: z.object({ text: z.string(), code: z.number() }),
   chance_of_rain: z.number(),
   chance_of_snow: z.number().nullish(),
   will_it_rain: z.number().nullish(),
   will_it_snow: z.number().nullish(),
-  precip_mm: z.number().nullish(),
-  snow_cm: z.number().nullish(),
   cloud: z.number(),
 });
 
@@ -76,8 +89,9 @@ const UpstreamForecastDaySchema = z.object({
   date: z.string(),
   day: z.object({
     mintemp_c: z.number(),
+    mintemp_f: z.number(),
     maxtemp_c: z.number(),
-    avgtemp_c: z.number(),
+    maxtemp_f: z.number(),
     daily_chance_of_rain: z.number(),
     daily_will_it_rain: z.number().nullish(),
     daily_chance_of_snow: z.number().nullish(),
@@ -247,11 +261,6 @@ export async function fetchForecast(
   );
   const epa = raw.current?.air_quality?.["us-epa-index"];
   return {
-    today: {
-      minC: round1(today.day.mintemp_c),
-      maxC: round1(today.day.maxtemp_c),
-      ...shapeDayPrecip(today.day),
-    },
     airQualityIndex: typeof epa === "number" ? epa : null,
     forecast: raw.forecast.forecastday.map(shapeForecastDay),
     astro: shapeAstro(today.astro),
@@ -273,36 +282,43 @@ function shapeLocation(raw: UpstreamLocation): WeatherLocation {
 }
 
 function shapeCurrent(raw: UpstreamCurrent): CurrentConditions {
+  const tempC = raw.temp_c;
+  const feelsLikeC = raw.feelslike_c;
+  const dewpointC = raw.dewpoint_c ?? 0;
+  const windKph = raw.wind_kph;
+  const precipMm = raw.precip_mm ?? 0;
+
   return {
-    tempC: round1(raw.temp_c),
-    feelsLikeC: round1(raw.feelslike_c),
-    // Upstream omits heat index in cold air; fall back so the field is always a number.
-    heatIndexC: round1(raw.heatindex_c ?? raw.temp_c),
-    // Same for wind chill in warm air.
-    windchillC: round1(raw.windchill_c ?? raw.temp_c),
+    temp: temperature(tempC, raw.temp_f),
+    feelsLike: temperature(feelsLikeC, raw.feelslike_f),
+    // Upstream omits heat index in cold air, and wind chill in warm air.
+    heatIndex: temperature(raw.heatindex_c ?? tempC, raw.heatindex_f ?? raw.temp_f),
+    windchill: temperature(raw.windchill_c ?? tempC, raw.windchill_f ?? raw.temp_f),
+    dewpoint: temperature(dewpointC, raw.dewpoint_f ?? 0),
     conditionText: raw.condition.text,
     conditionCode: raw.condition.code,
     timeOfDay: raw.is_day === 1 ? "day" : "night",
-    windKph: round1(raw.wind_kph),
+    wind: speed(windKph, raw.wind_mph),
+    gust: speed(raw.gust_kph ?? 0, raw.gust_mph ?? 0),
     windDir: raw.wind_dir,
     windDegree: Math.round(raw.wind_degree),
-    gustKph: round1(raw.gust_kph ?? 0),
     humidity: raw.humidity,
     pressureMb: round1(raw.pressure_mb ?? 0),
-    visibilityKm: round1(raw.vis_km ?? 0),
+    pressure: pressure(raw.pressure_mb ?? 0, raw.pressure_in ?? 0),
+    visibility: distance(raw.vis_km ?? 0, raw.vis_miles ?? 0),
     uv: raw.uv ?? 0,
     cloud: raw.cloud ?? 0,
-    dewpointC: round1(raw.dewpoint_c ?? 0),
-    precipMm: round1(raw.precip_mm ?? 0),
+    precip: precipAmountPair(precipMm, "mm"),
+    comfort: airComfort({ tempC, feelsLikeC, dewpointC, humidity: raw.humidity }),
+    beaufort: beaufort(windKph),
   };
 }
 
 function shapeForecastDay(d: UpstreamForecastDay): ForecastDay {
   return {
     date: d.date,
-    minC: round1(d.day.mintemp_c),
-    maxC: round1(d.day.maxtemp_c),
-    avgC: round1(d.day.avgtemp_c),
+    min: temperature(d.day.mintemp_c, d.day.mintemp_f),
+    max: temperature(d.day.maxtemp_c, d.day.maxtemp_f),
     ...shapeDayPrecip(d.day),
     conditionText: d.day.condition.text,
     conditionCode: d.day.condition.code,
@@ -316,16 +332,16 @@ function shapeDayPrecip(day: UpstreamForecastDay["day"]): DayPrecip {
     willItRain: isTrue(day.daily_will_it_rain),
     chanceOfSnow: day.daily_chance_of_snow ?? 0,
     willItSnow: isTrue(day.daily_will_it_snow),
-    totalPrecipMm: round1(day.totalprecip_mm ?? 0),
-    totalSnowCm: round1(day.totalsnow_cm ?? 0),
+    totalPrecip: precipPair(day.totalprecip_mm ?? 0, "mm"),
+    totalSnow: precipPair(day.totalsnow_cm ?? 0, "cm"),
   };
 }
 
 function shapeHourly(h: z.infer<typeof UpstreamHourSchema>): HourlyForecast {
   return {
     time: h.time,
-    tempC: round1(h.temp_c),
-    feelsLikeC: round1(h.feelslike_c),
+    temp: temperature(h.temp_c, h.temp_f),
+    feelsLike: temperature(h.feelslike_c, h.feelslike_f),
     conditionText: h.condition.text,
     conditionCode: h.condition.code,
     isDay: h.is_day === 1,
@@ -333,8 +349,6 @@ function shapeHourly(h: z.infer<typeof UpstreamHourSchema>): HourlyForecast {
     chanceOfSnow: h.chance_of_snow ?? 0,
     willItRain: isTrue(h.will_it_rain),
     willItSnow: isTrue(h.will_it_snow),
-    precipMm: round1(h.precip_mm ?? 0),
-    snowCm: round1(h.snow_cm ?? 0),
     cloud: h.cloud,
   };
 }

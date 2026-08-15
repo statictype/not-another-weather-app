@@ -17,19 +17,26 @@ const upstreamCurrentFixture = {
   location: upstreamLocation,
   current: {
     temp_c: 12.3456,
+    temp_f: 54.2,
     feelslike_c: 11.1,
+    feelslike_f: 52.0,
     is_day: 1,
     condition: { text: "Partly cloudy", code: 1003 },
     wind_kph: 14.4,
+    wind_mph: 8.9,
     wind_dir: "WSW",
     wind_degree: 240,
     gust_kph: 22,
+    gust_mph: 13.7,
     humidity: 67,
     pressure_mb: 1015,
+    pressure_in: 29.97,
     vis_km: 10,
+    vis_miles: 6,
     uv: 4,
     cloud: 40,
     dewpoint_c: 6.2,
+    dewpoint_f: 43.2,
     precip_mm: 0,
   },
 };
@@ -46,7 +53,9 @@ const upstreamAstro = {
 const upstreamHour = {
   time: "2026-04-07 15:00",
   temp_c: 13.2,
+  temp_f: 55.8,
   feelslike_c: 12.0,
+  feelslike_f: 53.6,
   is_day: 1,
   condition: { text: "Light rain", code: 1063 },
   chance_of_rain: 80,
@@ -66,8 +75,9 @@ const upstreamForecastFixture = {
         date: "2026-04-07",
         day: {
           mintemp_c: 8.0,
+          mintemp_f: 46.4,
           maxtemp_c: 15.5,
-          avgtemp_c: 11.7,
+          maxtemp_f: 59.9,
           daily_chance_of_rain: 20,
           daily_will_it_rain: 1,
           daily_chance_of_snow: 15,
@@ -83,8 +93,9 @@ const upstreamForecastFixture = {
         date: "2026-04-08",
         day: {
           mintemp_c: 9.0,
+          mintemp_f: 48.2,
           maxtemp_c: 16.0,
-          avgtemp_c: 12.5,
+          maxtemp_f: 60.8,
           daily_chance_of_rain: 15,
           condition: { text: "Sunny", code: 1000 },
         },
@@ -94,8 +105,9 @@ const upstreamForecastFixture = {
         date: "2026-04-09",
         day: {
           mintemp_c: 7.0,
+          mintemp_f: 44.6,
           maxtemp_c: 14.0,
-          avgtemp_c: 10.5,
+          maxtemp_f: 57.2,
           daily_chance_of_rain: 40,
           condition: { text: "Light rain", code: 1063 },
         },
@@ -140,17 +152,55 @@ describe("Worker /api/weather (current)", () => {
     expect(body).toMatchObject({
       location: { name: "London", country: "United Kingdom" },
       current: {
-        tempC: 12.3,
+        temp: {
+          metric: { text: "12°", value: "12", suffix: "°", spoken: "12 degrees" },
+          imperial: { text: "54°", value: "54", suffix: "°", spoken: "54 degrees" },
+        },
+        wind: {
+          metric: { text: "14 km/h", suffix: "km/h" },
+          imperial: { text: "9 mph", suffix: "mph" },
+        },
+        pressure: {
+          metric: { text: "1015 mb" },
+          imperial: { text: "29.97 inHg", spoken: "29.97 inches of mercury" },
+        },
+        visibility: { metric: { text: "10 km" }, imperial: { text: "6 mi" } },
         conditionText: "Partly cloudy",
         conditionCode: 1003,
         timeOfDay: "day",
         windDir: "WSW",
         humidity: 67,
+        pressureMb: 1015,
+        beaufort: "Gentle breeze",
+        comfort: { thermal: "Cool", air: "Slightly dry" },
       },
     });
     expect(body.forecast).toBeUndefined();
     expect(body.astro).toBeUndefined();
     expect(body.today).toBeUndefined();
+  });
+
+  it("ships no raw Celsius or kph — the readings render, their raw form does not", async () => {
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (p) => p.startsWith("/v1/current.json") })
+      .reply(200, upstreamCurrentFixture);
+
+    const res = await SELF.fetch("https://example.com/api/weather?q=CurrentNoRawFields");
+    const body = (await res.json()) as { current: Record<string, unknown> };
+    for (const field of [
+      "tempC",
+      "feelsLikeC",
+      "heatIndexC",
+      "windchillC",
+      "dewpointC",
+      "windKph",
+      "gustKph",
+      "visibilityKm",
+      "precipMm",
+    ]) {
+      expect(body.current[field]).toBeUndefined();
+    }
   });
 
   it("returns 404 with not_found kind for upstream code 1006", async () => {
@@ -254,22 +304,26 @@ describe("Worker /api/weather/forecast", () => {
     expect(res.headers.get("X-Oasis-Cache")).toBe("MISS");
 
     const body = (await res.json()) as {
-      today: { minC: number; maxC: number; chanceOfRain: number };
-      forecast: Array<{ date: string }>;
+      today?: unknown;
+      forecast: Array<Record<string, unknown>>;
       astro: { sunrise: string };
     };
-    expect(body.today).toEqual({
-      minC: 8,
-      maxC: 15.5,
+    expect(body.today).toBeUndefined();
+    expect(body.forecast).toHaveLength(3);
+    expect(body.forecast[0]).toMatchObject({
+      date: "2026-04-07",
+      min: { metric: { text: "8°" }, imperial: { text: "46°" } },
+      max: { metric: { text: "16°" }, imperial: { text: "60°" } },
       chanceOfRain: 20,
       willItRain: true,
       chanceOfSnow: 15,
       willItSnow: false,
-      totalPrecipMm: 4.3,
-      totalSnowCm: 0,
+      totalPrecip: {
+        metric: { text: "4.3 mm", spoken: "4.3 millimetres" },
+        imperial: { text: "0.17 in", spoken: "0.17 inches" },
+      },
+      totalSnow: null,
     });
-    expect(body.forecast).toHaveLength(3);
-    expect(body.forecast[0]?.date).toBe("2026-04-07");
     expect(body.astro.sunrise).toBe("06:32 AM");
   });
 
@@ -308,9 +362,10 @@ describe("Worker /api/weather/forecast", () => {
       chanceOfSnow: 10,
       willItRain: true,
       willItSnow: false,
-      precipMm: 2.4,
-      snowCm: 0,
+      temp: { metric: { text: "13°" }, imperial: { text: "56°" } },
     });
+    expect(body.hourly[0]?.precipMm).toBeUndefined();
+    expect(body.hourly[0]?.snowCm).toBeUndefined();
   });
 
   it("defaults the new fields to 0 / false when upstream omits them", async () => {
@@ -333,7 +388,7 @@ describe("Worker /api/weather/forecast", () => {
     ]) {
       delete day0.day[key];
     }
-    for (const key of ["chance_of_snow", "will_it_rain", "will_it_snow", "precip_mm", "snow_cm"]) {
+    for (const key of ["chance_of_snow", "will_it_rain", "will_it_snow"]) {
       delete day0.hour?.[0]?.[key];
     }
 
@@ -345,22 +400,20 @@ describe("Worker /api/weather/forecast", () => {
     const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastSparseFields");
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
-      today: Record<string, unknown>;
+      forecast: Array<Record<string, unknown>>;
       hourly: Array<Record<string, unknown>>;
     };
-    expect(body.today).toMatchObject({
+    expect(body.forecast[0]).toMatchObject({
       willItRain: false,
       chanceOfSnow: 0,
       willItSnow: false,
-      totalPrecipMm: 0,
-      totalSnowCm: 0,
+      totalPrecip: null,
+      totalSnow: null,
     });
     expect(body.hourly[0]).toMatchObject({
       chanceOfSnow: 0,
       willItRain: false,
       willItSnow: false,
-      precipMm: 0,
-      snowCm: 0,
     });
   });
 

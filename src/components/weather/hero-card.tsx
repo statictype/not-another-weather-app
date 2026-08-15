@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CurrentConditions, WeatherLocation } from "@/api/types";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { formatDate, formatTime } from "@/lib/clock";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
 
@@ -23,6 +25,7 @@ export function HeroCard({ location, current }: HeroCardProps) {
   const isDay = current.timeOfDay === "day";
   const country = location.country;
   const now = useTicker();
+  const system = useUnitSystem();
 
   return (
     <section
@@ -46,10 +49,10 @@ export function HeroCard({ location, current }: HeroCardProps) {
           <div className="order-1 sm:order-none sm:mt-5 md:mt-6">
             <p className={CONDITION}>{current.conditionText}</p>
             <p className="label-section mt-2 flex items-center gap-2.5 leading-none text-white">
-              <span>{formatDate(now, location.tz)}</span>
+              <span>{formatDate(now, location.tz, system)}</span>
               <span className="h-2.5 w-px shrink-0 bg-white/30" aria-hidden="true" />
               <time dateTime={new Date(now).toISOString()} className="tabular-nums">
-                {formatTime(now, location.tz)}
+                {formatTime(now, location.tz, system)}
               </time>
             </p>
           </div>
@@ -81,32 +84,4 @@ function useTicker(): number {
     return () => clearInterval(id);
   }, []);
   return now;
-}
-
-function formatTime(now: number, tz: string): string {
-  try {
-    return new Date(now).toLocaleTimeString("en-US", {
-      timeZone: tz,
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch {
-    return "—";
-  }
-}
-
-function formatDate(now: number, tz: string): string {
-  try {
-    return new Date(now)
-      .toLocaleDateString("en-US", {
-        timeZone: tz,
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      })
-      .replace(",", "");
-  } catch {
-    return "";
-  }
 }

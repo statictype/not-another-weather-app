@@ -1,27 +1,37 @@
 import { useId } from "react";
+import type { Measure, MeasurePair } from "@/api/types";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { read } from "@/lib/units";
 
 interface WindCardProps {
-  windKph: number;
+  wind: MeasurePair;
   windDir: string;
   windDegree: number;
-  gustKph: number;
+  gust: MeasurePair;
 }
 
-export function WindCard({ windKph, windDir, windDegree, gustKph }: WindCardProps) {
+export function WindCard({ wind, windDir, windDegree, gust }: WindCardProps) {
+  const system = useUnitSystem();
+  const gusts = read(gust, system);
+
   return (
     <section className="swap-in swap-d-7 bento-tile flex flex-col sm:col-span-4 md:col-span-2 lg:col-span-4 xl:order-7 xl:col-span-1">
       <div className="flex items-start justify-between gap-3">
         <p className="label-section">Wind</p>
         <div className="text-right">
           <p className="label-sub">Gusts</p>
-          <p className="mt-0.5 text-sm leading-tight tracking-tight">
-            {Math.round(gustKph)}
-            <span className="ml-1 text-foreground/70">km/h</span>
+          <p
+            role="img"
+            aria-label={gusts.spoken}
+            className="mt-0.5 text-sm leading-tight tracking-tight"
+          >
+            {gusts.value}
+            <span className="ml-1 text-foreground/70">{gusts.suffix}</span>
           </p>
         </div>
       </div>
       <div className="flex flex-1 flex-col justify-center">
-        <Compass windKph={windKph} windDir={windDir} windDegree={windDegree} />
+        <Compass wind={read(wind, system)} windDir={windDir} windDegree={windDegree} />
       </div>
     </section>
   );
@@ -32,11 +42,11 @@ const R_RING = 52;
 
 /** The blade sits inside the ring, tip at the bearing the wind blows *from*. */
 function Compass({
-  windKph,
+  wind,
   windDir,
   windDegree,
 }: {
-  windKph: number;
+  wind: Measure;
   windDir: string;
   windDegree: number;
 }) {
@@ -109,9 +119,9 @@ function Compass({
       </svg>
 
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-2xl leading-none tracking-tight">
-          {Math.round(windKph)}
-          <span className="ml-1 text-sm text-foreground/70">km/h</span>
+        <p role="img" aria-label={wind.spoken} className="text-2xl leading-none tracking-tight">
+          {wind.value}
+          <span className="ml-1 text-sm text-foreground/70">{wind.suffix}</span>
         </p>
         <p className="label-sub">{windDir}</p>
       </div>

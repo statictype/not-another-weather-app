@@ -1,4 +1,7 @@
 import type { ForecastDay } from "@/api/types";
+import { useUnitSystem } from "@/hooks/use-unit-system";
+import { formatWeekday } from "@/lib/clock";
+import { read, type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
 import { PrecipStrip } from "./precip-strip";
@@ -25,6 +28,7 @@ const LAYOUTS: Record<number, string> = {
 const SKELETON_DAYS = 3;
 
 export function ForecastCard({ forecast }: ForecastCardProps) {
+  const system = useUnitSystem();
   const days = forecast?.slice(0, MAX_DAYS);
   const layout = LAYOUTS[days?.length ?? SKELETON_DAYS] ?? LAYOUTS[MAX_DAYS];
 
@@ -44,7 +48,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
         {days
           ? days.map((day, i) => (
               <div key={day.date} className="min-w-0 py-3 sm:py-0">
-                <DayColumn day={day} label={forecastLabel(day.date, i)} />
+                <DayColumn day={day} label={forecastLabel(day.date, i, system)} system={system} />
               </div>
             ))
           : Array.from({ length: SKELETON_DAYS }, (_, i) => (
@@ -60,7 +64,15 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
 /** Placement is `.fc-day`'s, in `index.css`: a row below `sm`, a stack above
  *  it. Source order is the spoken order in both — name, high/low, condition,
  *  precipitation, with the icon skipped. */
-function DayColumn({ day, label }: { day: ForecastDay; label: string }) {
+function DayColumn({
+  day,
+  label,
+  system,
+}: {
+  day: ForecastDay;
+  label: string;
+  system: UnitSystem;
+}) {
   return (
     <div className="fc-day min-w-0">
       <span className="fc-name label-section truncate">{label}</span>
@@ -74,8 +86,8 @@ function DayColumn({ day, label }: { day: ForecastDay; label: string }) {
         aria-hidden="true"
       />
       <span className="fc-temp text-2xl leading-none tracking-tight tabular-nums whitespace-nowrap">
-        {Math.round(day.maxC)}°
-        <span className="ml-1 text-base text-foreground/70">/ {Math.round(day.minC)}°</span>
+        {read(day.max, system).text}
+        <span className="ml-1 text-base text-foreground/70">/ {read(day.min, system).text}</span>
       </span>
       <span className="fc-cond truncate text-sm text-foreground/70">{day.conditionText}</span>
       <PrecipStrip day={day} className="fc-prec" />
@@ -99,13 +111,8 @@ function DayColumnSkeleton() {
 }
 
 /** `index` counts from today, so 0 is today and 1 is tomorrow. */
-function forecastLabel(date: string, index: number): string {
+function forecastLabel(date: string, index: number, system: UnitSystem): string {
   if (index === 0) return "Today";
   if (index === 1) return "Tomorrow";
-  try {
-    const d = new Date(date);
-    return d.toLocaleDateString(undefined, { weekday: "short" });
-  } catch {
-    return date;
-  }
+  return formatWeekday(date, system) ?? date;
 }

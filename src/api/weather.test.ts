@@ -1,6 +1,8 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "@/test/msw-server";
+import { distance, pressure, speed, temperature } from "@/worker/format";
+import { precipAmountPair, precipPair } from "@/worker/precip";
 import type { WeatherCurrent, WeatherForecast } from "./types";
 import { fetchCurrent, fetchForecast, WeatherClientError } from "./weather";
 
@@ -15,24 +17,27 @@ const okFixture: WeatherCurrent = {
     lon: -0.11,
   },
   current: {
-    tempC: 12.3,
-    feelsLikeC: 11.1,
-    heatIndexC: 12.3,
-    windchillC: 11.1,
+    temp: temperature(12.3, 54.1),
+    feelsLike: temperature(11.1, 52),
+    heatIndex: temperature(12.3, 54.1),
+    windchill: temperature(11.1, 52),
+    dewpoint: temperature(6.2, 43.2),
     conditionText: "Partly cloudy",
     conditionCode: 1003,
     timeOfDay: "day",
-    windKph: 14.4,
+    wind: speed(14.4, 8.9),
+    gust: speed(22, 13.7),
     windDir: "WSW",
     windDegree: 240,
-    gustKph: 22,
     humidity: 67,
     pressureMb: 1015,
-    visibilityKm: 10,
+    pressure: pressure(1015, 29.97),
+    visibility: distance(10, 6),
     uv: 4,
     cloud: 40,
-    dewpointC: 6.2,
-    precipMm: 0,
+    precip: precipAmountPair(0, "mm"),
+    comfort: { thermal: "Cool", air: "Slightly dry", sentence: "Cool but slightly dry" },
+    beaufort: "Gentle breeze",
   },
 };
 
@@ -77,29 +82,18 @@ describe("fetchCurrent", () => {
 });
 
 const forecastFixture: WeatherForecast = {
-  today: {
-    minC: 8,
-    maxC: 15.5,
-    chanceOfRain: 20,
-    willItRain: false,
-    chanceOfSnow: 0,
-    willItSnow: false,
-    totalPrecipMm: 0,
-    totalSnowCm: 0,
-  },
   airQualityIndex: 2,
   forecast: [
     {
       date: "2026-04-07",
-      minC: 8,
-      maxC: 15.5,
-      avgC: 11.7,
+      min: temperature(8, 46.4),
+      max: temperature(15.5, 59.9),
       chanceOfRain: 20,
       willItRain: false,
       chanceOfSnow: 0,
       willItSnow: false,
-      totalPrecipMm: 0,
-      totalSnowCm: 0,
+      totalPrecip: precipPair(0, "mm"),
+      totalSnow: precipPair(0, "cm"),
       conditionText: "Partly cloudy",
       conditionCode: 1003,
       isDay: true,

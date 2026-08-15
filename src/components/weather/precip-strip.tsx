@@ -1,7 +1,7 @@
 import { SnowflakeIcon, UmbrellaIcon } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
-import type { DayPrecip } from "@/api/types";
-import { precipAmount, type PrecipAmount } from "@/lib/precip";
+import type { DayPrecip, Measure } from "@/api/types";
+import { useUnitSystem } from "@/hooks/use-unit-system";
 import { cn } from "@/lib/utils";
 
 interface PrecipStripProps {
@@ -11,10 +11,10 @@ interface PrecipStripProps {
 
 /** One line per kind of precipitation, under the day column it belongs to.
  *  The rain line always renders, so a day's height does not depend on whether
- *  it snows. Each line carries its amount whenever upstream reports one that
- *  rounds above zero, `willItRain` / `willItSnow` notwithstanding. */
+ *  it snows. Each line carries its amount whenever the Worker sends one. */
 export function PrecipStrip({ day, className }: PrecipStripProps) {
-  const snow = precipAmount(day?.totalSnowCm ?? 0, "cm");
+  const system = useUnitSystem();
+  const snow = day?.totalSnow?.[system] ?? null;
 
   return (
     <div className={cn("flex flex-col gap-0.5", className)}>
@@ -26,7 +26,7 @@ export function PrecipStrip({ day, className }: PrecipStripProps) {
             icon={UmbrellaIcon}
             name="Chance of rain"
             chance={day.chanceOfRain}
-            amount={precipAmount(day.totalPrecipMm, "mm")}
+            amount={day.totalPrecip?.[system] ?? null}
           />
           {(day.willItSnow || snow) && (
             <Line
@@ -51,7 +51,7 @@ function Line({
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   name: string;
   chance: number;
-  amount: PrecipAmount | null;
+  amount: Measure | null;
 }) {
   return (
     // `role="img"` gives the line one accessible name instead of per-glyph output.
