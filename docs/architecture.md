@@ -39,7 +39,9 @@ src/
 │   │   ├── grid.tsx                  # row layout + calls useWeatherForecast
 │   │   ├── hero-card.tsx             # LCP card — city, temperature, comfort sentence (uses air-comfort.ts)
 │   │   ├── air-comfort-card.tsx      # raw metrics tile — dew, humidity, cloud, wind, visibility
-│   │   ├── exposure-card.tsx         # pressure + UV + AQI combined tile
+│   │   ├── exposure-card.tsx         # UV + AQI tile
+│   │   ├── wind-card.tsx             # compass — speed, Beaufort, direction, bearing
+│   │   ├── pressure-card.tsx         # half-circle pressure gauge
 │   │   ├── astro-card.tsx            # sunrise / sunset / moon phase
 │   │   ├── forecast-card.tsx         # the future days upstream returns, 2 or 3 (today lives in the hero)
 │   │   ├── hourly-card.tsx           # next-24h strip

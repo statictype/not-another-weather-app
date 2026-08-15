@@ -568,6 +568,8 @@ html, body { background: oklch(0.97 0.02 230); }
 .swap-d-4 { animation-delay: 0.15s; }
 .swap-d-5 { animation-delay: 0.20s; }
 .swap-d-6 { animation-delay: 0.25s; }
+.swap-d-7 { animation-delay: 0.30s; }
+.swap-d-8 { animation-delay: 0.35s; }
 
 
 .mobile-search-overlay {

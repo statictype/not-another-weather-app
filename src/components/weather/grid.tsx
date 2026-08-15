@@ -9,6 +9,8 @@ import { ForecastCard } from "./forecast-card";
 import { HeroCard } from "./hero-card";
 import { HourlyCard } from "./hourly-card";
 import { NowCard } from "./now-card";
+import { PressureCard } from "./pressure-card";
+import { WindCard } from "./wind-card";
 
 interface WeatherGridProps {
   query: string | null;
@@ -40,7 +42,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
           tz={c.location.tz}
           isNight={c.current.timeOfDay === "night"}
         />
-        <NowCard current={c.current} />
+        <NowCard current={c.current} chanceOfRain={forecast.data?.today.chanceOfRain} />
       </div>
       <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
       <ForecastCard forecast={forecast.data?.forecast} />
@@ -48,9 +50,15 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
       <ExposureCard
         uv={c.current.uv}
         airQualityIndex={forecast.data?.airQualityIndex ?? null}
-        pressureMb={c.current.pressureMb}
         isDay={c.current.timeOfDay === "day"}
       />
+      <WindCard
+        windKph={c.current.windKph}
+        windDir={c.current.windDir}
+        windDegree={c.current.windDegree}
+        gustKph={c.current.gustKph}
+      />
+      <PressureCard pressureMb={c.current.pressureMb} />
     </div>
   );
 }

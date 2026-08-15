@@ -22,6 +22,7 @@ const upstreamCurrentFixture = {
     condition: { text: "Partly cloudy", code: 1003 },
     wind_kph: 14.4,
     wind_dir: "WSW",
+    wind_degree: 240,
     gust_kph: 22,
     humidity: 67,
     pressure_mb: 1015,

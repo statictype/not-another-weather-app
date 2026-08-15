@@ -1,0 +1,147 @@
+import { useId } from "react";
+import { beaufort } from "@/lib/air-comfort";
+
+interface WindCardProps {
+  windKph: number;
+  windDir: string;
+  windDegree: number;
+  gustKph: number;
+}
+
+export function WindCard({ windKph, windDir, windDegree, gustKph }: WindCardProps) {
+  return (
+    <section className="swap-in swap-d-7 bento-tile flex flex-col p-6 sm:col-span-4 lg:col-span-2 xl:order-7 xl:col-span-1">
+      <p className="label-section">Wind</p>
+      <div className="flex flex-1 flex-col justify-center gap-4">
+        <Compass windKph={windKph} windDir={windDir} windDegree={windDegree} />
+        <div>
+          <div aria-hidden="true" className="h-px w-full bg-foreground/8" />
+          <div className="mt-3 flex items-baseline justify-between gap-3 px-1">
+            <span className="text-sm tracking-tight">{beaufort(windKph)}</span>
+            <span className="shrink-0 text-sm tracking-tight">
+              <span className="label-sub mr-2">Gusts</span>
+              {Math.round(gustKph)}
+              <span className="ml-1 text-foreground/70">km/h</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const C = 57;
+const R_RING = 52;
+
+/** The blade sits inside the ring, tip at the bearing the wind blows *from*. */
+function Compass({
+  windKph,
+  windDir,
+  windDegree,
+}: {
+  windKph: number;
+  windDir: string;
+  windDegree: number;
+}) {
+  const uid = useId();
+  const gradId = `${uid}-wind-grad`;
+
+  return (
+    <div className="relative mx-auto w-full max-w-[160px]">
+      <svg viewBox="0 0 114 114" className="block w-full" aria-hidden="true">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stopColor="#5D5FE04D" />
+            <stop offset="0.45" stopColor="#3C82EAE6" />
+            <stop offset="1" stopColor="#22B8E6FF" />
+          </linearGradient>
+        </defs>
+
+        <circle
+          cx={C}
+          cy={C}
+          r={R_RING}
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity="0.1"
+          strokeWidth="1"
+        />
+
+        {TICKS.map((deg) => {
+          const inner = pointOn(47, deg);
+          const outer = pointOn(R_RING, deg);
+          return (
+            <line
+              key={deg}
+              x1={inner.x}
+              y1={inner.y}
+              x2={outer.x}
+              y2={outer.y}
+              stroke="currentColor"
+              strokeOpacity="0.13"
+              strokeWidth="1"
+            />
+          );
+        })}
+
+        {CARDINALS.map(({ letter, deg }) => {
+          const p = pointOn(42, deg);
+          return (
+            <text
+              key={letter}
+              x={p.x}
+              y={p.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize="7.5"
+              letterSpacing="0.5"
+              fill="currentColor"
+              fillOpacity="0.45"
+            >
+              {letter}
+            </text>
+          );
+        })}
+
+        <g
+          transform={`rotate(${windDegree} ${C} ${C})`}
+          className="transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+        >
+          <path d={MARKER} fill={`url(#${gradId})`} />
+        </g>
+      </svg>
+
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        <p className="text-2xl leading-none tracking-tight">
+          {Math.round(windKph)}
+          <span className="ml-1 text-sm text-foreground/70">km/h</span>
+        </p>
+        <p className="label-sub">{windDir}</p>
+      </div>
+    </div>
+  );
+}
+
+const TICKS = Array.from({ length: 16 }, (_, i) => i * 22.5);
+
+const CARDINALS = [
+  { letter: "N", deg: 0 },
+  { letter: "E", deg: 90 },
+  { letter: "S", deg: 180 },
+  { letter: "W", deg: 270 },
+] as const;
+
+function pointOn(radius: number, deg: number): { x: number; y: number } {
+  const rad = ((deg - 90) * Math.PI) / 180;
+  return { x: C + radius * Math.cos(rad), y: C + radius * Math.sin(rad) };
+}
+
+function marker(): string {
+  const tip = pointOn(52, 0);
+  const left = pointOn(40, -6.5);
+  const right = pointOn(40, 6.5);
+  const back = pointOn(43.5, 0);
+  return `M ${tip.x} ${tip.y} L ${left.x} ${left.y} Q ${back.x} ${back.y} ${right.x} ${right.y} Z`;
+}
+
+const MARKER = marker();

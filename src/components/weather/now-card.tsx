@@ -2,11 +2,14 @@ import { useState } from "react";
 import {
   BubblesIcon,
   CloudIcon,
+  CloudRainIcon,
   DropletsIcon,
   EyeIcon,
   Maximize2Icon,
   PersonStandingIcon,
   ThermometerIcon,
+  ThermometerSunIcon,
+  UmbrellaIcon,
   WindIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -20,7 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { airComfort, beaufort } from "@/lib/air-comfort";
+import { airComfort } from "@/lib/air-comfort";
+import { precipAmount } from "@/lib/precip";
 import { cn } from "@/lib/utils";
 
 interface Reading {
@@ -28,12 +32,12 @@ interface Reading {
   icon: LucideIcon;
   label: string;
   value: string;
-  faceValue?: string;
 }
 
-const FACE = new Set(["temp", "feels", "wind"]);
+const FACE = new Set(["temp", "feels", "windchill"]);
 
-function readingsOf(c: CurrentConditions): Reading[] {
+function readingsOf(c: CurrentConditions, chanceOfRain: number | undefined): Reading[] {
+  const precip = precipAmount(c.precipMm, "mm");
   return [
     { key: "temp", icon: ThermometerIcon, label: "Temperature", value: `${Math.round(c.tempC)}°C` },
     {
@@ -42,16 +46,37 @@ function readingsOf(c: CurrentConditions): Reading[] {
       label: "Feels like",
       value: `${Math.round(c.feelsLikeC)}°`,
     },
+    {
+      key: "windchill",
+      icon: WindIcon,
+      label: "Wind chill",
+      value: `${Math.round(c.windchillC)}°`,
+    },
+    {
+      key: "heatindex",
+      icon: ThermometerSunIcon,
+      label: "Heat index",
+      value: `${Math.round(c.heatIndexC)}°`,
+    },
     { key: "dew", icon: BubblesIcon, label: "Dew", value: `${Math.round(c.dewpointC)}°` },
     { key: "humidity", icon: DropletsIcon, label: "Humidity", value: `${c.humidity}%` },
-    { key: "cloud", icon: CloudIcon, label: "Cloud", value: `${c.cloud}%` },
+    { key: "cloud", icon: CloudIcon, label: "Cloud cover", value: `${c.cloud}%` },
     {
-      key: "wind",
-      icon: WindIcon,
-      label: "Wind",
-      value: `${Math.round(c.windKph)} km/h ${c.windDir} · ${beaufort(c.windKph)}`,
-      faceValue: beaufort(c.windKph),
+      key: "precip",
+      icon: CloudRainIcon,
+      label: "Precipitation",
+      value: precip ? precip.text : "0mm",
     },
+    ...(chanceOfRain === undefined
+      ? []
+      : [
+          {
+            key: "rain-chance",
+            icon: UmbrellaIcon,
+            label: "Chance of rain",
+            value: `${chanceOfRain}%`,
+          },
+        ]),
     {
       key: "visibility",
       icon: EyeIcon,
@@ -63,12 +88,14 @@ function readingsOf(c: CurrentConditions): Reading[] {
 
 interface NowCardProps {
   current: CurrentConditions;
+  /** From the forecast tier, so it is absent until the second request lands. */
+  chanceOfRain: number | undefined;
 }
 
-export function NowCard({ current }: NowCardProps) {
+export function NowCard({ current, chanceOfRain }: NowCardProps) {
   const [open, setOpen] = useState(false);
   const { sentence } = airComfort(current);
-  const readings = readingsOf(current);
+  const readings = readingsOf(current, chanceOfRain);
   const face = readings.filter((r) => FACE.has(r.key));
 
   return (
@@ -125,14 +152,14 @@ export function NowCard({ current }: NowCardProps) {
 }
 
 function FaceRow({ reading }: { reading: Reading }) {
-  const { icon: Icon, label, value, faceValue } = reading;
+  const { icon: Icon, label, value } = reading;
   return (
     <span className="flex items-center justify-between gap-3 py-3">
       <span className="flex items-center gap-2.5">
         <Icon className="size-4 shrink-0 text-foreground/70" strokeWidth={1.5} aria-hidden="true" />
         <span className="label-sub">{label}</span>
       </span>
-      <span className="text-base tracking-tight">{faceValue ?? value}</span>
+      <span className="text-base tracking-tight">{value}</span>
     </span>
   );
 }
