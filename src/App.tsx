@@ -4,6 +4,7 @@ import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
 
 const Toaster = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { WeatherResult } from "@/components/weather-result";
 import type { HistoryItem } from "@/hooks/use-history";
 import { useReversibleHistory } from "@/hooks/use-reversible-history";
@@ -85,43 +86,48 @@ export function App() {
   }, [isNight]);
 
   return (
-    <div
-      className={cn("text-foreground relative min-h-screen overflow-x-hidden", isNight && "night")}
-    >
-      <div className={cn("sky", isNight && "night")} aria-hidden="true" />
+    <TooltipProvider>
+      <div
+        className={cn(
+          "text-foreground relative min-h-screen overflow-x-hidden",
+          isNight && "night",
+        )}
+      >
+        <div className={cn("sky", isNight && "night")} aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
-        <header className="relative z-30 mb-8 flex items-center gap-2 md:gap-6">
-          <h1 className="text-5xl sm:text-7xl shrink-0 leading-none" aria-label="Weather">
-            <span aria-hidden="true">😶‍🌫️</span>
-          </h1>
-          <div className="flex-1 min-w-0">
-            <SearchBar
-              recentItems={history}
-              suggestions={suggestions.data}
-              isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
-              error={query.error}
-              activeQuery={activeQuery}
-              onValueChange={setInputValue}
-              onSuggestionSelect={handleSuggestionSelect}
-              onRecentSelect={handleHistorySelect}
-              onRecentRemove={removeWithUndo}
-              onRecentClearAll={clearAllWithUndo}
-              onLocationRequest={handleLocationRequest}
-              onRandomSelect={handleRandomSelect}
-            />
-          </div>
-        </header>
+        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
+          <header className="relative z-30 mb-8 flex items-center gap-2 md:gap-6">
+            <h1 className="text-5xl sm:text-7xl shrink-0 leading-none" aria-label="Weather">
+              <span aria-hidden="true">😶‍🌫️</span>
+            </h1>
+            <div className="flex-1 min-w-0">
+              <SearchBar
+                recentItems={history}
+                suggestions={suggestions.data}
+                isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
+                error={query.error}
+                activeQuery={activeQuery}
+                onValueChange={setInputValue}
+                onSuggestionSelect={handleSuggestionSelect}
+                onRecentSelect={handleHistorySelect}
+                onRecentRemove={removeWithUndo}
+                onRecentClearAll={clearAllWithUndo}
+                onLocationRequest={handleLocationRequest}
+                onRandomSelect={handleRandomSelect}
+              />
+            </div>
+          </header>
 
-        <main className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>
-          <WeatherResult query={query} activeQuery={activeQuery} onRetry={handleRetry} />
-        </main>
+          <main className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>
+            <WeatherResult query={query} activeQuery={activeQuery} onRetry={handleRetry} />
+          </main>
+        </div>
+
+        <Suspense fallback={null}>
+          <Toaster />
+        </Suspense>
       </div>
-
-      <Suspense fallback={null}>
-        <Toaster />
-      </Suspense>
-    </div>
+    </TooltipProvider>
   );
 }
 
