@@ -17,7 +17,7 @@ interface HeroCardProps {
 const PEAK =
   "font-light tracking-tight text-[2.125rem] sm:text-[2.5rem] md:text-[3rem] xl:text-[3.5rem] leading-[1.05]";
 
-const LINE = "text-base md:text-lg leading-snug";
+const CONDITION = "text-base md:text-lg leading-snug";
 
 export function HeroCard({ location, current }: HeroCardProps) {
   const isDay = current.timeOfDay === "day";
@@ -44,13 +44,13 @@ export function HeroCard({ location, current }: HeroCardProps) {
           </div>
 
           <div className="order-1 sm:order-none sm:mt-5 md:mt-6">
-            <p className={cn(LINE)}>{current.conditionText}</p>
-            <p className={cn(LINE, "mt-1")}>
-              {formatDate(now, location.tz)}
-              <span className="px-2 text-white/50" aria-hidden="true">
-                ·
-              </span>
-              <time dateTime={new Date(now).toISOString()}>{formatTime(now, location.tz)}</time>
+            <p className={CONDITION}>{current.conditionText}</p>
+            <p className="label-section mt-2 flex items-center gap-2.5 leading-none text-white">
+              <span>{formatDate(now, location.tz)}</span>
+              <span className="h-2.5 w-px shrink-0 bg-white/30" aria-hidden="true" />
+              <time dateTime={new Date(now).toISOString()} className="tabular-nums">
+                {formatTime(now, location.tz)}
+              </time>
             </p>
           </div>
         </div>
@@ -85,14 +85,12 @@ function useTicker(): number {
 
 function formatTime(now: number, tz: string): string {
   try {
-    return new Date(now)
-      .toLocaleTimeString("en-US", {
-        timeZone: tz,
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })
-      .toLowerCase();
+    return new Date(now).toLocaleTimeString("en-US", {
+      timeZone: tz,
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   } catch {
     return "—";
   }
@@ -100,12 +98,14 @@ function formatTime(now: number, tz: string): string {
 
 function formatDate(now: number, tz: string): string {
   try {
-    return new Date(now).toLocaleDateString("en-US", {
-      timeZone: tz,
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(now)
+      .toLocaleDateString("en-US", {
+        timeZone: tz,
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
+      .replace(",", "");
   } catch {
     return "";
   }
