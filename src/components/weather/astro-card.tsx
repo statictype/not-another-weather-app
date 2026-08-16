@@ -54,7 +54,7 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
         </div>
       </div>
 
-      <div key={`panel-${view}`} className="astro-fade relative mx-auto mt-3 w-full max-w-[400px]">
+      <div key={`panel-${view}`} className="astro-fade relative mt-3 w-full">
         {view === "sun" ? (
           <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} lat={lat} />
         ) : (
@@ -116,7 +116,11 @@ function ArcPanel({ kind, rise, set, lat, astro }: ArcPanelProps) {
 
   return (
     <div>
-      <Arc kind={kind} astro={astro} lat={lat} />
+      {/* The arc is capped so its height cannot follow the card's width; the
+          times below it are not, and sit on the tile's edges. */}
+      <div className="mx-auto w-full max-w-[400px]">
+        <Arc kind={kind} astro={astro} lat={lat} />
+      </div>
       <div className="mt-2 flex items-end justify-between">
         <div>
           {rise ? (
@@ -156,7 +160,9 @@ function Arc({
   const dotColor = kind === "sun" ? "oklch(0.85 0.15 65)" : "oklch(0.85 0.04 250)";
 
   return (
-    <svg viewBox="0 0 320 116" className="block aspect-[320/116] w-full" aria-hidden="true">
+    // Horizon at y=68, control point at y=4, so the apex lands at y=36 and the
+    // body's r=16.5 clears both.
+    <svg viewBox="0 0 320 76" className="block aspect-[320/76] w-full" aria-hidden="true">
       <defs>
         <linearGradient id={arcGradId} x1="0" y1="0" x2="1" y2="0">
           {kind === "sun" ? (
@@ -200,9 +206,9 @@ function Arc({
 
       <line
         x1="0"
-        y1="100"
+        y1="68"
         x2="320"
-        y2="100"
+        y2="68"
         stroke="currentColor"
         strokeOpacity="0.1"
         strokeWidth="0.6"
@@ -210,33 +216,33 @@ function Arc({
       />
 
       <path
-        d="M 20 100 Q 160 -16 300 100"
+        d="M 20 68 Q 160 4 300 68"
         fill="none"
         stroke={`url(#${arcGradId})`}
         strokeWidth="1.5"
         strokeLinecap="round"
       />
 
-      <circle cx="20" cy="100" r="3" fill={dotColor} />
-      <circle cx="300" cy="100" r="3" fill={dotColor} />
+      <circle cx="20" cy="68" r="3" fill={dotColor} />
+      <circle cx="300" cy="68" r="3" fill={dotColor} />
 
       {kind === "sun" ? (
         <g>
-          <circle cx="160" cy="42" r="42" fill={`url(#${sunGlowId})`} />
-          <circle cx="160" cy="42" r="22" fill={`url(#${sunDiscId})`} />
+          <circle cx="160" cy="36" r="31.5" fill={`url(#${sunGlowId})`} />
+          <circle cx="160" cy="36" r="16.5" fill={`url(#${sunDiscId})`} />
         </g>
       ) : astro ? (
         <MoonBodyShapes
           cx={160}
-          cy={42}
-          r={22}
+          cy={36}
+          r={16.5}
           illumination={astro.moonIllumination}
           phase={astro.moonPhase}
           lat={lat}
           litGradId={moonLitId}
         />
       ) : (
-        <circle cx="160" cy="42" r="22" fill="currentColor" fillOpacity="0.12" />
+        <circle cx="160" cy="36" r="16.5" fill="currentColor" fillOpacity="0.12" />
       )}
     </svg>
   );

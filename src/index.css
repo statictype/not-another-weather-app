@@ -865,6 +865,27 @@ html, body { background: oklch(0.97 0.02 230); }
   .fc-prec { margin-top: 0.125rem; align-items: center; }
 }
 
+/* Every day column is one grid track wide, so the query answers the same for
+   all of them and the card cannot stack one column and not its neighbour. */
+.fc-col {
+  container-type: inline-size;
+}
+
+/* A chance and its amount need ~129px side by side; below that they take a
+   line each and the separator between them goes. */
+@container (max-width: 10rem) {
+  .fc-line {
+    flex-direction: column;
+    gap: 0;
+  }
+  .fc-sep {
+    display: none;
+  }
+  .fc-prec-bar {
+    height: 2.5rem;
+  }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
 }

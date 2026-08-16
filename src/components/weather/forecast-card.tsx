@@ -44,12 +44,14 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
           "-my-3 grid grid-cols-1 divide-y divide-foreground/10",
           "sm:my-0 sm:divide-y-0",
           "sm:[&>*:not(:last-child)]:border-r sm:[&>*:not(:last-child)]:border-foreground/10",
+          // The outer columns give their outward padding back to the tile's own.
+          "sm:[&>*:first-child]:ps-0 sm:[&>*:last-child]:pe-0",
           layout,
         )}
       >
         {days
           ? days.map((day, i) => (
-              <div key={day.date} className="min-w-0 py-3 sm:py-0">
+              <div key={day.date} className="fc-col min-w-0 py-3 sm:py-0">
                 <DayColumn
                   day={day}
                   label={forecastLabel(day.date, i)}
@@ -59,7 +61,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
               </div>
             ))
           : Array.from({ length: SKELETON_DAYS }, (_, i) => (
-              <div key={i} className="min-w-0 py-3 sm:py-0">
+              <div key={i} className="fc-col min-w-0 py-3 sm:py-0">
                 <DayColumnSkeleton />
               </div>
             ))}
@@ -116,7 +118,7 @@ function DayColumnSkeleton() {
       <div className="fc-icon size-10 shrink-0 animate-pulse rounded-xl bg-foreground/10" />
       <div className="fc-temp h-6 w-20 animate-pulse rounded bg-foreground/10" />
       <div className="fc-cond h-5 w-24 animate-pulse rounded bg-foreground/10" />
-      <div className="fc-prec h-5 w-14 animate-pulse rounded bg-foreground/10" />
+      <div className="fc-prec-bar fc-prec h-5 w-14 animate-pulse rounded bg-foreground/10" />
     </div>
   );
 }

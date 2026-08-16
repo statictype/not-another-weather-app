@@ -65,16 +65,22 @@ function Line({
     <span
       role="img"
       aria-label={`${name}, ${chance} percent${amount ? `, ${amount.spoken}` : ""}`}
-      className="flex h-5 items-center gap-1.5 text-sm text-foreground/70 tabular-nums"
+      className="fc-line flex min-h-5 flex-wrap items-center gap-1.5 text-sm text-foreground/70 tabular-nums"
     >
-      <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-      {chance}%
+      <span className="flex h-5 items-center gap-1.5">
+        <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+        {chance}%
+      </span>
       {amount && (
         <>
-          <span className="text-foreground/40" aria-hidden="true">
+          <span className="fc-sep flex h-5 items-center text-foreground/40" aria-hidden="true">
             ·
           </span>
-          <UnitValue text={amount.text} delay={delay} />
+          {/* The amount is one token: it stacks under the chance rather than
+              breaking between the number and its suffix. */}
+          <span className="flex h-5 items-center whitespace-nowrap">
+            <UnitValue text={amount.text} delay={delay} />
+          </span>
         </>
       )}
     </span>
