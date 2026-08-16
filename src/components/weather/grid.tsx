@@ -48,7 +48,11 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
       </div>
       <HourlyCard hourly={forecast.data?.hourly} tz={c.location.tz} />
       <ForecastCard forecast={forecast.data?.forecast} />
-      <AstroCard astro={forecast.data?.astro} lat={c.location.lat} />
+      <AstroCard
+        astro={forecast.data?.astro}
+        lat={c.location.lat}
+        isNight={c.current.timeOfDay === "night"}
+      />
       <ExposureCard
         uv={c.current.uv}
         airQualityIndex={forecast.data?.airQualityIndex ?? null}

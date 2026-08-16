@@ -12,10 +12,11 @@ interface AstroCardProps {
   astro: Astro | undefined;
   /** Viewer latitude. Below the equator the moon's lit side mirrors. */
   lat: number;
+  isNight: boolean;
 }
 
-export function AstroCard({ astro, lat }: AstroCardProps) {
-  const [view, setView] = useState<AstroView>("sun");
+export function AstroCard({ astro, lat, isNight }: AstroCardProps) {
+  const [view, setView] = useState<AstroView>(isNight ? "moon" : "sun");
 
   return (
     <section
