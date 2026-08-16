@@ -16,6 +16,8 @@ colors:
   hero-day: "oklch(0.6152 0.2108 256.10)"
   hero-day-deep: "oklch(0.4550 0.1850 264)"
   hero-lamp: "#00C4FF"
+  now-lamp: "#00CCFF"
+  now-cyan: "#C0EDF2"
   ink-well: "oklch(0.1871 0.0557 253.85)"
   ink-well-far: "oklch(0.1176 0.0289 243.78)"
   sev-extreme: "oklch(0.485 0.215 22)"
@@ -91,6 +93,7 @@ components:
     rounded: "{rounded.tile}"
     padding: "{spacing.tile-pad}"
   tile-now:
+    backgroundColor: "{colors.now-cyan}"
     textColor: "{colors.wet-slate}"
     rounded: "{rounded.tile}"
     padding: "{spacing.tile-pad}"
@@ -180,9 +183,19 @@ border white at 6–10% alpha.
 
 **The pictures.** Day sky `{colors.sky-day}` → `{colors.sky-day-far}`. Day hero
 `{colors.hero-day-deep}` → `{colors.hero-day}`, lit by `{colors.hero-lamp}`
-parked past the lower-right corner; the Now tile takes that same lamp at a third
-of its strength, which is what ties the two together. Night hero
-`{colors.ink-well-far}` → `{colors.ink-well}` under a 45° sheen.
+parked past the lower-right corner. Night hero `{colors.ink-well-far}` →
+`{colors.ink-well}` under a 45° sheen.
+
+**The Now tile is the one pane with a hue of its own.** It carries the answer, so
+it separates from the plain tiles the way its night counterpart does — a
+`{colors.now-cyan}` base rather than the tiles' near-white glass, deepened at the
+lower right by `{colors.now-lamp}` at `0x5C` peak alpha. That alpha is the
+ceiling: it holds 70%-alpha ink over the corner at 4.55:1, and anything higher
+drops the row labels under AA.
+
+> **Two lamps, one job.** `{colors.now-lamp}` and `{colors.hero-lamp}` differ by
+> 8 in the green channel and read as the same light. They are two tokens because
+> the values diverged, not because the system wants two. Unify them.
 
 ### Named Rules
 
@@ -288,13 +301,12 @@ overlapping is the shadow's reach, not its presence.
 
 ### Named Rules
 
-**The Two Lights Rule.** Day surfaces that carry a light carry the same one:
-`{colors.hero-lamp}` in a radial parked past the lower-right corner, on
-`.hero-day` at 0.46 peak alpha and `.tile-now` at 0.34. Night uses a 45° white
-sheen at 0.08 instead, on `.hero-night`. A new lit surface picks the rule for
-its cascade rather than inventing a third. The astro tiles are the exception:
-their bloom sits at `80% 100%` in day and `78% 0%` in night, following the body
-on the arc.
+**The Two Lights Rule.** Day surfaces are lit by a cyan radial parked past the
+lower-right corner — `.hero-day` at `0.46` peak alpha, `.tile-now` at `0x5C`
+(0.36). Night uses a 45° white sheen at `0.08` instead, on `.hero-night`. A new
+lit surface picks the rule for its cascade rather than inventing a third. The
+astro tiles are the exception: their bloom sits at `80% 100%` in day and
+`78% 0%` in night, following the body on the arc.
 
 ## Shapes
 

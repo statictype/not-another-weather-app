@@ -242,20 +242,20 @@ html, body { background: oklch(0.97 0.02 230); }
 .tile-now {
   background:
     radial-gradient(128% 92% at 42% -16% in oklab,
-      #FFFFFF6E 0%,
-      #FFFFFF61 20%,
-      #FFFFFF2E 54%,
-      #FFFFFF0F 80%,
+      #FFFFFF2E 0%,
+      #FFFFFF28 20%,
+      #FFFFFF15 54%,
+      #FFFFFF07 80%,
       #FFFFFF00 100%),
     radial-gradient(112% 96% at 98% 104% in oklab,
-      #00C4FF57 0%,
-      #00C4FF4A 20%,
-      #00C4FF26 54%,
-      #00C4FF0D 80%,
-      #00C4FF00 100%),
+      #00CCFF5C 0%,
+      #00CCFF4E 20%,
+      #00CCFF28 54%,
+      #00CCFF0D 80%,
+      #00CCFF00 100%),
     linear-gradient(168deg in oklab,
-      #FBFDFF 0%,
-      #E7F0FA 100%);
+      #C4EFF3 0%,
+      #C0EDF2 100%);
 }
 
 .tile-now-sweep {
