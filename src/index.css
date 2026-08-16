@@ -588,8 +588,8 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 @keyframes astro-fade {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .astro-fade { animation: astro-fade 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .swap-in { animation: swap-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }

@@ -21,7 +21,7 @@ export function AstroCard({ astro, lat, isNight }: AstroCardProps) {
   return (
     <section
       className={cn(
-        "swap-in swap-d-5 bento-tile relative overflow-hidden sm:col-span-4 md:col-span-4 xl:order-5 xl:col-span-1",
+        "swap-in swap-d-5 bento-tile relative flex flex-col overflow-hidden sm:col-span-4 md:col-span-4 xl:order-5 xl:col-span-1",
         view === "sun" ? "tile-astro" : "tile-astro-moon",
       )}
     >
@@ -50,12 +50,14 @@ export function AstroCard({ astro, lat, isNight }: AstroCardProps) {
           </TabButton>
         </div>
 
-        <div key={`info-${view}`} className="astro-fade min-w-0 pt-1 text-right">
+        {/* Fixed height: the sun's two lines measure 34.5px and the moon's
+            39.5px, and the difference would move the arc on every switch. */}
+        <div key={`info-${view}`} className="astro-fade h-10 min-w-0 text-right">
           {astro ? <SideInfo view={view} astro={astro} /> : <SideInfoSkeleton />}
         </div>
       </div>
 
-      <div key={`panel-${view}`} className="astro-fade relative mt-3 w-full">
+      <div key={`panel-${view}`} className="astro-fade relative mt-3 flex w-full flex-1 flex-col">
         {view === "sun" ? (
           <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} lat={lat} />
         ) : (
@@ -116,13 +118,13 @@ function ArcPanel({ kind, rise, set, lat, astro }: ArcPanelProps) {
     kind === "sun" ? { rise: "Sunrise", set: "Sunset" } : { rise: "Moonrise", set: "Moonset" };
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       {/* The arc is capped so its height cannot follow the card's width; the
           times below it are not, and sit on the tile's edges. */}
       <div className="mx-auto w-full max-w-[400px]">
         <Arc kind={kind} astro={astro} lat={lat} />
       </div>
-      <div className="mt-2 flex items-end justify-between">
+      <div className="mt-auto flex items-end justify-between pt-2">
         <div>
           {rise ? (
             <p className="text-base leading-none tracking-tight">{formatClock(rise)}</p>
