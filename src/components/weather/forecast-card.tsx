@@ -43,7 +43,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
         className={cn(
           "-my-3 grid grid-cols-1 divide-y divide-foreground/10",
           "sm:my-0 sm:divide-y-0",
-          "sm:[&>*:not(:last-child)]:border-r sm:[&>*:not(:last-child)]:border-foreground/6",
+          "sm:[&>*:not(:last-child)]:border-r sm:[&>*:not(:last-child)]:border-foreground/10",
           layout,
         )}
       >
@@ -90,7 +90,7 @@ function DayColumn({
       <ConditionIcon
         text={day.conditionText}
         isDay={day.isDay}
-        className="fc-icon size-10 shrink-0 text-foreground/60"
+        className="fc-icon size-10 shrink-0 text-foreground/70"
         strokeWidth={1.05}
         aria-hidden="true"
       />

@@ -9,16 +9,8 @@ interface HeroCardProps {
   current: CurrentConditions;
 }
 
-/** Hierarchy is by size step, never opacity: faded white fails 4.5:1 on the day gradient.
- *
- *  `leading-*` comes last on purpose. tailwind-merge treats a font-size class
- *  as conflicting with line-height, so a `leading-` written before `text-`
- *  is dropped by `cn` — which is how the city shipped at 56px/84px instead of
- *  56px/58.8px, and why the three lines under it read as loose. */
-const PEAK =
-  "font-light tracking-tight text-[2.125rem] sm:text-[2.5rem] md:text-[3rem] xl:text-[3.5rem] leading-[1.05]";
-
-const CONDITION = "text-base md:text-lg leading-snug";
+/** Hierarchy is by size step, never opacity: faded white fails 4.5:1 on the day gradient. */
+const CONDITION = "text-base sm:text-xl leading-snug";
 
 export function HeroCard({ location, current }: HeroCardProps) {
   const isDay = current.timeOfDay === "day";
@@ -41,7 +33,7 @@ export function HeroCard({ location, current }: HeroCardProps) {
         <div className="contents sm:flex sm:min-w-0 sm:flex-col">
           <div>
             {country && <p className="label-section leading-none text-white">{country}</p>}
-            <h2 className={cn(PEAK, "mt-1 text-balance")}>{location.name}</h2>
+            <h2 className="type-display mt-1 text-balance">{location.name}</h2>
           </div>
 
           <div className="order-1 sm:order-none sm:mt-5 md:mt-6">
@@ -56,14 +48,13 @@ export function HeroCard({ location, current }: HeroCardProps) {
           </div>
         </div>
 
-        {/* `stroke-width` comes down as the icon goes up so the drawn line
-            stays ~5px from `sm` up, rather than thickening with the size.
-            Below `sm` it draws at ~3.5px. */}
+        {/* `stroke-width` comes down as the icon goes up, so the drawn line
+            holds at ~5px across all three sizes. */}
         <ConditionIcon
           text={current.conditionText}
           isDay={isDay}
           className={cn(
-            "size-36 shrink-0 self-center [stroke-width:0.58]",
+            "size-36 shrink-0 self-center [stroke-width:0.83]",
             "sm:size-44 sm:[stroke-width:0.68]",
             "xl:size-56 xl:[stroke-width:0.53]",
             isDay ? "text-white/90" : "text-[oklch(0.62_0.03_250)]",

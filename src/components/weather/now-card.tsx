@@ -95,7 +95,7 @@ export function NowCard({ current }: NowCardProps) {
         <button
           type="button"
           className={cn(
-            "swap-in swap-d-2 bento-tile tile-wind group relative w-full overflow-hidden text-left",
+            "swap-in swap-d-2 bento-tile tile-now group relative w-full overflow-hidden text-left",
             "flex flex-col justify-center gap-5",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
             "lg:flex-1",
@@ -103,7 +103,7 @@ export function NowCard({ current }: NowCardProps) {
         >
           <span
             aria-hidden="true"
-            className="tile-wind-sweep pointer-events-none absolute inset-0"
+            className="tile-now-sweep pointer-events-none absolute inset-0"
           />
 
           <span className="relative flex items-center justify-between gap-3">
@@ -116,7 +116,7 @@ export function NowCard({ current }: NowCardProps) {
           </span>
 
           <span className="relative flex flex-col gap-5 md:flex-row md:items-center md:gap-10 lg:flex-col lg:items-stretch lg:gap-5">
-            <span className="block text-2xl leading-tight font-light text-balance md:flex-1 lg:text-xl xl:text-2xl">
+            <span className="block text-2xl leading-tight font-light text-balance md:flex-1">
               {sentence}
             </span>
 
@@ -137,15 +137,18 @@ export function NowCard({ current }: NowCardProps) {
 }
 
 function FaceRow({ reading, delay }: { reading: Reading; delay: number }) {
-  const { icon: Icon, key, label, value } = reading;
+  const { icon: Icon, label, value } = reading;
   return (
     <span className="flex items-center justify-between gap-3 py-3">
-      <span className="flex items-center gap-2.5 lg:gap-1.5 xl:gap-2.5">
-        <Icon className="size-4 shrink-0 text-foreground/70" strokeWidth={1.5} aria-hidden="true" />
+      <span className="flex items-center gap-2.5">
+        <Icon
+          className="size-4 shrink-0 text-foreground/70"
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
         <span className="label-sub">{label}</span>
       </span>
-      {/* Wind is the one worded value on the face; the others are figures. */}
-      <span className={cn("text-base tracking-tight", key === "wind" && "text-sm xl:text-base")}>
+      <span className="text-base tracking-tight">
         <UnitValue text={value} delay={delay} />
       </span>
     </span>
@@ -187,7 +190,7 @@ function NowDialog({
               <dt className="flex items-center gap-2.5">
                 <Icon
                   className="size-4 shrink-0 text-foreground/70"
-                  strokeWidth={1.5}
+                  strokeWidth={1.75}
                   aria-hidden="true"
                 />
                 <span className="label-sub">{label}</span>

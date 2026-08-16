@@ -1,25 +1,40 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-
+/** Mirrors the grid's spans, so the first paint does not reflow when data
+ *  lands. Each card's own skeleton takes over from there. */
 export function WeatherSkeleton() {
   return (
-    <Card aria-busy="true" aria-label="Loading weather">
-      <CardHeader className="space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-3 w-48" />
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-end gap-4">
-          <Skeleton className="h-20 w-32" />
-          <Skeleton className="h-6 w-24" />
+    <div
+      aria-busy="true"
+      aria-label="Loading weather"
+      className="grid w-full auto-rows-[minmax(150px,auto)] grid-cols-1 gap-5 sm:grid-cols-4 sm:gap-6 lg:grid-cols-8 xl:grid-cols-4"
+    >
+      <div className="bento-tile min-h-[334px] sm:col-span-4 lg:col-span-5 xl:col-span-3">
+        <Bar className="h-[18px] w-24" />
+      </div>
+      <div className="flex flex-col gap-5 sm:col-span-4 sm:gap-6 lg:col-span-3 xl:col-span-1">
+        <div className="bento-tile flex-1">
+          <Bar className="h-[18px] w-16" />
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <Skeleton className="h-14" />
-          <Skeleton className="h-14" />
-          <Skeleton className="h-14" />
-          <Skeleton className="h-14" />
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      <Tile className="sm:col-span-4 lg:col-span-4 xl:col-span-2" />
+      <Tile className="sm:col-span-4 lg:col-span-4 xl:col-span-2" />
+      <Tile className="sm:col-span-4 md:col-span-2 lg:col-span-4 xl:col-span-1" />
+      <Tile className="sm:col-span-4 md:col-span-2 lg:col-span-4 xl:col-span-1" />
+      <Tile className="sm:col-span-4 md:col-span-2 lg:col-span-4 xl:col-span-1" />
+      <Tile className="sm:col-span-4 md:col-span-2 lg:col-span-4 xl:col-span-1" />
+    </div>
+  );
+}
+
+function Tile({ className }: { className: string }) {
+  return (
+    <div className={`bento-tile ${className}`}>
+      <Bar className="h-[18px] w-20" />
+    </div>
+  );
+}
+
+function Bar({ className }: { className: string }) {
+  return (
+    <div aria-hidden="true" className={`animate-pulse rounded bg-foreground/10 ${className}`} />
   );
 }

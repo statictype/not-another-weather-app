@@ -84,16 +84,16 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
         <ul className="flex flex-col">
           {[0, 1, 2].map((i) => (
             <li key={i} className="flex items-center gap-3 px-3 py-3">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.04]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/10">
                 <MapPinIcon
-                  className="size-3.5 text-foreground/15"
-                  strokeWidth={2}
+                  className="size-3.5 text-foreground/10"
+                  strokeWidth={1.75}
                   aria-hidden="true"
                 />
               </span>
               <div className="flex flex-1 flex-col gap-1.5">
-                <span className="h-3.5 w-40 animate-pulse rounded-md bg-foreground/[0.06]" />
-                <span className="h-2.5 w-24 animate-pulse rounded-md bg-foreground/[0.04]" />
+                <span className="h-3.5 w-40 animate-pulse rounded-md bg-foreground/10" />
+                <span className="h-2.5 w-24 animate-pulse rounded-md bg-foreground/10" />
               </div>
             </li>
           ))}
@@ -128,15 +128,15 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
   if (section.kind === "empty-results") {
     return (
       <div className="px-3 py-4">
-        <p className="text-sm font-medium text-foreground/70">No cities found</p>
-        <p className="mt-0.5 text-xs text-foreground/70">Try a different spelling</p>
+        <p className="text-sm text-foreground/70">No cities found</p>
+        <p className="mt-0.5 text-sm text-foreground/70">Try a different spelling</p>
       </div>
     );
   }
 
   return (
     <div className="px-3 py-2">
-      <p className="text-xs font-medium text-foreground/70">Keep typing for city suggestions…</p>
+      <p className="text-sm text-foreground/70">Keep typing for city suggestions…</p>
     </div>
   );
 }
@@ -179,13 +179,17 @@ function RecentRow({
         className="relative flex w-full items-center gap-3 px-3 py-3 pr-11 text-left focus-visible:outline-none"
         aria-label={`Load weather for ${item.displayName}`}
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] transition-colors duration-150 group-hover:bg-foreground/[0.08]">
-          <ClockIcon className="size-3.5 text-foreground/55" strokeWidth={2} aria-hidden="true" />
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/6 transition-colors duration-150 group-hover:bg-foreground/10">
+          <ClockIcon
+            className="size-3.5 text-foreground/70"
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
         </span>
         <span
           className={cn(
-            "flex-1 truncate text-[15px] font-medium tracking-tight transition-colors duration-150",
-            focused ? "text-foreground" : "text-foreground/80",
+            "flex-1 truncate text-base tracking-tight transition-colors duration-150",
+            focused ? "text-foreground" : "text-foreground/70",
           )}
         >
           {item.displayName}
@@ -199,14 +203,14 @@ function RecentRow({
           onRemove(item);
         }}
         className={cn(
-          "absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/55 transition-all duration-150 hover:bg-foreground/[0.08] hover:text-foreground/70 focus-visible:outline-none active:scale-90",
+          "absolute right-2 top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-foreground/70 transition-all duration-150 hover:bg-foreground/10 hover:text-foreground/70 focus-visible:outline-none active:scale-90",
           // Always visible on touch; hover-to-reveal on desktop.
           "opacity-100 lg:opacity-0 lg:group-hover:opacity-100",
           focused && "lg:opacity-100",
         )}
         aria-label={`Remove ${item.displayName} from history`}
       >
-        <XIcon className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+        <XIcon className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
       </button>
     </li>
   );
@@ -239,23 +243,23 @@ function SuggestionRow({
         className="relative flex w-full items-center gap-3 px-3 py-3 text-left focus-visible:outline-none"
         aria-label={`Search weather for ${item.name}`}
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 transition-colors duration-150 group-hover:bg-sky-500/[0.15] [.night_&]:bg-foreground/[0.06] [.night_&]:group-hover:bg-foreground/[0.1]">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/6 transition-colors duration-150 group-hover:bg-foreground/10">
           <MapPinIcon
-            className="size-3.5 text-sky-700/80 [.night_&]:text-foreground/60"
-            strokeWidth={2}
+            className="size-3.5 text-foreground/70"
+            strokeWidth={1.75}
             aria-hidden="true"
           />
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span
             className={cn(
-              "truncate text-[15px] font-medium tracking-tight transition-colors duration-150",
-              focused ? "text-foreground" : "text-foreground/80",
+              "truncate text-base tracking-tight transition-colors duration-150",
+              focused ? "text-foreground" : "text-foreground/70",
             )}
           >
             {item.name}
           </span>
-          {rest && <span className="truncate text-xs text-foreground/70">{rest}</span>}
+          {rest && <span className="truncate text-sm text-foreground/70">{rest}</span>}
         </span>
       </motion.button>
     </li>
@@ -319,13 +323,13 @@ function ActionButton({
       >
         <Icon
           className={cn(
-            "size-4 shrink-0 text-foreground/55 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-180",
+            "size-4 shrink-0 text-foreground/70 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-180",
             focused && "rotate-180",
           )}
           strokeWidth={1.75}
           aria-hidden="true"
         />
-        <span className="text-[13px] font-medium tracking-tight text-foreground/70">{label}</span>
+        <span className="text-sm tracking-tight text-foreground/70">{label}</span>
       </button>
     </li>
   );

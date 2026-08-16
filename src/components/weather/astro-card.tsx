@@ -76,7 +76,7 @@ function SideInfo({ view, astro }: { view: AstroView; astro: Astro }) {
     return (
       <>
         <p className="truncate text-sm leading-tight tracking-tight">{astro.moonPhase}</p>
-        <p className="mt-0.5 text-xs text-foreground/70">{astro.moonIllumination}% illuminated</p>
+        <p className="mt-0.5 text-sm text-foreground/70">{astro.moonIllumination}% illuminated</p>
       </>
     );
   }

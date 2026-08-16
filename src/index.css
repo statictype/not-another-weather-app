@@ -118,6 +118,23 @@ body,
 }
 
 @layer components {
+  /* A class, not utilities: `cn` drops a `leading-` written before a `text-`. */
+  .type-display {
+    font-weight: 300;
+    font-size: 2.125rem;
+    line-height: 1.05;
+    letter-spacing: -0.055em;
+  }
+  @media (width >= 40rem) {
+    .type-display { font-size: 2.5rem; }
+  }
+  @media (width >= 48rem) {
+    .type-display { font-size: 3rem; }
+  }
+  @media (width >= 80rem) {
+    .type-display { font-size: 3.5rem; }
+  }
+
   .label-section,
   .label-sub {
     font-weight: 500;
@@ -171,18 +188,6 @@ html, body { background: oklch(0.97 0.02 230); }
   opacity: 1;
 }
 
-.card-surface {
-  background:
-    linear-gradient(180deg, oklch(1 0 0 / 0.85), oklch(1 0 0 / 0.55));
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid oklch(1 0 0 / 0.8);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.6) inset,
-    0 30px 60px -30px oklch(0.4 0.15 240 / 0.25),
-    0 8px 24px -12px oklch(0.4 0.15 240 / 0.15);
-}
-
 .search-surface {
   background: oklch(1 0 0 / 0.45);
   backdrop-filter: blur(24px) saturate(150%);
@@ -229,39 +234,31 @@ html, body { background: oklch(0.97 0.02 230); }
   padding: var(--tile-pad);
 }
 
-/* Every tile reads its padding from `--tile-pad`, so the eight of them can't
-   drift apart. 24px is the full-width value; it drops back to 20px at `lg`,
-   where the narrowest card in the grid is ~226px wide. */
+/* Every tile reads its padding from `--tile-pad`, so they cannot drift apart. */
 @media (width >= 40rem) {
   .bento-tile { --tile-pad: 1.5rem; }
 }
-@media (width >= 64rem) {
-  .bento-tile { --tile-pad: 1.25rem; }
-}
-@media (width >= 80rem) {
-  .bento-tile { --tile-pad: 1.5rem; }
-}
 
-.tile-wind {
+.tile-now {
   background:
     radial-gradient(128% 92% at 42% -16% in oklab,
-      #FFFFFF4D 0%,
-      #FFFFFF45 20%,
-      #FFFFFF21 54%,
-      #FFFFFF08 80%,
+      #FFFFFF6E 0%,
+      #FFFFFF61 20%,
+      #FFFFFF2E 54%,
+      #FFFFFF0F 80%,
       #FFFFFF00 100%),
-    radial-gradient(86% 76% at 100% 106% in oklab,
-      #1866E10A 0%,
-      #1866E108 22%,
-      #1866E104 58%,
-      #1866E101 82%,
-      #1866E100 100%),
+    radial-gradient(112% 96% at 98% 104% in oklab,
+      #00C4FF57 0%,
+      #00C4FF4A 20%,
+      #00C4FF26 54%,
+      #00C4FF0D 80%,
+      #00C4FF00 100%),
     linear-gradient(168deg in oklab,
-      #F5F7F8 0%,
-      #EAEDF2 100%);
+      #FBFDFF 0%,
+      #E7F0FA 100%);
 }
 
-.tile-wind-sweep {
+.tile-now-sweep {
   background-image: radial-gradient(160% 132% at 42% -16% in oklab,
     #FFFFFF9E 0%,
     #FFFFFF8F 20%,
@@ -275,22 +272,23 @@ html, body { background: oklch(0.97 0.02 230); }
     opacity 240ms ease-out,
     transform 240ms ease-out;
 }
-.tile-wind:hover .tile-wind-sweep,
-.tile-wind:focus-visible .tile-wind-sweep {
+.tile-now:hover .tile-now-sweep,
+.tile-now:focus-visible .tile-now-sweep {
   --sweep-scale: 1;
   opacity: 1;
   transition-duration: 420ms;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .tile-wind-sweep,
-  .tile-wind:hover .tile-wind-sweep,
-  .tile-wind:focus-visible .tile-wind-sweep {
+  .tile-now-sweep,
+  .tile-now:hover .tile-now-sweep,
+  .tile-now:focus-visible .tile-now-sweep {
     --sweep-scale: 1;
     transition: none;
   }
 }
 
+/* Sun and moon share one geometry per cascade; the moon differs by hue. */
 .tile-astro {
   background:
     radial-gradient(60% 80% at 80% 100%, oklch(0.96 0.09 60 / 0.7), transparent 65%),
@@ -299,8 +297,8 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 .tile-astro-moon {
   background:
-    radial-gradient(65% 85% at 80% 100%, oklch(0.99 0.005 230 / 0.85), transparent 65%),
-    linear-gradient(170deg, oklch(0.88 0.08 280 / 0.85), oklch(0.99 0.006 240 / 0.95));
+    radial-gradient(60% 80% at 80% 100%, oklch(0.97 0.015 250 / 0.7), transparent 65%),
+    linear-gradient(170deg, oklch(0.9 0.05 280 / 0.8), oklch(0.97 0.012 250 / 0.85));
   transition: background 0.4s ease;
 }
 
@@ -309,27 +307,7 @@ html, body { background: oklch(0.97 0.02 230); }
 :root  { --moon-dark: oklch(0.36 0.05 265); }
 .night { --moon-dark: oklch(0.08 0.005 250); }
 
-/* Severity ramp. Three hues, not three intensities of one: deep crimson at
- * `extreme`, red at `severe`, orange at `moderate`. `-on` is the ink that
- * reads on a surface filled with the color — near-white over the two reds,
- * near-black over the orange, which is too light to carry white text at the
- * lightness the hue needs to still read as orange.
- *
- * Measured against the composited plate (near stop, where the card's rail
- * sits) and inside a filled badge:
- *   day    rail 6.06 / 4.55 / 2.23:1 · badge ink 6.50 / 4.88 / 7.36:1
- *   night  rail 4.86 / 6.22 / 9.14:1 · badge ink 5.70 / 7.30 / 10.40:1
- * Badge text is small (4.5:1 floor) and clears it everywhere. The day
- * `moderate` rail is 2.23:1, under the 3:1 graphic floor — a deliberate
- * choice for a vivid orange, and the rail is 3px wide, so it is a thinner
- * carrier than the filled icon it replaced. The severity is also spoken in
- * the card's screen-reader text and printed as a word on the modal chip, so
- * the hue is not the only carrier. axe skips nodes behind backdrop-filter, so
- * regressions here are invisible to Lighthouse.
- *
- * The plate is the same slate at every severity, a step off the plain tile
- * rather than a color of its own — the alert card is a control, and the step
- * is what says so. `-lit` are the hover stops. */
+
 :root {
   --sev-extreme: oklch(0.485 0.215 22);
   --sev-extreme-on: oklch(0.99 0.012 60);
@@ -351,7 +329,7 @@ html, body { background: oklch(0.97 0.02 230); }
   --sev-moderate: oklch(0.820 0.150 68);
   --sev-moderate-on: oklch(0.18 0.040 50);
 
-  /* Night lifts on hover instead of deepening, as .tile-wind does. */
+  /* Night lifts on hover instead of deepening, as .tile-now does. */
   --alert-plate-near: oklch(0.245 0.014 252 / 0.92);
   --alert-plate-far: oklch(0.165 0.020 258 / 0.60);
   --alert-plate-near-lit: oklch(0.285 0.016 252 / 0.94);
@@ -372,16 +350,6 @@ html, body { background: oklch(0.97 0.02 230); }
   --input: oklch(1 0 0 / 0.08);
 }
 
-.night .card-surface {
-  background:
-    linear-gradient(180deg, oklch(0.22 0.015 250 / 0.85), oklch(0.18 0.02 255 / 0.55));
-  border: 1px solid oklch(1 0 0 / 0.1);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.06) inset,
-    0 30px 60px -30px oklch(0 0 0 / 0.6),
-    0 8px 24px -12px oklch(0 0 0 / 0.35);
-}
-
 .night .bento-tile {
   background:
     linear-gradient(160deg, oklch(0.17 0.012 255 / 0.9), oklch(0.15 0.015 260 / 0.6));
@@ -390,12 +358,12 @@ html, body { background: oklch(0.97 0.02 230); }
     0 1px 0 0 oklch(1 0 0 / 0.04) inset,
     0 12px 30px -18px oklch(0 0 0 / 0.6);
 }
-.night .tile-wind {
+.night .tile-now {
   background:
     linear-gradient(160deg, oklch(0.22 0.05 210 / 0.95), oklch(0.15 0.06 218 / 0.7));
   filter: grayscale(20%);
 }
-.night .tile-wind-sweep {
+.night .tile-now-sweep {
   background-image: radial-gradient(160% 132% at 42% -16% in oklab,
     #DCEBFF07 0%,
     #DCEBFF06 20%,
@@ -408,12 +376,16 @@ html, body { background: oklch(0.97 0.02 230); }
     radial-gradient(55% 70% at 78% 0%, oklch(0.32 0.06 270 / 0.6), transparent 65%),
     linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
+.night .tile-astro-moon {
+  background:
+    radial-gradient(55% 70% at 78% 0%, oklch(0.34 0.025 250 / 0.55), transparent 65%),
+    linear-gradient(170deg, oklch(0.19 0.022 258 / 0.95), oklch(0.125 0.018 250 / 0.7));
+}
 
 /* Two classes, and below `.night .bento-tile`: that rule sets `background` as a
    shorthand and wins at one class. */
 .bento-tile.tile-alert {
   background: linear-gradient(160deg in oklab, var(--alert-plate-near), var(--alert-plate-far));
-  border-radius: 1.25rem;
 }
 .tile-alert-rail {
   background: var(--alert-rail, transparent);
@@ -440,24 +412,7 @@ html, body { background: oklch(0.97 0.02 230); }
   }
 }
 
-/* One light source at the lower-right corner, falling away to deep navy at the
-   upper left. Two blooms only — earlier revisions used four or five, and the
-   extra ones read as scattered spotlights because nothing explained where each
-   sat. Both centres are parked on or past a corner (96% 98%, 6% 100%), so the
-   card only ever shows falloff, never a bloom's core.
 
-   Three properties keep the falloff invisible:
-
-   - each bloom runs its alpha ramp to 100%, so no falloff terminates at a
-     radius you can see;
-   - the ramp opens with a plateau (0.80 held to 18%) before easing down, rather
-     than peaking at a point — a single maximum is what makes a radial read as a
-     dot;
-   - each fades to its own hue at alpha 0 rather than to `transparent`
-     (= rgb(0 0 0 / 0)), which would drag the falloff toward grey.
-
-   Interpolation is oklab throughout so the blue-to-cyan ramps stay saturated
-   through the middle instead of dipping the way sRGB blending does. */
 .hero-day {
   background:
     /* the lamp — #00C4FF, held well under full strength so it lifts the corner
@@ -501,11 +456,6 @@ html, body { background: oklch(0.97 0.02 230); }
 .night .hero-chip {
   border-color: oklch(1 0 0 / 0.16);
   background: oklch(1 0 0 / 0.05);
-}
-
-.night .divide-foreground\/6 > :not([hidden]) ~ :not([hidden]),
-.night .border-foreground\/6 {
-  border-color: oklch(1 0 0 / 0.06) !important;
 }
 
 .search-dropdown-desktop,
@@ -606,12 +556,7 @@ html, body { background: oklch(0.97 0.02 230); }
   --hour-rule-col: color-mix(in oklab, var(--foreground) 6%, transparent);
   --hour-rule-break: color-mix(in oklab, var(--foreground) 22%, transparent);
 
-  /* An edge fades only while the table has content past it. At scroll 0 the
-     left fade is 0 and the right fade is one full column, so the last column's
-     label and three readings render at 0–100% mask alpha. That is the only
-     scroll cue on touch, where hover never fires. The left fade is 0.6 of a
-     column: it marks the cut without matching the right edge's weight. Both
-     are multiples of --hour-col-w, so the ratio holds at both breakpoints. */
+ 
   --hour-fade-l-w: calc(var(--hour-col-w) * 0.6);
   --hour-fade-r-w: var(--hour-col-w);
   --hour-fade-l: 0px;
@@ -732,11 +677,7 @@ html, body { background: oklch(0.97 0.02 230); }
   --hour-fade-r: var(--hour-fade-r-w);
 }
 
-/* Positioned over the edge it scrolls, inside the mask's fade zone. Hidden at
-   rest, so the table needs no control row above it: removing that row took the
-   tile from 259px to 215px. Revealed on hover and on focus-within; the
-   disabled direction stays at opacity 0, so the first and last scroll
-   positions show one arrow and every position between them shows two. */
+
 .hour-step {
   position: absolute;
   top: 50%;
@@ -787,12 +728,7 @@ html, body { background: oklch(0.97 0.02 230); }
   outline-offset: 2px;
 }
 
-/* The left button is pulled back over the 1.75rem gutter, so it lands on the
-   row icons. They yield to it under exactly the condition that reveals it —
-   the same :hover / :focus-within pair, gated on the same :not(:disabled) — so
-   the two states cannot drift apart. At scroll 0 the left button stays hidden
-   and the icons stay up. Opacity, not display: the gutter holds its 1.75rem
-   either way, so the table never shifts. */
+
 @media (hover: hover) {
   .hour-frame:hover:has(.hour-step-l:not(:disabled)) .hour-gutter {
     opacity: 0;
@@ -809,20 +745,7 @@ html, body { background: oklch(0.97 0.02 230); }
   }
 }
 
-/* One forecast day, in two topologies over one DOM.
 
-   Below 640px a day is a list row: the day name holds the leading edge and the
-   high/low the trailing edge, so both scan down the tile's two margins. The
-   previous row packed all five elements against the left edge and left 53% of
-   a 342px tile empty.
-
-   From 640px up the same five elements stack into a centred column, matching
-   the hour table beside it at `xl`. Start-alignment left 131px of a 231px cell
-   empty at 820px, which read as a fourth, blank day.
-
-   Grid areas rather than `order`, because the two topologies group the
-   elements differently: on the row the name, condition and precipitation share
-   one middle column, and in the stack all five are siblings. */
 .fc-day {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -853,15 +776,9 @@ html, body { background: oklch(0.97 0.02 230); }
     row-gap: 0;
     text-align: center;
   }
-  /* Centred by `text-align`, not by `justify-items`. Under `justify-items:
-     center` a cell is sized to its content, so the truncating name and
-     condition have no width to truncate against and overflow the column
-     instead — 166px of text in a 151px cell at 4 days. The icon is the one
-     item with no text to centre. */
+
   .fc-icon { justify-self: center; }
-  /* The interval tightens on the way down — 12 / 10 / 6 / 2 — so the name
-     stands off the reading and the two support lines close up under it. The
-     four gaps were 8 / 4 / 4 / 6 and the five elements read as one list. */
+
   .fc-icon { margin-top: 0.75rem; }
   .fc-temp { margin-top: 0.625rem; justify-self: stretch; }
   .fc-cond { margin-top: 0.375rem; }
@@ -908,10 +825,6 @@ html, body { background: oklch(0.97 0.02 230); }
    the app root, so the night cascade reaches them from <html> — App.tsx
    mirrors the class there.
 
-   The vendored primitives set `bg-black/50`, `rounded-lg`, and their position
-   utilities on the same elements these rules target. Every rule below is
-   unlayered, so it wins over a utility whatever the source order — the
-   mechanic `.bento-tile` already uses.
    --------------------------------------------------------------------------- */
 
 :root {
@@ -929,11 +842,7 @@ html, body { background: oklch(0.97 0.02 230); }
   --dialog-grabber: oklch(1 0 0 / 0.22);
 }
 
-/* Scrim. The sky behind a dialog is the product's subject, so it goes out of
-   focus rather than under a black slab: an ink at the palette's own hue plus a
-   blur. `bg-black/50` flattened both cascades — it drained the day sky to grey
-   and closed the night page to near-black, leaving the panel with nothing to
-   sit against. */
+
 [data-slot="dialog-overlay"],
 [data-slot="alert-dialog-overlay"] {
   background: oklch(0.34 0.055 250 / 0.34);
@@ -945,10 +854,7 @@ html, body { background: oklch(0.97 0.02 230); }
   background: oklch(0.09 0.02 255 / 0.58);
 }
 
-/* One authored moment: the room drops back as the pane comes forward. Nothing
-   here existed before — the primitives carry `animate-in` / `zoom-in-95`
-   classes from a plugin this project does not install, so all three dialogs
-   appeared with no transition at all. */
+
 @keyframes dialog-scrim-in {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -957,9 +863,7 @@ html, body { background: oklch(0.97 0.02 230); }
   from { opacity: 1; }
   to   { opacity: 0; }
 }
-/* The primitives centre with Tailwind v4's `translate-x/y` utilities, which
-   write the `translate` property — so these keyframes own `transform` alone and
-   never restate the centring. */
+
 @keyframes dialog-panel-in {
   from { opacity: 0; transform: translateY(16px) scale(0.98); }
   to   { opacity: 1; transform: none; }
@@ -986,7 +890,6 @@ html, body { background: oklch(0.97 0.02 230); }
   animation: dialog-scrim-out 0.18s ease-in both;
 }
 
-/* Exponential ease-out from an already-composed position. */
 .dialog-panel[data-state="open"] {
   animation: dialog-panel-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -994,13 +897,9 @@ html, body { background: oklch(0.97 0.02 230); }
   animation: dialog-panel-out 0.18s ease-in both;
 }
 
-/* The close control. The vendored button is a bare 16px glyph at 70% opacity
-   with a `focus:` (not `focus-visible:`) ring — and Radix focuses it on open,
-   so every mouse user saw the ring. It becomes a 36px pane in the system's own
-   rim language, and the ring returns only for keyboard focus. */
+
 [data-slot="dialog-content"] > [data-slot="dialog-close"] {
-  /* Optically aligned, not box-aligned: the 16px glyph sits on the header's own
-     24px text inset, so the 36px pane overhangs it by 10px on each side. */
+
   top: 1.125rem;
   right: 0.875rem;
   display: inline-flex;
@@ -1049,10 +948,7 @@ html, body { background: oklch(0.97 0.02 230); }
   --dialog-fade-b: 2.75rem;
 }
 
-/* Below `sm` the two content dialogs are sheets, not centred cards: they take
-   the bottom edge, keep the panel radius on the top corners only, and put a
-   long alert under the thumb instead of floating it between two margins. The
-   search overlay already speaks this language on the same breakpoint. */
+/* Below `sm` the two content dialogs are sheets, not centred cards */
 @media (width < 40rem) {
   .dialog-sheet {
     top: auto;

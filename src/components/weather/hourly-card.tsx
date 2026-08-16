@@ -171,7 +171,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
                 <ConditionIcon
                   text={slot.conditionText}
                   isDay={slot.isDay}
-                  className="size-7 shrink-0 text-foreground/55"
+                  className="size-7 shrink-0 text-foreground/70"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
@@ -226,7 +226,7 @@ function StepButton({
       aria-label={dir === -1 ? "Scroll to earlier hours" : "Scroll to later hours"}
       className={cn("hour-step", dir === -1 ? "hour-step-l" : "hour-step-r")}
     >
-      <Icon className="size-[18px]" strokeWidth={2} aria-hidden="true" />
+      <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
     </button>
   );
 }

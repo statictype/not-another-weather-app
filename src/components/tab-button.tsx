@@ -21,7 +21,7 @@ export function TabButton({ active, onClick, label, children }: TabButtonProps) 
         "flex h-9 min-w-9 items-center justify-center rounded-full px-2 transition-colors",
         active
           ? "bg-foreground/10 text-foreground"
-          : "text-foreground/55 hover:bg-foreground/5 hover:text-foreground",
+          : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground",
       )}
     >
       {children}

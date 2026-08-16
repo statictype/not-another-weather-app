@@ -46,7 +46,7 @@ export function ClearAllButton({ onConfirm, open, onOpenChange }: ClearAllButton
         <AlertDialogFooter className="gap-2">
           {/* Ghost plus a rim. The `outline` variant fills with `bg-background`,
               which is opaque and would sit as a solid chip on the glass. */}
-          <AlertDialogCancel variant="ghost" className="border border-foreground/15">
+          <AlertDialogCancel variant="ghost" className="border border-foreground/10">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={onConfirm}>

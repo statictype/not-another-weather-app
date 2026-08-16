@@ -116,7 +116,7 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
               <span className="text-sm tabular-nums text-foreground/70" aria-hidden="true">
                 +{extra}
               </span>
-              <span aria-hidden="true" className="h-4 w-px bg-foreground/15" />
+              <span aria-hidden="true" className="h-4 w-px bg-foreground/10" />
             </>
           )}
           <Maximize2Icon

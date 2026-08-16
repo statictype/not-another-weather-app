@@ -1,38 +1,45 @@
 ---
-name: Weather App
+name: air
 description: A view onto one city's sky, read through frosted panes that track that city's local time.
 colors:
-  cobalt-glass: "oklch(0.6800 0.1500 235.0000)"
-  sea-glass: "oklch(0.8200 0.1100 200.0000)"
-  wet-slate: "oklch(0.2600 0.0700 245.0000)"
-  frosted-pane: "oklch(0.9750 0.0180 235.0000)"
-  pane-white: "oklch(0.9950 0.0040 230.0000)"
-  haze: "oklch(0.9550 0.0180 230.0000)"
-  haze-ink: "oklch(0.5200 0.0500 245.0000)"
+  cobalt: "oklch(0.6800 0.1500 235)"
+  sea-glass: "oklch(0.8200 0.1100 200)"
+  wet-slate: "oklch(0.2600 0.0700 245)"
+  frosted-pane: "oklch(0.9750 0.0180 235)"
   hairline: "oklch(0.9288 0.0126 255.5078)"
-  signal-red: "oklch(0.6368 0.2078 25.3313)"
   focus-violet: "oklch(0.5854 0.2041 277.1173)"
-  smoked-glass: "oklch(0.1300 0.0080 250.0000)"
-  smoked-glass-raised: "oklch(0.2000 0.0150 250.0000)"
-  night-ink: "oklch(0.9500 0.0080 240.0000)"
-  night-haze-ink: "oklch(0.7000 0.0100 240.0000)"
-  ink-well-near: "#01132b"
-  ink-well-far: "#00060f"
-  rim-light: "oklch(1 0 0 / 0.8)"
-  rim-light-night: "oklch(1 0 0 / 0.10)"
+  signal-red: "oklch(0.6368 0.2078 25.3313)"
+  smoked-glass: "oklch(0.13 0.008 250)"
+  night-ink: "oklch(0.95 0.008 240)"
+  sky-day: "#D2EEF9"
+  sky-day-far: "#B4D9EF"
+  hero-day: "oklch(0.6152 0.2108 256.10)"
+  hero-day-deep: "oklch(0.4550 0.1850 264)"
+  hero-lamp: "#00C4FF"
+  ink-well: "oklch(0.1871 0.0557 253.85)"
+  ink-well-far: "oklch(0.1176 0.0289 243.78)"
+  sev-extreme: "oklch(0.485 0.215 22)"
+  sev-severe: "oklch(0.565 0.215 32)"
+  sev-moderate: "oklch(0.734 0.179 56)"
 typography:
   display:
     fontFamily: "Work Sans, system-ui, sans-serif"
-    fontSize: "clamp(2.125rem, 4.5vw, 3.5rem)"
+    fontSize: "2.125rem → 3.5rem"
     fontWeight: 300
     lineHeight: 1.05
     letterSpacing: "-0.055em"
   headline:
     fontFamily: "Work Sans, system-ui, sans-serif"
-    fontSize: "clamp(1.25rem, 2vw, 1.75rem)"
+    fontSize: "1.5rem"
     fontWeight: 300
     lineHeight: 1.25
-    letterSpacing: "-0.03em"
+    letterSpacing: "-0.055em"
+  title:
+    fontFamily: "Work Sans, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 300
+    lineHeight: 1.375
+    letterSpacing: "-0.055em"
   figure:
     fontFamily: "Work Sans, system-ui, sans-serif"
     fontSize: "1.5rem"
@@ -45,306 +52,202 @@ typography:
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "-0.03em"
+  caption:
+    fontFamily: "Work Sans, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: "-0.03em"
   label:
     fontFamily: "Work Sans, system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: "0.18em"
-  label-micro:
+  label-sub:
     fontFamily: "Work Sans, system-ui, sans-serif"
     fontSize: "0.625rem"
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: "0.18em"
 rounded:
-  sm: "0.75rem"
-  md: "1rem"
-  lg: "1.25rem"
-  xl: "1.75rem"
-  2xl: "2.25rem"
-  3xl: "2.75rem"
-  4xl: "3.25rem"
+  well: "0.75rem"
+  control: "1rem"
+  tile: "1.75rem"
+  hero: "2rem"
+  panel: "2.25rem"
+  pill: "999px"
 spacing:
   base: "0.25rem"
-  tile-gap: "1.25rem"
-  tile-gap-lg: "1.5rem"
-  tile-pad: "1.75rem"
-  hero-pad: "3rem"
+  tile-pad: "1.25rem"
+  tile-pad-sm: "1.5rem"
+  hero-pad: "1.5rem"
+  hero-pad-xl: "3rem"
   page-x: "1.25rem"
-  page-x-lg: "2rem"
+  page-x-sm: "2rem"
 components:
   tile:
-    backgroundColor: "{colors.pane-white}"
     textColor: "{colors.wet-slate}"
-    rounded: "{rounded.xl}"
-    padding: "1.5rem"
-  tile-hero-day:
+    rounded: "{rounded.tile}"
+    padding: "{spacing.tile-pad}"
+  tile-now:
+    textColor: "{colors.wet-slate}"
+    rounded: "{rounded.tile}"
+    padding: "{spacing.tile-pad}"
+  hero:
+    backgroundColor: "{colors.hero-day}"
     textColor: "#ffffff"
-    rounded: "2rem"
-    padding: "{spacing.hero-pad}"
-    typography: "display"
-  tile-hero-night:
-    backgroundColor: "{colors.ink-well-far}"
-    textColor: "#ffffff"
-    rounded: "2rem"
+    rounded: "{rounded.hero}"
     padding: "{spacing.hero-pad}"
     typography: "display"
   search-surface:
     textColor: "{colors.wet-slate}"
-    rounded: "{rounded.xl}"
-    padding: "0.875rem 1.25rem"
-  dropdown-panel:
+    rounded: "{rounded.tile}"
+    padding: "0.75rem 1.25rem"
+    typography: "title"
+  panel:
     textColor: "{colors.wet-slate}"
-    rounded: "{rounded.2xl}"
-    padding: "1rem 0.75rem 0.75rem"
+    rounded: "{rounded.panel}"
+    padding: "1.5rem"
   button-primary:
-    backgroundColor: "{colors.cobalt-glass}"
+    backgroundColor: "{colors.cobalt}"
     textColor: "#ffffff"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.control}"
     padding: "0.5rem 1rem"
     height: "2.25rem"
   button-ghost:
     textColor: "{colors.wet-slate}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.control}"
     padding: "0.5rem 1rem"
     height: "2.25rem"
-  button-ghost-hover:
-    backgroundColor: "{colors.sea-glass}"
+  tab-button:
     textColor: "{colors.wet-slate}"
-  input-search:
-    textColor: "{colors.wet-slate}"
-    rounded: "{rounded.md}"
-    padding: "0"
-    height: "auto"
-    typography: "headline"
+    rounded: "{rounded.pill}"
+    height: "2.25rem"
 ---
 
-# Design System: Weather App
+# Design System: air
 
-> The product name is unresolved. `README.md` says "Oasis"; `index.html` and
-> `package.json` say "not another weather app". This file uses a neutral name
-> and takes no position. Resolve it before it reaches any visible surface.
+> **Wordmark unresolved.** The name is `air`; a logo is planned. The header
+> shows a 😶‍🌫️ emoji in a fixed box (56 / 80 / 96 px by breakpoint) that
+> `SLIDE_XS/SM/MD` in `search-bar.tsx` slide across — a logo that changes the box
+> changes those constants too. `README.md`, `index.html`, `package.json` and
+> `wrangler.jsonc` still carry older names.
 
 ## Overview
 
 **Creative North Star: "The Window Seat"**
 
-The page is a view onto one city's actual sky. A fixed, full-bleed gradient
-sits behind everything and crossfades over 1.2 s between a day and a night
-composition, driven by that city's local time — not the viewer's OS
-preference. That layer is the subject. Everything above it is the pane you
-read the subject through.
+The page is a view onto one city's actual sky. A fixed, full-bleed gradient sits
+behind everything and crossfades over 1.2 s between a day and a night
+composition, driven by that city's local time — never the viewer's OS
+preference. That layer is the subject. Everything above it is the pane you read
+the subject through.
 
-Every surface therefore admits some of what is behind it. Tiles, the search
-field, the dropdown, and the mobile overlay are all translucent, blurred,
-and saturated (`backdrop-filter: blur(20–28px) saturate(140–160%)`). Nothing
-in the composition is opaque. The one exception proves the rule: the hero is
-not frosted, because the hero is not a pane — it is the view itself, and it
-carries a saturated gradient of its own.
-
-Depth comes from the edge of the glass, not from a shadow under it. A pane is
-present because its rim catches light (`1px oklch(1 0 0 / 0.8)` top edge, plus
-an inset highlight), and because the atmosphere behind it goes soft through
-its thickness. Shadows are reserved for surfaces that genuinely stack over
-other content.
+Every surface therefore admits some of what is behind it: tiles, the search
+field, the dropdown and the mobile overlay are translucent, blurred and
+saturated (`backdrop-filter: blur(20–28px) saturate(140–160%)`). Two surfaces
+are exempt, and both because they are pictures rather than panes — the hero,
+which is the view itself, and the astro tile, which draws a sky of its own.
 
 **Key Characteristics:**
 
-- One typeface (Work Sans), one weight range (300–500), used at six sizes.
-- Hierarchy is built from size and position. Never from opacity below 70%.
-- Radius is generous everywhere: 1 rem on the smallest control, 2 rem on the hero.
-- Cool blue-violet is the only hue family; `signal-red` is the only exception.
-- Two full cascades, day and night, both first-class. Neither is the default.
+- One typeface (Work Sans) at 300, 400 and 500, on eight size rungs.
+- Two ink levels: `foreground` and `foreground/70`. Nothing between them.
+- Hierarchy is size, then weight. Never opacity.
+- Cool blue-violet is the only hue family; the severity ramp is the exception.
+- Day is lit from the lower right. Night is lit by a diagonal sheen.
 
 ## Colors
 
-A single cool hue family from 195° to 260° in OKLCH, run at two lightness
-extremes. Chroma stays low on every surface (≤ 0.04) and is spent only on the
-hero and the sky.
+One cool hue family from 195° to 280° in OKLCH at two lightness extremes. Chroma
+stays at or below 0.04 on every pane and is spent only on the pictures: the sky,
+the hero, the astro tile.
 
-### Primary
+**Primary.** Cobalt (`{colors.cobalt}`) is the interactive blue — the `primary`
+token, so filled buttons, links and selection. It fills exactly one control in
+the app, the error state's retry; the only other filled button is the
+clear-history confirm, which takes `destructive`. Sea Glass
+(`{colors.sea-glass}`) is the `accent` token: the ghost and outline hover wash,
+never a text color.
 
-- **Cobalt Glass** (`{colors.cobalt-glass}`): the interactive blue. Filled
-  buttons, link text, text selection. Appears on well under 10% of any screen —
-  the app has almost no filled controls.
-- **Sea Glass** (`{colors.sea-glass}`): the hover and highlight wash. Ghost and
-  outline button hover, `accent` surfaces. Never used as a text color.
+**Neutral, day.** Frosted Pane (`{colors.frosted-pane}`) ground, Wet Slate
+(`{colors.wet-slate}`) text, Hairline (`{colors.hairline}`) border.
 
-### Neutral — day cascade
+**Neutral, night.** The same roles under `.night` on the app root: Smoked Glass
+(`{colors.smoked-glass}`) ground, Night Ink (`{colors.night-ink}`) text, every
+border white at 6–10% alpha.
 
-- **Frosted Pane** (`{colors.frosted-pane}`): the page ground. Also the literal
-  `background` on `html, body`, so the sky layer has a matching base while it
-  paints.
-- **Pane White** (`{colors.pane-white}`): card and popover fill in the token
-  layer. Most real surfaces override this with a white-alpha gradient instead.
-- **Wet Slate** (`{colors.wet-slate}`): all body and heading text in day mode.
-- **Haze** / **Haze Ink** (`{colors.haze}` / `{colors.haze-ink}`): muted surface
-  and muted text.
-- **Hairline** (`{colors.hairline}`): `border` and `input` borders in the token
-  layer. Glass surfaces override it with white-alpha rims.
-
-### Neutral — night cascade
-
-Scoped under `.night` on the app root. Same roles, inverted.
-
-- **Smoked Glass** (`{colors.smoked-glass}`): the night page ground.
-- **Smoked Glass Raised** (`{colors.smoked-glass-raised}`): night card fill.
-- **Night Ink** / **Night Haze Ink** (`{colors.night-ink}` /
-  `{colors.night-haze-ink}`): foreground and muted foreground.
-- **Rim Light Night** (`{colors.rim-light-night}`): every night border is white
-  at 6–10% alpha, never a solid color.
-
-### Tertiary — the hero
-
-The hero does not use the token palette. It carries the only two saturated
-fields in the product, apart from the alerts tile at `extreme`, which takes
-`--alert-fill` across its whole surface. That was the point of the change: at
-the top severity the warning outranks the view, and nothing quieter than a
-filled field says so beside a hero this size.
-
-- **Day hero**: a top-right linear gradient, `blue-700 → sky-800 → sky-800`,
-  with two blurred radial bloom shapes over it (`white/10` upper right,
-  `cyan-300/20` lower left).
-- **Ink Well** (`{colors.ink-well-near}` → `{colors.ink-well-far}`): the night
-  hero, a 135° gradient with a faint 45° white sheen across the diagonal.
+**The pictures.** Day sky `{colors.sky-day}` → `{colors.sky-day-far}`. Day hero
+`{colors.hero-day-deep}` → `{colors.hero-day}`, lit by `{colors.hero-lamp}`
+parked past the lower-right corner; the Now tile takes that same lamp at a third
+of its strength, which is what ties the two together. Night hero
+`{colors.ink-well-far}` → `{colors.ink-well}` under a 45° sheen.
 
 ### Named Rules
 
 **The Colorless Encoding Rule.** Color never carries a reading that words are
-not already carrying. The OKLCH air-comfort mood tint was withdrawn in August
-2026 because six hue buckets read as decoration while the sentence beside them
-said the same thing in English. Do not reintroduce hue as a data channel — not
-for comfort, not for temperature, not for AQI. Binding.
+not already carrying. Not comfort, not temperature, not air quality. Binding.
 
-**The One Hue Family Rule.** Every surface, border, text, and shadow color in
-the system lands between 195° and 280° in OKLCH. The warm ramp around 27–35°
-is the sole exception, and it is licensed for exactly two things:
-destructive confirmation (`signal-red`, `{colors.signal-red}`) and
-severe-weather alerts (the `--alert-*` ramp). Nothing else may reach for a
-warm hue. Amended August 2026 when alerts shipped; the previous wording named
-destructive confirmation alone.
+**The One Hue Family Rule.** Every surface, border, text and shadow color lands
+between 195° and 280°. Warm hues are licensed for two things only: destructive
+confirmation (`{colors.signal-red}`) and severe-weather alerts.
 
-**The Alert Ramp.** Severity is drawn at three intensities, not five:
-`--alert-fill` (filled, `extreme`), `--alert-wash` + `--alert-ink` (tinted,
-`severe`), and `--alert-ink-muted` (muted text, `moderate`). `minor` and
-`unknown` stay neutral and take no warm color at all. The icon shape
-separates the two severities that share a step — `OctagonAlertIcon` for
-`extreme`, `TriangleAlertIcon` for `severe` and `moderate`, `InfoIcon` below
-them. This does not reopen The Colorless Encoding Rule: the event text names
-the hazard and the severity word is printed as a chip in the modal and spoken
-on the plate, so the color repeats a reading rather than carrying one. Both
-cascades are declared in `src/index.css` and measured — 5.20–5.86:1 in day,
-6.71–8.84:1 in night, against the composited tile grounds.
+**The Severity Ramp.** Three hues, not three intensities of one — crimson at
+`extreme`, red at `severe`, orange at `moderate`; `minor` and `unknown` take no
+warm color. The hue never carries the severity alone: the icon shape separates
+the two red steps, the word prints on the modal chip, and the card speaks it.
 
-On the card the ramp is the tile's own field, not a badge sitting on glass:
-`.tile-alert-fill` for `extreme`, `.tile-alert-tint` for `severe`, and
-`.tile-alert-plain` for `moderate` and below, which take no warm hue and get a
-neutral `foreground` rim instead so they still read as their own surface.
+**The Two Inks Rule.** Text and icons are `foreground` or `foreground/70`.
+Rules and dividers are `foreground/10`; tracks, wells and icon plates are
+`foreground/6`. One emphasis mark exists at `foreground/25`.
 
-**A wash is not a tint at tile scale.** `--alert-wash` is 9% and was
-calibrated for a badge on white glass; spread across a whole tile beside the
-plain tiles it disappears. The tinted step therefore has its own stops —
-`--alert-tile-near` / `--alert-tile-far`, built like `.tile-wind`'s gradient
-and held light enough that `--alert-ink` still clears AA over the darker one
-(5.13:1 near, 4.95:1 far in day; 7.81:1 and 9.12:1 in night). `--alert-wash`
-keeps its original job on the modal chips.
-
-Hover moves along the ramp rather than fading the surface: `extreme` steps to
-`--alert-ink` (day 0.55 → 0.52 lightness, night 0.70 → 0.80, so contrast with
-`--alert-fill-ink` rises either way — 5.20 → 5.89:1 and 6.71 → 9.02:1). The
-tinted and plain steps move their rim only, and the hazard name underlines at
-every severity. Deepening the tint on hover was measured first and rejected:
-4.34:1 in day, 4.67:1 in night. Element opacity is out for the same reason —
-it composites ink and field together toward the page behind and costs contrast
-in a state WCAG still applies to.
-
-**The 70% Floor Rule.** Text composited over a glass tile is never faded below
-70% alpha of `foreground`. At 70% it measures 5.3–5.5:1 over the day tile
-gradients; the 40–60% range this system used previously measured 2.3–4.1:1 and
-failed WCAG AA throughout day mode. Lighthouse scored accessibility 100 the
-whole time, because axe cannot resolve a background behind `backdrop-filter`
-and skips those nodes. Automated tooling will not catch a regression here. Use
-the size step to build hierarchy instead.
-
-> **Known drift.** `{colors.focus-violet}` (277°) is the `--ring` token, used by
-> every `focus-visible` state on the vendored shadcn primitives. It sits outside
-> the 195–260° band the rest of the palette occupies. It is documented, not
-> endorsed.
+**The 70% Floor.** Text over glass is never faded below 70% of `foreground`.
+`.label-section`, `.label-sub` and `.hour-cell` set it with `color-mix`; every
+other faded string is `foreground/70`. Contrast over a `backdrop-filter` surface
+has to be measured by hand.
 
 ## Typography
 
-**One family: Work Sans** (300, 400, 500, 600, 700), loaded from Google Fonts
-with a `media="print"` / `onload` swap. `system-ui, sans-serif` is the fallback.
-
-There is no display face, no serif, and no monospace face. Aliases for all
-three previously existed in `@theme` and every one of them resolved back to
-Work Sans, so `font-serif` was not a serif and `font-mono` was not monospace.
-They were removed. `--font-mono` remains as a real system stack but nothing
-uses it.
+**One family: Work Sans** (300, 400, 500), loaded from Google Fonts with a
+`media="print"` / `onload` swap. No display face, no serif, no monospace.
 
 **Character:** a grotesque with slightly humanist proportions, set light and
-tight. Global letter-spacing is `-0.03em`; the display role tightens further to
-`-0.055em`. The system's whole personality comes from the gap between very
-large light text and very small wide-tracked uppercase labels — there is no
-third voice.
+tight. Global tracking is `-0.03em`; every rung at 20 px and up tightens to
+`-0.055em`. The personality is the gap between very large light type and very
+small wide-tracked uppercase labels. There is no third voice.
 
 ### Hierarchy
 
-- **Display** (300, `2.125rem → 3.5rem` across breakpoints, `1.05`,
-  `-0.055em`): the hero's city name, plus the empty state's question.
-- **Headline** (300, `1.25rem → 1.5rem`, `1.25`): the words that answer the
-  question — the condition beside the hero icon, the comfort sentence in the
-  Now card, the hazard name on the alerts tile — plus the search input and the
-  dialog titles. The rung between the 56 px hero and the 24 px figures. The
-  comfort sentence is the one member fixed at `1.5rem` at every width, and the
-  one place in the system that drops `tracking-tight`: it is the only light
-  type set at 24 px across a full line, and −0.055 em closed the words up.
-- **Figure** (400, `1.5rem`, `1`, `-0.055em`): the numbers a tile is built
-  around — forecast day highs, UV and AQI values, the pressure reading. It sits
-  at the same size as Headline and is separated from it by weight.
-- **Body** (400, `0.875rem → 1rem`, `1.5`): all supporting text.
-- **Label** (500, `0.75rem`, `0.18em`, uppercase, `foreground` at 70%): tile
-  headers and section headers. Class `.label-section`.
-- **Label Micro** (500, `0.625rem`, `0.18em`, uppercase, `foreground` at 70%):
-  the sub-label under a tile header. Class `.label-sub`.
+| Role      | Weight | Size       | Where                                                                                 |
+| --------- | ------ | ---------- | ------------------------------------------------------------------------------------- |
+| Display   | 300    | 34 → 56 px | Hero city, empty state. Class `.type-display`                                         |
+| Headline  | 300    | 24 px      | The comfort sentence                                                                  |
+| Title     | 300    | 20 px      | Hazard name, dialog titles, error/quota headings, hero condition. Search input at 400 |
+| Figure    | 400    | 24 px      | Forecast highs, UV, AQI, wind, pressure. Tabular                                      |
+| Body      | 400    | 16 px      | Readings, astro times, menu rows                                                      |
+| Caption   | 400    | 14 px      | All supporting text                                                                   |
+| Label     | 500    | 12 px      | Section headers. Class `.label-section`                                               |
+| Label Sub | 500    | 10 px      | Metric row names. Class `.label-sub`                                                  |
+
+Display is declared in CSS rather than utilities: `cn` drops a `leading-`
+written before a `text-`.
 
 ### Named Rules
 
-**The Two Labels Rule.** The small uppercase label exists in exactly two sizes
-and nothing else. It once appeared in eight near-identical variants — three
-sizes × five tracking values × six opacities. `.label-section` and `.label-sub`
-are the entire vocabulary; they differ by size alone, never by tracking or
-alpha. Adding a third is a regression.
+**Words Outrank Figures.** One rung at 24 px holds both the sentence that
+answers the question (300) and the numbers supporting it (400). Never a figure
+above a word.
 
-**Light Is a Display Weight.** Weight 300 is used at 20 px and up and nowhere
-below it; 16 px and 14 px are weight 400. Work Sans Light was previously set at
-14 px on the forecast condition and the precipitation lines, at 16 px on the
-hero clock and the forecast low, and at 18 px on the alerts hazard name — all
-of it over glass at 70% `foreground`, which is the thinnest the system gets and
-was carrying content. Amended August 2026; the previous wording read "Light
-weight, never regular" and named 300 as the body weight.
+**The Step-Down Rule.** Every drop in the hierarchy is a size change; the weight
+step at 24 px is the sole exception. Opacity is not a hierarchy tool.
 
-**Words Outrank Figures.** The largest thing on the dashboard is the city at
-56 px. Below it, one rung at 24 px holds both the words that answer the
-question (Headline, 300) and the numbers that support them (Figure, 400) —
-never a figure above a word. The forecast highs previously ran at 30 px against
-a 20 px comfort sentence, so three temperatures outweighed the sentence
-PRODUCT.md calls the answer. Both moved to the shared rung: figures down from
-1.875 rem, the sentence up from 1.25 rem.
+**One Size Per Role, At Every Width.** A rung may change across breakpoints only
+if it changes monotonically. A size that steps down at one breakpoint and back
+up at the next is drift, not response.
 
-This replaces The Equal Peaks Rule, which named the city, the temperature and
-the comfort sentence as one size in the hero. Two of the three left the hero
-when the Now card absorbed them.
-
-**The Step-Down Rule.** Every drop in the hierarchy is a size change, with the
-one weight step above as the exception that separates Headline from Figure at
-the same size. Opacity is not a hierarchy tool in this system (see The 70%
-Floor Rule).
-
-> **Known drift.** `src/components/empty-state.tsx` uses `font-extralight`
-> (200). Only 300–700 are loaded, so the browser synthesizes or snaps to 300.
-> Use `font-light` for the intended result.
+**The Two Labels Rule.** `.label-section` and `.label-sub` differ by size alone,
+never by tracking or alpha. A third is a regression.
 
 ## Layout
 
@@ -352,274 +255,164 @@ Floor Rule).
 `sm`. Full viewport height minimum; horizontal overflow hidden so the sky layer
 cannot introduce a scrollbar.
 
-**The weather grid.** One column on mobile, twelve columns from `sm` up, with
-`auto-rows-[minmax(150px,auto)]` and `gap-5` rising to `gap-6`. The hero takes
-`col-span-8` at `xl` beside a 4-wide right column; other tiles take 3, 4, 6, or
-12 columns.
-
-**The right column** holds the alerts tile above the Now tile — what is urgent,
-then what is current. It is the one place two tiles share a grid cell: a
-wrapper carries `contents` below `xl`, so both stay direct grid children and
-document order is still the mobile reading order, and becomes
-`xl:flex xl:flex-col` at `xl`, where it is the single 4-wide cell they stack
-inside. The Now tile takes `xl:flex-1` so the pair fills the hero's height. The
-alerts tile is absent whenever there are no alerts, and the column collapses
-back to the Now tile alone — the only tile in the system that can disappear.
+**Grid.** One column on mobile, 4 from `sm`, 8 at `lg`, 4 at `xl`, with
+`auto-rows-[minmax(150px,auto)]` and a `1.25rem` gap rising to `1.5rem`. The
+hero takes 3 of 4 at `xl` beside a 1-wide right column holding the alerts strip
+above the Now tile — what is urgent, then what is current. The alerts strip is
+the only tile that can be absent.
 
 **Document order is the mobile reading order** — the answer, then the next
 hours, then the next days. Desktop composition is restored with `xl:order-*`
-only. A new tile is placed by inserting it at the correct point in the reading
-order first, then assigning its desktop order.
+only. Place a new tile in the reading order first, then give it a desktop order.
 
-**Density.** Tile padding is `1.5rem` (`p-6`) or `1.75rem` (`p-7`); the hero
-runs `1.75rem → 3rem`. Interior rhythm inside a tile is a `0.25rem` base scale,
-usually `mt-1` / `mt-4` between a label and its content.
-
-**Breakpoints.** Tailwind defaults: `sm` 640, `md` 768, `lg` 1024, `xl` 1280.
-The search menu switches from mobile overlay to desktop dropdown at 1024;
-`useMediaQuery` reads 640 / 768 / 1024 to compute the mobile input slide.
-
-**One component, two chromes.** The search menu is a single `<Menu>` rendering
-in both layouts. The parent picks the chrome — absolute dropdown or fixed
-overlay panel. There is no variant prop and no second component.
+**Density.** Tile padding comes from `--tile-pad` on `.bento-tile`, so the tiles
+cannot drift apart: `1.25rem`, rising to `1.5rem` at `sm`. The hero runs
+`1.5rem` → `2.5rem` at `sm` → `3rem` at `xl`. Interior rhythm is a `0.25rem`
+base scale. Breakpoints are Tailwind defaults; the search menu switches from
+mobile overlay to desktop dropdown at 1024.
 
 ## Elevation & Depth
 
-This system is **edge-lit, not shadow-lifted**. A surface reads as present
-because its rim catches light and because the atmosphere behind it blurs
-through its thickness — a `1px` white rim at 80% alpha in day, 6–10% alpha in
-night, plus a `0 1px 0 0 inset` highlight along the top edge.
+Depth comes from the edge of the glass first — a `1px` white rim at 70–80% alpha
+in day and 6–10% in night, a `0 1px 0 0 inset` highlight along the top edge, and
+the atmosphere going soft through the pane. Shadows are ambient, not structural:
+every resting tile casts a short one, and the difference between resting and
+overlapping is the shadow's reach, not its presence.
 
-**Shadows indicate stacking, not material.** A shadow means this surface is
-over other content the user was just reading. Resting tiles do not stack over
-anything, so they do not cast.
-
-### Shadow Vocabulary
-
-- **Overlay** (`0 40px 80px -24px oklch(0.3 0.12 240 / 0.28)`,
-  `0 16px 32px -10px oklch(0.3 0.12 240 / 0.14)`): the search dropdown and the
-  mobile menu panel. The only fully-earned shadow in the system.
-- **Focus ring** (`0 0 0 3px oklch(0.7 0.12 230 / 0.12)`): the search surface
-  on `:focus-within`. A state response, not elevation.
-- **Token scale** (`--shadow-2xs` through `--shadow-2xl`): generated from
-  `--shadow-color: #4f46e5` at `0.08` opacity, `30px` blur, `-5px` spread,
-  `10px` y-offset. Present for the vendored shadcn primitives. Do not reach for
-  it on app surfaces.
+- **Tile** `0 12px 30px -18px oklch(0.4 0.15 240 / 0.25)`; night `oklch(0 0 0 / 0.6)`.
+- **Hero** `0 30px 60px -25px` — deeper, because it is the largest surface.
+- **Overlay** `0 40px 80px -24px` + `0 16px 32px -10px` — dropdown, mobile panel,
+  dialogs. Surfaces over content the user was reading.
+- **Focus ring** `0 0 0 3px oklch(0.7 0.12 230 / 0.12)` on `:focus-within`. A
+  state response, not elevation.
 
 ### Named Rules
 
-**The Edge-Lit Rule.** Depth on a resting surface comes from the rim highlight
-and the backdrop blur. Reach for a drop shadow only when the surface overlaps
-content the user was reading a moment ago.
-
-> **Known drift.** `.card-surface` and `.bento-tile` currently carry always-on
-> drop shadows at rest (`0 30px 60px -30px` and `0 12px 30px -18px`
-> respectively, both `oklch(0.4 0.15 240 / 0.25)`). These predate the rule above
-> and contradict it. New surfaces follow the rule; changing the existing two is
-> a deliberate edit, not a cleanup to perform in passing.
+**The Two Lights Rule.** Day surfaces that carry a light carry the same one:
+`{colors.hero-lamp}` in a radial parked past the lower-right corner, on
+`.hero-day` at 0.46 peak alpha and `.tile-now` at 0.34. Night uses a 45° white
+sheen at 0.08 instead, on `.hero-night`. A new lit surface picks the rule for
+its cascade rather than inventing a third. The astro tiles are the exception:
+their bloom sits at `80% 100%` in day and `78% 0%` in night, following the body
+on the arc.
 
 ## Shapes
 
 Rectangles with generous, uniform corners. No cut corners, no asymmetric radii,
-no clipping paths, no non-rectangular silhouettes anywhere in the system.
+no clipping paths, no non-rectangular silhouettes.
 
-The radius scale derives from a single `--radius: 1.25rem` root, multiplied:
-`sm` 0.75rem, `md` 1rem, `lg` 1.25rem, `xl` 1.75rem, `2xl` 2.25rem, `3xl`
-2.75rem, `4xl` 3.25rem. Even the smallest control — a 24 px icon button — is
-`1rem`.
+Icon wells and badges `0.75rem`, buttons and inputs `1rem`, every tile
+`1.75rem`, the hero `2rem`, dialogs and the search dropdown `2.25rem`, tab and
+step buttons `999px`.
 
-Observed assignments: hero `2rem`, tile `1.75rem`, search surface `1.75rem`,
-dropdown panel `2.25rem`, buttons and inputs `1rem`, list-row icon wells
-`0.75rem`.
+Borders are one of two things: a white-alpha rim on a glass surface, or a
+`foreground/10` hairline dividing content inside a tile. Solid opaque borders do
+not appear.
 
-**Borders** are one of two things: a white-alpha rim on a glass surface, or a
-`foreground`-alpha hairline dividing content inside a tile (`divide-y
-divide-foreground/10` between metric rows, `border-foreground/6` between
-forecast columns). Solid opaque borders do not appear.
-
-### Named Rules
-
-**The Soft Container Rule.** Precise content, forgiving container. Wide-tracked
-uppercase labels and exact numerals sit inside high-radius translucent panes.
-The tension between the two is the character; flattening either side loses it.
+**The Soft Container Rule.** Precise content, forgiving container: wide-tracked
+uppercase labels and exact numerals inside high-radius translucent panes. Every
+tile is `1.75rem` whatever its height — a short tile does not get a smaller
+corner.
 
 ## Components
 
-### Tiles (the signature component)
+### Tiles
 
-The system's primary surface. Class pair `.bento-tile` plus an optional
-variant.
+The primary surface: `.bento-tile` plus an optional variant. `1.75rem` radius,
+transparent 1px border, padding from `--tile-pad`. Day fill
+`linear-gradient(160deg, oklch(1 0 0 / 0.9), oklch(0.97 0.03 230 / 0.5))`; night
+the same geometry at `oklch(0.17 0.012 255 / 0.9)` → `oklch(0.15 0.015 260 / 0.6)`
+with a white 6% rim. Anatomy is a `.label-section` header, then content.
 
-- **Shape:** `1.75rem` radius, transparent 1px border.
-- **Day fill:** `linear-gradient(160deg, oklch(1 0 0 / 0.9), oklch(0.97 0.03 230 / 0.5))`.
-  Glass keeps its cool tint in day mode.
-- **Night fill:** `linear-gradient(160deg, oklch(0.17 0.012 255 / 0.9), oklch(0.15 0.015 260 / 0.6))`
-  with a `oklch(1 0 0 / 0.06)` rim.
-- **Variants:** `.tile-wind` (teal-petrol, `200–220°`), `.tile-astro` (indigo
-  with a warm low-right sun bloom), `.tile-astro-moon` (the same geometry with
-  the bloom shifted to near-white), `.tile-alert-fill`, `.tile-alert-tint` and
-  `.tile-alert-plain` (alerts only). Astro tiles transition their background over
-  `0.4s ease` when the sun/moon state changes.
-- **A variant is declared in `index.css`, never as a utility.** `.bento-tile`
-  sets `background` and `border` in an unlayered rule, so a `bg-*` or
-  `border-*` utility loses to it whatever the source order. A tile's field
-  belongs beside the other variants.
-- **Internal padding:** `1.5rem` or `1.75rem`.
-- **Anatomy:** a `.label-section` header, then content at `mt-4`. Metric lists
-  are `<dl>` with `divide-y divide-foreground/10`.
+Variants: `.tile-now` (the day lamp on cool white glass), `.tile-astro` /
+`.tile-astro-moon` (a drawn sky — sun and moon share one geometry per cascade
+and differ by bloom hue), `.tile-alert` (the severity plate).
+
+**A variant is declared in `index.css`, never as a utility.** `.bento-tile` sets
+`background`, `border` and `padding` in an unlayered rule, so those three
+properties beat any utility whatever the source order.
 
 ### Hero
 
-Not a tile. Full-bleed saturated gradient, white text, `2rem` radius,
-`1.75rem → 3rem` padding, `col-span-8` at `xl`. Its height is set by the right
-column beside it: 334 px with the Now tile alone, and taller when an alerts
-tile stacks above it — the alert plate sets its own hazard name in one or two
-lines of headline type, so that second figure is not a constant. Day mode adds two
-blurred bloom circles (`size-80`, `blur-3xl`) bleeding past the corners; night
-mode drops them and uses a diagonal white sheen instead. Text is pure white at
-full opacity — the day gradient clears 4.5:1 for white, but not for faded
-white.
+Not a tile. Full-bleed saturated gradient, white text at full opacity, `2rem`
+radius. Two blocks — place on the left, sky on the right — a row from `sm` up
+and stacked below it, where the words column is too narrow to hold the city name
+on one line.
 
-The two blocks — place on the left, sky on the right — are a row from `sm` up
-and stack below it. Side by side at 390 px the left block resolves to 117 px:
-the city name overflows it and the clock breaks across three lines. Stacked,
-the composition runs place → sky down the diagonal instead of across it.
+The condition icon sets `stroke-width` from its size, so the drawn line is
+constant: `0.83` at `size-36`, `0.68` at `sm:size-44`, `0.53` at `xl:size-56`,
+all ≈5 px on a 24-unit viewBox. Card-sized condition icons hold ≈1.75 px the
+same way — `1.05` at `size-10` in the forecast, `1.5` at `size-7` in the hourly.
 
-### Hero Chip
+### The two tiles that are buttons
 
-The one reading in the hero, and the only element in the system defined by its
-rim alone. `.hero-chip` plus `h-8`, `0.75rem` radius, `px-3`, an icon at
-`14px` / stroke 2, then the value at body-small. No label text — the icon is
-the label, which is what keeps it a different family from the metric lists the
-hero evicted rather than a fourth typographic rung.
+The Now tile and the alerts strip are the only tiles that are controls, and they
+respond alike: the surface lifts on hover and focus, over 150–420 ms.
 
-- **Day:** a `1px` rim at `oklch(1 0 0 / 0.3)` and no fill. The hero has no
-  headroom for a lighter field — white over the day gradient measures
-  5.05–5.35:1 where the strip sits, and a white fill at 8% alpha takes it to
-  4.12:1, under AA at body size. A rim leaves the ground untouched and is the
-  system's own depth mechanic anyway.
-- **Night:** the rim drops to `0.16` and the chip takes an `oklch(1 0 0 /
-0.05)` fill. Near-black has all the headroom there is (16.8:1 inside the
-  chip, measured) and a bare rim on it reads faint.
+- **Now** carries the answer — the comfort sentence at Headline, then
+  temperature, feels-like and wind as a `foreground/10`-divided list.
+- **Alerts** carries a 3 px severity rail on the leading edge, the hazard name at
+  Title with `line-clamp-2`, the window end at Caption, and a `+N` count at the
+  right. No section label; the hazard names the tile. Hover also underlines it.
 
-A strip of chips is a single fixed-height row that never wraps, so it measures
-the same before its data arrives, with one chip, and with two — it sits inside
-the LCP element, where a mounted-on-arrival element would be a layout shift.
+### Search surface, dropdown, dialogs
 
-### Alert Tile
+The search field is a `1.75rem` pill, `px-5 py-3`, white at 45% in day and 6% in
+night; on `:focus-within` fill and rim step up ~0.15 alpha and a 3 px ring
+appears, over `0.3s`. Inside: a 20 px icon at `foreground/70`, then a borderless
+transparent input at Title size.
 
-A `.bento-tile` that is itself the button opening the alerts modal — the only
-tile in the system that is a control, and the only one that can be absent.
-There is no pane around a plate around a row: one surface, and the severity
-ramp is that surface's field.
+The dropdown and all dialogs share one chrome — `2.25rem` radius,
+`blur(28px) saturate(160%)`, the Overlay shadow — and become bottom sheets below
+`sm`. The dialog scrim is a tinted blur, not a black slab:
+`oklch(0.34 0.055 250 / 0.34)` with `blur(6px) saturate(105%)`, and
+`oklch(0.09 0.02 255 / 0.58)` in night. Menu rows are `px-3 py-3` with a
+`size-8` well at `foreground/6` and a focus pill that springs between rows.
 
-- **Shape:** the tile's own `1.75rem` radius and `p-6` padding. It is a tile,
-  and it sits in the grid as one.
-- **Fill:** the severity's step from The Alert Ramp — filled, tinted, or a
-  neutral rim. Every step gives the tile a surface of its own; none of them
-  leaves it looking like the plain tiles around it.
-- **Contents:** a `24px` icon at `1.5` stroke, then the hazard name at
-  headline size (`text-lg → text-xl`, light, `line-clamp-2`), then the end of
-  the window at body-small (`Until 9:00 pm`, the city's time, the date added
-  only when the end is not today there). A `+N` count sits at the far right
-  when more alerts follow; the rest of them are in the modal.
-- **Hover** underlines the hazard name at every severity. `extreme` also steps
-  its field along the ramp; the tinted and plain steps move their rim, because
-  deepening their field costs contrast (see The Alert Ramp).
-- **No section label.** The hazard is named at headline size across the whole
-  tile, so a `.label-section` above it would repeat what the tile already is.
-  It is the one tile in the system without one.
-- **Vertical centring** rather than top alignment: the grid's
-  `minmax(150px,auto)` row floor is taller than the content, so below `xl` the
-  tile would otherwise hold it against the top edge over a void.
+### Buttons and icons
 
-### Search Surface
+Buttons are vendored shadcn primitives in `src/components/ui/` — do not refactor
+them wholesale. `1rem` radius, `h-9 px-4`; primary takes the Cobalt fill, ghost
+the Sea Glass hover wash, focus a 3 px ring at `{colors.focus-violet}` (the one
+token outside the hue band, kept because it is the primitives' `--ring`). The
+unit toggle and astro switch are a separate family: a 36 px round control,
+`foreground/10` when active.
 
-- **Shape:** `1.75rem` radius pill, `px-5 py-3` rising to `py-3.5`.
-- **Day:** `oklch(1 0 0 / 0.45)` fill, `blur(24px) saturate(150%)`,
-  `oklch(1 0 0 / 0.35)` rim.
-- **Night:** `oklch(1 0 0 / 0.06)` fill and rim.
-- **Focus-within:** fill and rim step up by ~0.15 alpha, plus a 3px
-  `oklch(0.7 0.12 230 / 0.12)` ring. All three transition over `0.3s`.
-- **Contents:** a `18px → 20px` search icon at `foreground/55`, then a
-  borderless transparent input at headline size.
-
-### Dropdown Panel
-
-Shared by the desktop dropdown and the mobile overlay panel
-(`.search-dropdown-desktop`). `2.25rem` radius, `blur(28px) saturate(160%)`,
-a `linear-gradient(180deg, oklch(1 0 0 / 0.88), oklch(1 0 0 / 0.74))` fill in
-day, and the Overlay shadow. Thin custom scrollbars (`6px`, thumb at
-`oklch(0.5 0 0 / 0.12)`).
-
-Rows are `px-3 py-3` list items with a `size-8` rounded-`0.75rem` icon well.
-The focused row gets a springy `FocusPill` (`oklch(0.55 0.04 240 / 0.08)` with
-a matching inset rim) that animates between rows via a shared motion
-`layoutId`. Remove buttons are always visible on touch and hover-revealed on
-desktop.
-
-### Buttons
-
-Vendored shadcn primitives in `src/components/ui/`. Do not reformat or refactor
-these wholesale.
-
-- **Shape:** `1rem` radius (`rounded-md` against this radius scale).
-- **Primary:** `cobalt-glass` fill, white text, `h-9 px-4`; hover drops to 90%
-  alpha.
-- **Ghost:** transparent; hover takes the `sea-glass` accent wash.
-- **Focus:** `3px` ring at `focus-violet / 50` plus a border shift.
-- **Sizes:** `xs` 24 px through `lg` 40 px, with square `icon` variants at each.
-
-### Inputs
-
-`h-9`, `1rem` radius, `hairline` border, transparent fill, `3px` focus ring.
-The search field overrides nearly all of this — border removed, padding zeroed,
-size raised to headline — because it is a search surface, not a form field.
+Icons are Lucide at `1.75` stroke and `size-4` unless the surface says
+otherwise. Condition icons set stroke from size instead.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** build hierarchy with the size step. Six type roles are declared; use
-  one of them.
-- **Do** keep text over glass at or above 70% `foreground` alpha, and verify by
-  measurement — `backdrop-filter` makes automated contrast checks silently skip
-  the node.
-- **Do** place a new tile in the correct mobile reading order first, then give
-  it an `xl:order-*` for the desktop composition.
-- **Do** let a new surface be translucent. `backdrop-filter: blur(20–28px)
-saturate(140–160%)` with a white-alpha rim is the system's material.
-- **Do** define both cascades. Anything added under `:root` needs its `.night`
-  counterpart in the same change.
+- **Do** build hierarchy with the size step. Eight rungs are declared; use one.
+- **Do** keep text over glass at or above 70% `foreground`, and verify by
+  measurement. Every app surface sits on a `backdrop-filter`, so the composited
+  ground is not a value a checker can read off the element.
+- **Do** place a new tile in the correct mobile reading order first, then give it
+  an `xl:order-*`.
+- **Do** let a new surface be translucent. `blur(20–28px) saturate(140–160%)`
+  with a white-alpha rim is the material.
+- **Do** define every state a variant has. In a two-cascade system a two-state
+  tile is four rules, not three.
 - **Do** treat the day/night switch as driven by the located city's local time.
-  It is never the viewer's OS preference, and `@custom-variant dark` is
-  deliberately scoped to a `.dark` class this app never applies.
-- **Do** add `prefers-reduced-motion` handling to any motion you introduce. A
-  grep across `src/` currently returns nothing, and PRODUCT.md marks this a hard
-  requirement. New motion closes the gap rather than widening it.
+  `@custom-variant dark` is scoped to a `.dark` class this app never applies.
+- **Do** guard new motion with `prefers-reduced-motion`, as every existing
+  animation does.
 
 ### Don't:
 
-- **Don't** encode a reading in color. Not comfort, not temperature, not air
-  quality. This is binding and was decided by removing a shipped feature.
-- **Don't** add a drop shadow to a resting surface. Shadows mean stacking.
-- **Don't** introduce a second typeface, a serif, or a monospace face. One
-  family, six roles.
-- **Don't** add a third small-label variant, or vary the label by tracking or
-  opacity.
+- **Don't** encode a reading in color.
+- **Don't** introduce a second typeface, a serif, or a monospace face.
+- **Don't** add a size, weight, ink level or radius that is not on the scales
+  above. A one-off `text-[15px]` or `foreground/55` is drift by default.
 - **Don't** fade text to create hierarchy.
-- **Don't** build generic SaaS card UI — opaque white cards, hairline gray
-  borders, 8 px radius, neutral gray text. The large radius and the
-  translucency are the system.
-- **Don't** illustrate or simulate weather. No animated rain on glass, no 3D sun
-  sprites, no drawn cloud scenes, no parallax mountains. Condition is
-  communicated by a line icon and a sentence.
-- **Don't** read the rule above as banning photographic backdrops. Real footage
-  behind the composition is a planned direction: per-condition background video
-  with day / night / sunrise / sunset variants, chosen to be neutral enough that
-  one clip covers several states. That work is not built and is out of scope
-  until specified — see PRODUCT.md. When it lands, the glass keeps its tint
-  (decided August 2026) and the contrast floors above still bind over moving
-  footage.
+- **Don't** reach for a raw Tailwind palette color (`sky-500`, `rose-300`).
+- **Don't** build generic SaaS card UI — opaque white cards, gray hairlines,
+  8 px radius. The large radius and the translucency are the system.
+- **Don't** illustrate weather in the card layer. Condition is a line icon and a
+  sentence. This does not bind the sky layer: procedural weather effects and
+  time-of-day lighting behind the composition are planned, and when they land the
+  glass keeps its tint and the contrast floors still hold over moving footage.
 - **Don't** treat night as a dark mode. It is a full second cascade, equal in
-  standing to day, and the two are the same room at different hours.
+  standing to day — the same room at a different hour.
