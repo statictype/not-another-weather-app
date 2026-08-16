@@ -221,6 +221,72 @@ html, body { background: oklch(0.97 0.02 230); }
     0 0 0 3px oklch(0.65 0.1 250 / 0.12);
 }
 
+/* The first-run paths take the search field's material and dimensions: they are
+   the same act, moved to the middle of the page. */
+.start-action {
+  background: oklch(1 0 0 / 0.45);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid oklch(1 0 0 / 0.35);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.3) inset,
+    0 12px 30px -18px oklch(0.4 0.15 240 / 0.25);
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.start-action:hover,
+.start-action:focus-visible {
+  background: oklch(1 0 0 / 0.62);
+  border-color: oklch(1 0 0 / 0.5);
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.45) inset,
+    0 22px 44px -22px oklch(0.4 0.15 240 / 0.3);
+}
+.start-action:active {
+  transform: translateY(0);
+}
+.start-action:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.night .start-action {
+  background: oklch(1 0 0 / 0.06);
+  border-color: oklch(1 0 0 / 0.06);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.03) inset,
+    0 12px 30px -18px oklch(0 0 0 / 0.6);
+}
+.night .start-action:hover,
+.night .start-action:focus-visible {
+  background: oklch(1 0 0 / 0.12);
+  border-color: oklch(1 0 0 / 0.12);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.06) inset,
+    0 22px 44px -22px oklch(0 0 0 / 0.7);
+}
+
+.start-city {
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+  color: color-mix(in oklab, var(--foreground) 70%, transparent);
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+.start-city:hover {
+  background: color-mix(in oklab, var(--foreground) 10%, transparent);
+  color: var(--foreground);
+}
+.start-city:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  color: var(--foreground);
+}
+
 
 .bento-tile {
   background:
@@ -1019,5 +1085,20 @@ html, body { background: oklch(0.97 0.02 230); }
   }
   [data-slot="dialog-content"] > [data-slot="dialog-close"] {
     transition: none;
+  }
+  /* All three start from opacity 0 with `both`; dropping the animation leaves
+     the element's own styles, which are the end state. */
+  .rise,
+  .swap-in,
+  .astro-fade {
+    animation: none;
+  }
+  .start-action {
+    transition: none;
+  }
+  .start-action:hover,
+  .start-action:focus-visible,
+  .start-action:active {
+    transform: none;
   }
 }

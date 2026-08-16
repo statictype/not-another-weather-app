@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { MotionConfig } from "motion/react";
 import { toast } from "sonner";
 import type { SuggestionItem } from "@/api/types";
 import { SearchBar } from "@/components/search-bar";
@@ -12,6 +13,7 @@ import { useReversibleHistory } from "@/hooks/use-reversible-history";
 import { setSearchParam, useSearchParam } from "@/hooks/use-search-param";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { useWeather } from "@/hooks/use-weather";
+import { markVisited } from "@/lib/first-run";
 import { cn } from "@/lib/utils";
 import { pickRandomCity } from "@/lib/random-cities";
 
@@ -34,6 +36,7 @@ export function App() {
     if (lastCommittedQuery.current === activeQuery.toLowerCase()) return;
 
     lastCommittedQuery.current = activeQuery.toLowerCase();
+    markVisited();
     addHistory({
       query: activeQuery,
       displayName: formatDisplayName(query.data),
@@ -73,6 +76,10 @@ export function App() {
     setSearchParam("city", pickRandomCity());
   }, []);
 
+  const handleCitySelect = useCallback((city: string) => {
+    setSearchParam("city", city);
+  }, []);
+
   const handleRetry = () => {
     void query.refetch();
   };
@@ -88,50 +95,63 @@ export function App() {
   }, [isNight]);
 
   return (
-    <TooltipProvider>
-      <div
-        className={cn(
-          "text-foreground relative min-h-screen overflow-x-hidden",
-          isNight && "night",
-        )}
-      >
-        <div className={cn("sky", isNight && "night")} aria-hidden="true" />
+    <MotionConfig reducedMotion="user">
+      <TooltipProvider>
+        <div
+          className={cn(
+            "text-foreground relative min-h-screen overflow-x-hidden",
+            isNight && "night",
+          )}
+        >
+          <div className={cn("sky", isNight && "night")} aria-hidden="true" />
 
-        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
-          <header className="relative z-30 mb-8 flex items-center gap-2 md:gap-6">
-            <h1 className="text-5xl sm:text-7xl shrink-0 leading-none" aria-label="Weather">
-              <span aria-hidden="true">😶‍🌫️</span>
-            </h1>
-            <div className="flex-1 min-w-0">
-              <SearchBar
-                recentItems={history}
-                suggestions={suggestions.data}
-                isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
-                error={query.error}
+          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
+            <header className="relative z-30 mb-8 flex items-center gap-2 md:gap-6">
+              <h1 className="text-5xl sm:text-7xl shrink-0 leading-none" aria-label="Weather">
+                <span aria-hidden="true">😶‍🌫️</span>
+              </h1>
+              <div className="flex-1 min-w-0">
+                <SearchBar
+                  recentItems={history}
+                  suggestions={suggestions.data}
+                  isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
+                  error={query.error}
+                  activeQuery={activeQuery}
+                  onValueChange={setInputValue}
+                  onSuggestionSelect={handleSuggestionSelect}
+                  onRecentSelect={handleHistorySelect}
+                  onRecentRemove={removeWithUndo}
+                  onRecentClearAll={clearAllWithUndo}
+                  onLocationRequest={handleLocationRequest}
+                  onRandomSelect={handleRandomSelect}
+                  onOpenChange={setSearchOverlayOpen}
+                />
+              </div>
+              <UnitToggle collapsed={isSearchOverlayOpen} />
+            </header>
+
+            <main
+              className="rise rise-3 flex flex-1 flex-col"
+              aria-live="polite"
+              aria-busy={query.isFetching}
+            >
+              <WeatherResult
+                query={query}
                 activeQuery={activeQuery}
-                onValueChange={setInputValue}
-                onSuggestionSelect={handleSuggestionSelect}
-                onRecentSelect={handleHistorySelect}
-                onRecentRemove={removeWithUndo}
-                onRecentClearAll={clearAllWithUndo}
+                onRetry={handleRetry}
                 onLocationRequest={handleLocationRequest}
                 onRandomSelect={handleRandomSelect}
-                onOpenChange={setSearchOverlayOpen}
+                onCitySelect={handleCitySelect}
               />
-            </div>
-            <UnitToggle collapsed={isSearchOverlayOpen} />
-          </header>
+            </main>
+          </div>
 
-          <main className="rise rise-3 flex-1" aria-live="polite" aria-busy={query.isFetching}>
-            <WeatherResult query={query} activeQuery={activeQuery} onRetry={handleRetry} />
-          </main>
+          <Suspense fallback={null}>
+            <Toaster />
+          </Suspense>
         </div>
-
-        <Suspense fallback={null}>
-          <Toaster />
-        </Suspense>
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </MotionConfig>
   );
 }
 

@@ -7,6 +7,7 @@ import { App } from "@/App";
 import type { SuggestionItem, WeatherCurrent, WeatherForecast } from "@/api/types";
 import { __resetHistoryStoreForTests } from "@/hooks/use-history";
 import { __resetUnitSystemForTests } from "@/hooks/use-unit-system";
+import { __resetFirstRunForTests } from "@/lib/first-run";
 import { server } from "@/test/msw-server";
 import { distance, pressure, speed, temperature } from "@/worker/format";
 import { precipAmountPair, precipPair } from "@/worker/precip";
@@ -117,6 +118,7 @@ const londonSuggestion: SuggestionItem = {
 function renderAppAt(url: string) {
   __resetHistoryStoreForTests();
   __resetUnitSystemForTests("metric");
+  __resetFirstRunForTests();
   window.history.replaceState(null, "", url);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(
@@ -129,6 +131,7 @@ function renderAppAt(url: string) {
 beforeEach(() => {
   __resetHistoryStoreForTests();
   __resetUnitSystemForTests("metric");
+  __resetFirstRunForTests();
   window.history.replaceState(null, "", "/");
 
   // Desktop layout: the mobile overlay remounts the input on focus.
@@ -234,7 +237,7 @@ describe("Oasis (integration)", () => {
 
     for (let i = 0; i < readings.length; i++) {
       await user.click(input);
-      const myLocation = await screen.findByRole("button", { name: /my location/i });
+      const myLocation = await screen.findByRole("button", { name: "My location" });
       await user.click(myLocation);
       await waitFor(() => {
         expect(new URL(window.location.href).searchParams.get("city")).toBeTruthy();

@@ -1,4 +1,11 @@
-import { ClockIcon, LocateFixedIcon, MapPinIcon, ShuffleIcon, XIcon } from "lucide-react";
+import {
+  ClockIcon,
+  LocateFixedIcon,
+  MapPinIcon,
+  SearchXIcon,
+  ShuffleIcon,
+  XIcon,
+} from "lucide-react";
 import { lazy, Suspense } from "react";
 import { LayoutGroup, motion } from "motion/react";
 import type { SuggestionItem } from "@/api/types";
@@ -34,7 +41,7 @@ export function Menu(props: MenuProps) {
   return (
     <LayoutGroup id="search-menu">
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-3 pb-3 pt-4">
+        <div className="flex flex-1 flex-col overflow-y-auto px-3 pb-3 pt-4">
           {props.model.sections.map((section, idx) => (
             <SectionRenderer key={sectionKey(section, idx)} section={section} {...props} />
           ))}
@@ -127,16 +134,54 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
 
   if (section.kind === "empty-results") {
     return (
-      <div className="px-3 py-4">
-        <p className="text-sm text-foreground/70">No cities found</p>
-        <p className="mt-0.5 text-sm text-foreground/70">Try a different spelling</p>
-      </div>
+      <MenuEmpty
+        icon={SearchXIcon}
+        title="No cities found"
+        hint="Try a different spelling, or fewer words."
+      />
+    );
+  }
+
+  if (section.kind === "no-history") {
+    return (
+      <MenuEmpty
+        icon={ClockIcon}
+        title="Cities you look up show up here"
+        hint="Type three letters to search, or take a shortcut below."
+      />
     );
   }
 
   return (
     <div className="px-3 py-2">
       <p className="text-sm text-foreground/70">Keep typing for city suggestions…</p>
+    </div>
+  );
+}
+
+/**
+ * The two states where the panel would otherwise be blank. `m-auto` centres it
+ * in the tall mobile overlay and collapses to nothing in the desktop dropdown,
+ * which sizes to its content.
+ */
+function MenuEmpty({
+  icon: Icon,
+  title,
+  hint,
+}: {
+  icon: typeof ClockIcon;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <div className="m-auto flex flex-col items-center gap-4 px-6 py-10 text-center">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-foreground/6">
+        <Icon className="size-5 text-foreground/70" strokeWidth={1.75} aria-hidden="true" />
+      </span>
+      <div className="flex flex-col gap-1">
+        <p className="text-base tracking-tight">{title}</p>
+        <p className="max-w-[26ch] text-sm text-balance text-foreground/70">{hint}</p>
+      </div>
     </div>
   );
 }
@@ -323,8 +368,8 @@ function ActionButton({
       >
         <Icon
           className={cn(
-            "size-4 shrink-0 text-foreground/70 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-180",
-            focused && "rotate-180",
+            "size-4 shrink-0 text-foreground/70 motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:rotate-180",
+            focused && "motion-safe:rotate-180",
           )}
           strokeWidth={1.75}
           aria-hidden="true"

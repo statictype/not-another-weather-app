@@ -50,3 +50,14 @@ const CITIES = [
 export function pickRandomCity(): string {
   return CITIES[Math.floor(Math.random() * CITIES.length)]!;
 }
+
+/**
+ * Fixed, not sampled from `CITIES`: the first-run row has to hold still between
+ * renders. Four time zones, so one of them is always in the night cascade.
+ */
+export const STARTER_CITIES = [
+  { label: "Tokyo", query: "Tokyo, Japan" },
+  { label: "Lisbon", query: "Lisbon, Portugal" },
+  { label: "Reykjavík", query: "Reykjavik, Iceland" },
+  { label: "New York", query: "New York, USA" },
+] as const;

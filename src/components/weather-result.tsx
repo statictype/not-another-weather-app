@@ -10,10 +10,20 @@ interface WeatherResultProps {
   query: UseWeatherResult;
   activeQuery: string | null;
   onRetry: () => void;
+  onLocationRequest: () => void;
+  onRandomSelect: () => void;
+  onCitySelect: (query: string) => void;
 }
 
 /** `not_found` / `invalid_query` are input errors, surfaced under the search input. */
-export function WeatherResult({ query, activeQuery, onRetry }: WeatherResultProps) {
+export function WeatherResult({
+  query,
+  activeQuery,
+  onRetry,
+  onLocationRequest,
+  onRandomSelect,
+  onCitySelect,
+}: WeatherResultProps) {
   const { data, error, isLoading, isFetching, isPlaceholderData } = query;
 
   if (error instanceof WeatherClientError && error.kind === "quota_exceeded") {
@@ -44,5 +54,11 @@ export function WeatherResult({ query, activeQuery, onRetry }: WeatherResultProp
     );
   }
 
-  return <EmptyState />;
+  return (
+    <EmptyState
+      onLocationRequest={onLocationRequest}
+      onRandomSelect={onRandomSelect}
+      onCitySelect={onCitySelect}
+    />
+  );
 }

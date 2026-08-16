@@ -116,6 +116,43 @@ describe("buildMenuModel", () => {
     expect(m.sections.map((s) => s.kind)).toEqual(["recent"]);
   });
 
+  it("emits no-history when nothing is typed and nothing is remembered", () => {
+    const m = buildMenuModel({
+      value: "",
+      recentItems: [],
+      suggestions: [],
+      isSuggestionsLoading: false,
+    });
+    expect(m.sections.map((s) => s.kind)).toEqual(["no-history"]);
+    expect(m.defaultFocusKey).toBeNull();
+  });
+
+  it("omits no-history as soon as any other section is present", () => {
+    const withRecents = buildMenuModel({
+      value: "",
+      recentItems: [recent("a", "Paris")],
+      suggestions: [],
+      isSuggestionsLoading: false,
+    });
+    expect(withRecents.sections.map((s) => s.kind)).toEqual(["recent"]);
+
+    const whileTyping = buildMenuModel({
+      value: "xy",
+      recentItems: [],
+      suggestions: [],
+      isSuggestionsLoading: false,
+    });
+    expect(whileTyping.sections.map((s) => s.kind)).toEqual(["keep-typing"]);
+
+    const noMatches = buildMenuModel({
+      value: "xyz",
+      recentItems: [],
+      suggestions: [],
+      isSuggestionsLoading: false,
+    });
+    expect(noMatches.sections.map((s) => s.kind)).toEqual(["empty-results"]);
+  });
+
   it("always returns the two action footer items", () => {
     const m = buildMenuModel({
       value: "",

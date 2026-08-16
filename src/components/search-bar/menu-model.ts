@@ -14,7 +14,8 @@ export type MenuSection =
   | { kind: "suggestions"; items: SuggestionItem[]; showHeader: boolean }
   | { kind: "suggestions-loading" }
   | { kind: "empty-results" }
-  | { kind: "keep-typing" };
+  | { kind: "keep-typing" }
+  | { kind: "no-history" };
 
 export interface MenuModel {
   sections: MenuSection[];
@@ -79,6 +80,12 @@ export function buildMenuModel({
     }
   } else if (len > 0) {
     sections.push({ kind: "keep-typing" });
+  }
+
+  // Nothing typed and nothing remembered: without this the panel is an empty
+  // scroll area above the footer, which on mobile is most of the screen.
+  if (sections.length === 0) {
+    sections.push({ kind: "no-history" });
   }
 
   const actions: NavigableItem[] = [LOCATION_ACTION, RANDOM_ACTION];
