@@ -36,7 +36,8 @@ interface Reading {
   value: string;
 }
 
-const FACE = new Set(["temp", "feels", "wind"]);
+/** Which readings reach the tile, and in what order — the dialog keeps `readingsOf`'s. */
+const FACE: readonly string[] = ["temp", "feels", "wind", "cloud"];
 
 function readingsOf(c: CurrentConditions, system: UnitSystem): Reading[] {
   return [
@@ -87,7 +88,9 @@ export function NowCard({ current }: NowCardProps) {
   const system = useUnitSystem();
   const sentence = current.comfort?.sentence ?? "—";
   const readings = readingsOf(current, system);
-  const face = readings.filter((r) => FACE.has(r.key));
+  const face = readings
+    .filter((r) => FACE.includes(r.key))
+    .sort((a, b) => FACE.indexOf(a.key) - FACE.indexOf(b.key));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -120,7 +123,8 @@ export function NowCard({ current }: NowCardProps) {
               {sentence}
             </span>
 
-            <span className="block divide-y divide-foreground/10 md:w-[340px] md:shrink-0 lg:w-auto">
+            {/* `-mb-3` cancels the last row's own `py-3` against the tile padding. */}
+            <span className="-mb-3 block divide-y divide-foreground/10 md:w-[340px] md:shrink-0 lg:w-auto">
               {face.map((r, i) => (
                 <FaceRow key={r.key} reading={r} delay={sweep(2, i * 20)} />
               ))}
