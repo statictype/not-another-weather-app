@@ -17,7 +17,7 @@ export function UnitToggle({ collapsed }: UnitToggleProps) {
     <motion.div
       role="group"
       aria-label="Units"
-      className="flex shrink-0 items-center gap-0.5 overflow-hidden"
+      className="flex shrink-0 flex-col items-center gap-0.5 overflow-hidden sm:flex-row"
       initial={false}
       animate={{ width: collapsed ? 0 : "auto", opacity: collapsed ? 0 : 1 }}
       transition={collapseTransition}

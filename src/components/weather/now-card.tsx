@@ -99,9 +99,9 @@ export function NowCard({ current }: NowCardProps) {
           type="button"
           className={cn(
             "swap-in swap-d-2 bento-tile tile-now group relative w-full overflow-hidden text-left",
-            "flex flex-col justify-center gap-5",
+            "flex flex-col gap-5",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-            "lg:flex-1",
+            "md:flex-1",
           )}
         >
           <span
@@ -118,13 +118,15 @@ export function NowCard({ current }: NowCardProps) {
             />
           </span>
 
-          <span className="relative flex flex-col gap-5 md:flex-row md:items-center md:gap-10 lg:flex-col lg:items-stretch lg:gap-5">
-            <span className="block text-2xl leading-tight font-light text-balance md:flex-1">
+          {/* Grows to the tile's free height, so the sentence stays under the
+              title and the readings sit on the bottom edge. */}
+          <span className="relative flex flex-1 flex-col justify-between gap-5 sm:flex-row sm:items-center sm:gap-10 md:flex-col md:items-stretch md:gap-5">
+            <span className="block text-2xl leading-tight font-light text-balance sm:flex-1 md:flex-initial">
               {sentence}
             </span>
 
             {/* `-mb-3` cancels the last row's own `py-3` against the tile padding. */}
-            <span className="-mb-3 block divide-y divide-foreground/10 md:w-[340px] md:shrink-0 lg:w-auto">
+            <span className="-mb-3 block divide-y divide-foreground/10 sm:w-[340px] sm:shrink-0 md:w-auto">
               {face.map((r, i) => (
                 <FaceRow key={r.key} reading={r} delay={sweep(2, i * 20)} />
               ))}

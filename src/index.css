@@ -716,18 +716,23 @@ html, body { background: oklch(0.97 0.02 230); }
   padding: 0;
   border-top: 1px solid var(--hour-rule);
   color: color-mix(in oklab, var(--foreground) 70%, transparent);
-  font-size: 14px;
+  font-size: 0.88rem;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.065em;
   font-variant-numeric: tabular-nums;
   text-align: center;
   vertical-align: middle;
+  font-weight: 400;
 }
-/* Temperature is the row the card is read for, so it takes the size step up to
-   Body. The other two stay at Caption. */
 .hour-cell-lead {
   color: var(--foreground);
-  font-size: 16px;
+  font-size: 0.88rem;
+}
+
+/* The precipitation row is last in `ROWS` in both the table and its skeleton. */
+.hour-table tbody tr:last-child .hour-cell {
+  font-size: 0.75rem;
+  color: var(--foreground);
 }
 
 .hour-head-cell:nth-child(n + 3),

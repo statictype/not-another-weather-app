@@ -9,7 +9,6 @@ interface HeroCardProps {
   current: CurrentConditions;
 }
 
-
 const CONDITION = "text-base sm:text-xl leading-snug";
 
 export function HeroCard({ location, current }: HeroCardProps) {
@@ -21,15 +20,13 @@ export function HeroCard({ location, current }: HeroCardProps) {
     <section
       className={cn(
         "swap-in swap-d-1 relative col-span-1 xl:order-1 overflow-hidden rounded-[2rem] p-6 text-white",
-        "sm:col-span-4 sm:p-10 lg:col-span-5 xl:col-span-3 xl:p-12",
+        "sm:col-span-4 sm:p-10 md:col-span-8 xl:col-span-3 xl:p-12",
         isDay
           ? "hero-day shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_30px_60px_-25px_rgba(24,102,225,0.55)]"
           : "hero-night shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_30px_60px_-25px_rgba(8,8,24,0.85)]",
       )}
     >
-
       <div className="flex h-full flex-col justify-between gap-8 sm:flex-row sm:items-center sm:gap-10">
-
         <div
           className={cn(
             "contents sm:flex sm:h-full sm:min-h-fit sm:min-w-0 sm:flex-col sm:gap-y-4",
@@ -53,7 +50,7 @@ export function HeroCard({ location, current }: HeroCardProps) {
           </div>
         </div>
 
-           <ConditionIcon
+        <ConditionIcon
           text={current.conditionText}
           isDay={isDay}
           className={cn(

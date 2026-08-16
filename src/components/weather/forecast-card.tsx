@@ -35,7 +35,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
   const layout = LAYOUTS[days?.length ?? SKELETON_DAYS] ?? LAYOUTS[MAX_DAYS];
 
   return (
-    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center sm:col-span-4 lg:col-span-4 xl:order-4 xl:col-span-2">
+    <section className="swap-in swap-d-4 bento-tile flex flex-col justify-center sm:col-span-4 md:col-span-5 xl:order-4 xl:col-span-2">
       {/* Days are a divided list below `sm` and a column matrix above it, so
           the rule between them turns and the row padding folds away. `-my-3`
           cancels the outer rows' own `py-3`. */}
@@ -94,9 +94,9 @@ function DayColumn({
         strokeWidth={1.05}
         aria-hidden="true"
       />
-      <span className="fc-temp text-2xl leading-none tracking-tight tabular-nums whitespace-nowrap">
+      <span className="fc-temp text-lg leading-none tracking-tight tabular-nums whitespace-nowrap">
         <UnitValue text={read(day.max, system).text} delay={delay} />
-        <span className="ml-1 text-base text-foreground/70">
+        <span className="ml-1 text-sm text-foreground/70">
           / <UnitValue text={read(day.min, system).text} delay={delay + 20} />
         </span>
       </span>

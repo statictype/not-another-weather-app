@@ -268,11 +268,13 @@ never by tracking or alpha. A third is a regression.
 `sm`. Full viewport height minimum; horizontal overflow hidden so the sky layer
 cannot introduce a scrollbar.
 
-**Grid.** One column on mobile, 4 from `sm`, 8 at `lg`, 4 at `xl`, with
-`auto-rows-[minmax(150px,auto)]` and a `1.25rem` gap rising to `1.5rem`. The
-hero takes 3 of 4 at `xl` beside a 1-wide right column holding the alerts strip
-above the Now tile — what is urgent, then what is current. The alerts strip is
-the only tile that can be absent.
+**Grid.** One column on mobile, 4 from `sm`, 8 from `md`, 4 at `xl`, with
+`auto-rows-[minmax(150px,auto)]` and a `1.25rem` gap rising to `1.5rem`. From
+`md` to `xl` the alerts + Now column takes 3 of 8 and spans two rows, beside the
+hourly strip's 5 above the forecast's 5; the hero runs full width. The hero
+takes 3 of 4 at `xl` beside a 1-wide right
+column holding the alerts strip above the Now tile — what is urgent, then what
+is current. The alerts strip is the only tile that can be absent.
 
 **Document order is the mobile reading order** — the answer, then the next
 hours, then the next days. Desktop composition is restored with `xl:order-*`

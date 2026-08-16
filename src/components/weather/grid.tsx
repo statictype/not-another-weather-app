@@ -28,9 +28,9 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
       key={swapKey}
       aria-busy={isStale}
       className={cn(
-        // 8 columns at `lg` only, so the alerts + Now column can take 3 of
+        // 8 columns from `md` to `xl`, so the alerts + Now column can take 3 of
         // them — 1.5 of the 4-column track the other breakpoints use.
-        "grid w-full auto-rows-[minmax(150px,auto)] grid-cols-1 gap-5 transition-opacity duration-300 sm:grid-cols-4 sm:gap-6 lg:grid-cols-8 xl:grid-cols-4",
+        "grid w-full auto-rows-[minmax(150px,auto)] grid-cols-1 gap-5 transition-opacity duration-300 sm:grid-cols-4 sm:gap-6 md:grid-cols-8 xl:grid-cols-4",
         isStale && "opacity-60",
       )}
     >
@@ -38,7 +38,7 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
 
       {/* One cell at every width: `auto-rows` floors a row at 150px, which is
           taller than the alert strip. */}
-      <div className="flex flex-col gap-5 sm:col-span-4 sm:gap-6 lg:col-span-3 xl:order-2 xl:col-span-1">
+      <div className="flex flex-col gap-5 sm:col-span-4 sm:gap-6 md:col-span-3 md:row-span-2 xl:order-2 xl:col-span-1 xl:row-span-1">
         <AlertsCard
           alerts={demoAlerts() ?? forecast.data?.alerts}
           tz={c.location.tz}
