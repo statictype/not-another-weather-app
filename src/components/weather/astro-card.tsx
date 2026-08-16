@@ -2,10 +2,8 @@ import { useId, useState } from "react";
 import { MoonIcon, SunIcon } from "lucide-react";
 import type { Astro } from "@/api/types";
 import { TabButton } from "@/components/tab-button";
-import { useUnitSystem } from "@/hooks/use-unit-system";
 import { formatClock, parseClockMinutes } from "@/lib/clock";
 import { moonGeometry, moonLitPath } from "@/lib/moon";
-import { type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 type AstroView = "sun" | "moon";
@@ -18,7 +16,6 @@ interface AstroCardProps {
 
 export function AstroCard({ astro, lat }: AstroCardProps) {
   const [view, setView] = useState<AstroView>("sun");
-  const system = useUnitSystem();
 
   return (
     <section
@@ -59,13 +56,7 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
 
       <div key={`panel-${view}`} className="astro-fade relative mx-auto mt-3 w-full max-w-[400px]">
         {view === "sun" ? (
-          <ArcPanel
-            kind="sun"
-            rise={astro?.sunrise}
-            set={astro?.sunset}
-            lat={lat}
-            system={system}
-          />
+          <ArcPanel kind="sun" rise={astro?.sunrise} set={astro?.sunset} lat={lat} />
         ) : (
           <ArcPanel
             kind="moon"
@@ -73,7 +64,6 @@ export function AstroCard({ astro, lat }: AstroCardProps) {
             set={astro?.moonset}
             astro={astro}
             lat={lat}
-            system={system}
           />
         )}
       </div>
@@ -117,11 +107,10 @@ interface ArcPanelProps {
   rise: string | undefined;
   set: string | undefined;
   lat: number;
-  system: UnitSystem;
   astro?: Astro | undefined;
 }
 
-function ArcPanel({ kind, rise, set, lat, system, astro }: ArcPanelProps) {
+function ArcPanel({ kind, rise, set, lat, astro }: ArcPanelProps) {
   const labels =
     kind === "sun" ? { rise: "Sunrise", set: "Sunset" } : { rise: "Moonrise", set: "Moonset" };
 
@@ -131,7 +120,7 @@ function ArcPanel({ kind, rise, set, lat, system, astro }: ArcPanelProps) {
       <div className="mt-2 flex items-end justify-between">
         <div>
           {rise ? (
-            <p className="text-base leading-none tracking-tight">{formatClock(rise, system)}</p>
+            <p className="text-base leading-none tracking-tight">{formatClock(rise)}</p>
           ) : (
             <Skeleton />
           )}
@@ -139,7 +128,7 @@ function ArcPanel({ kind, rise, set, lat, system, astro }: ArcPanelProps) {
         </div>
         <div className="text-right">
           {set ? (
-            <p className="text-base leading-none tracking-tight">{formatClock(set, system)}</p>
+            <p className="text-base leading-none tracking-tight">{formatClock(set)}</p>
           ) : (
             <Skeleton />
           )}

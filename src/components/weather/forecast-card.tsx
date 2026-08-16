@@ -48,7 +48,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
         {days
           ? days.map((day, i) => (
               <div key={day.date} className="min-w-0 py-3 sm:py-0">
-                <DayColumn day={day} label={forecastLabel(day.date, i, system)} system={system} />
+                <DayColumn day={day} label={forecastLabel(day.date, i)} system={system} />
               </div>
             ))
           : Array.from({ length: SKELETON_DAYS }, (_, i) => (
@@ -111,8 +111,8 @@ function DayColumnSkeleton() {
 }
 
 /** `index` counts from today, so 0 is today and 1 is tomorrow. */
-function forecastLabel(date: string, index: number, system: UnitSystem): string {
+function forecastLabel(date: string, index: number): string {
   if (index === 0) return "Today";
   if (index === 1) return "Tomorrow";
-  return formatWeekday(date, system) ?? date;
+  return formatWeekday(date) ?? date;
 }

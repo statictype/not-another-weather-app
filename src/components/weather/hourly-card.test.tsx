@@ -109,20 +109,22 @@ describe("HourlyCard — the matrix", () => {
     expect(row("Feels like")[0]).toHaveTextContent("11°");
   });
 
+  /** Column labels follow the viewer's locale, which jsdom reports as `en-US`
+   *  — a 12-hour clock, whatever the unit system is set to. */
   it("names every column by its hour and its condition", () => {
     render(<HourlyCard hourly={hourly()} tz={TZ} />);
 
     expect(headers()).toHaveLength(24);
-    expect(headers()[0]).toHaveTextContent("15");
-    expect(headers()[0]).toHaveAccessibleName("15:00, Partly cloudy");
+    expect(headers()[0]).toHaveTextContent("3pm");
+    expect(headers()[0]).toHaveAccessibleName("3 pm, Partly cloudy");
   });
 
   it("names the new day where the date rolls over", () => {
     render(<HourlyCard hourly={hourly()} tz={TZ} />);
 
     expect(headers()[ROLLOVER_INDEX]).toHaveTextContent("Thu");
-    expect(headers()[ROLLOVER_INDEX]).toHaveAccessibleName(/^Thursday, 00:00,/);
-    expect(headers()[ROLLOVER_INDEX - 1]).toHaveTextContent("23");
+    expect(headers()[ROLLOVER_INDEX]).toHaveAccessibleName(/^Thursday, 12 am,/);
+    expect(headers()[ROLLOVER_INDEX - 1]).toHaveTextContent("11pm");
   });
 });
 

@@ -155,7 +155,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
             >
               <span className="hour-head-inner">
                 <span aria-hidden="true" className={cn("label-sub", isBreak && "text-foreground")}>
-                  {isBreak ? weekdayLabel(slot.time, system) : hourLabel(slot.time, system)}
+                  {isBreak ? weekdayLabel(slot.time) : hourLabel(slot.time)}
                 </span>
                 <ConditionIcon
                   text={slot.conditionText}
@@ -166,7 +166,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
                 />
               </span>
               <span className="sr-only">
-                {spokenColumn(slot.time, isBreak, system)}, {slot.conditionText}
+                {spokenColumn(slot.time, isBreak)}, {slot.conditionText}
               </span>
             </th>
           ))}
@@ -316,18 +316,18 @@ function dateOf(time: string): string {
   return time.split(" ")[0] ?? time;
 }
 
-function hourLabel(time: string, system: UnitSystem): string {
-  return formatHour(hourOf(time), system);
+function hourLabel(time: string): string {
+  return formatHour(hourOf(time));
 }
 
-function weekdayLabel(time: string, system: UnitSystem): string {
-  return formatWeekday(dateOf(time), system) ?? hourLabel(time, system);
+function weekdayLabel(time: string): string {
+  return formatWeekday(dateOf(time)) ?? hourLabel(time);
 }
 
-function spokenColumn(time: string, withDay: boolean, system: UnitSystem): string {
-  const clock = spokenHour(hourOf(time), system);
+function spokenColumn(time: string, withDay: boolean): string {
+  const clock = spokenHour(hourOf(time));
   if (!withDay) return clock;
-  const day = formatWeekday(dateOf(time), system, "long");
+  const day = formatWeekday(dateOf(time), "long");
   return day ? `${day}, ${clock}` : clock;
 }
 

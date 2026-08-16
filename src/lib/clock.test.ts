@@ -14,44 +14,51 @@ import {
 const AT = Date.UTC(2026, 7, 15, 15, 45);
 const TZ = "UTC";
 
+/** `en-GB` and `de-DE` read 24-hour, `en-US` 12-hour. The unit system is not
+ *  an input to any of these. */
 describe("formatTime", () => {
-  it("is 24-hour in metric and 12-hour in imperial", () => {
-    expect(formatTime(AT, TZ, "metric")).toBe("15:45");
-    expect(formatTime(AT, TZ, "imperial")).toBe("3:45 PM");
+  it("follows the locale's hour cycle", () => {
+    expect(formatTime(AT, TZ, "en-GB")).toBe("15:45");
+    expect(formatTime(AT, TZ, "de-DE")).toBe("15:45");
+    expect(formatTime(AT, TZ, "en-US")).toBe("3:45 PM");
   });
 
-  it("pads the metric hour past midnight", () => {
+  it("pads the hour past midnight in a 24-hour locale", () => {
     const midnight = Date.UTC(2026, 7, 15, 0, 5);
-    expect(formatTime(midnight, TZ, "metric")).toBe("00:05");
-    expect(formatTime(midnight, TZ, "imperial")).toBe("12:05 AM");
+    expect(formatTime(midnight, TZ, "en-GB")).toBe("00:05");
+    expect(formatTime(midnight, TZ, "en-US")).toBe("12:05 AM");
   });
 
   it("returns a dash for an unknown time zone rather than throwing", () => {
-    expect(formatTime(AT, "Mars/Olympus", "metric")).toBe("—");
+    expect(formatTime(AT, "Mars/Olympus", "en-GB")).toBe("—");
+  });
+
+  it("falls back to the runtime default for a locale Intl rejects", () => {
+    expect(formatTime(AT, TZ, "not a locale")).not.toBe("—");
   });
 });
 
 describe("formatDate", () => {
-  it("puts the day before the month in metric and after it in imperial", () => {
-    expect(formatDate(AT, TZ, "metric")).toBe("Sat 15 Aug");
-    expect(formatDate(AT, TZ, "imperial")).toBe("Sat Aug 15");
+  it("orders the day and month per locale", () => {
+    expect(formatDate(AT, TZ, "en-GB")).toBe("Sat 15 Aug");
+    expect(formatDate(AT, TZ, "en-US")).toBe("Sat Aug 15");
   });
 
   it("returns an empty string for an unknown time zone", () => {
-    expect(formatDate(AT, "Mars/Olympus", "metric")).toBe("");
+    expect(formatDate(AT, "Mars/Olympus", "en-GB")).toBe("");
   });
 });
 
 describe("formatClock", () => {
-  it("reads upstream's 12-hour astro string in either system", () => {
-    expect(formatClock("06:23 AM", "metric")).toBe("06:23");
-    expect(formatClock("06:23 AM", "imperial")).toBe("6:23 am");
-    expect(formatClock("07:48 PM", "metric")).toBe("19:48");
-    expect(formatClock("07:48 PM", "imperial")).toBe("7:48 pm");
+  it("reads upstream's 12-hour astro string in either hour cycle", () => {
+    expect(formatClock("06:23 AM", "en-GB")).toBe("06:23");
+    expect(formatClock("06:23 AM", "en-US")).toBe("6:23 am");
+    expect(formatClock("07:48 PM", "en-GB")).toBe("19:48");
+    expect(formatClock("07:48 PM", "en-US")).toBe("7:48 pm");
   });
 
   it("passes an unparseable string through", () => {
-    expect(formatClock("No moonrise", "metric")).toBe("No moonrise");
+    expect(formatClock("No moonrise", "en-GB")).toBe("No moonrise");
   });
 });
 
@@ -69,42 +76,48 @@ describe("parseClockMinutes", () => {
 });
 
 describe("formatHour", () => {
-  it("renders hour-only in both systems", () => {
-    expect(formatHour(15, "metric")).toBe("15");
-    expect(formatHour(15, "imperial")).toBe("3pm");
-    expect(formatHour(0, "metric")).toBe("00");
-    expect(formatHour(0, "imperial")).toBe("12am");
+  it("renders hour-only in either hour cycle", () => {
+    expect(formatHour(15, "en-GB")).toBe("15");
+    expect(formatHour(15, "en-US")).toBe("3pm");
+    expect(formatHour(0, "en-GB")).toBe("00");
+    expect(formatHour(0, "en-US")).toBe("12am");
+  });
+
+  it("drops the word locales attach to a bare hour", () => {
+    expect(formatHour(15, "de-DE")).toBe("15");
+    expect(formatHour(15, "ja-JP")).toBe("15");
   });
 });
 
 describe("spokenHour", () => {
-  it("says the whole time in metric and the meridiem in imperial", () => {
-    expect(spokenHour(15, "metric")).toBe("15:00");
-    expect(spokenHour(15, "imperial")).toBe("3 pm");
-    expect(spokenHour(0, "imperial")).toBe("12 am");
+  it("says the whole time on a 24-hour clock and the meridiem on a 12-hour one", () => {
+    expect(spokenHour(15, "en-GB")).toBe("15:00");
+    expect(spokenHour(15, "en-US")).toBe("3 pm");
+    expect(spokenHour(0, "en-US")).toBe("12 am");
   });
 });
 
 describe("formatWeekday", () => {
-  it("names the day in both systems", () => {
-    expect(formatWeekday("2026-08-15", "metric")).toBe("Sat");
-    expect(formatWeekday("2026-08-15", "imperial", "long")).toBe("Saturday");
+  it("names the day in the locale's language", () => {
+    expect(formatWeekday("2026-08-15", "short", "en-GB")).toBe("Sat");
+    expect(formatWeekday("2026-08-15", "long", "en-US")).toBe("Saturday");
+    expect(formatWeekday("2026-08-15", "long", "de-DE")).toBe("Samstag");
   });
 
   it("returns null for an unparseable date", () => {
-    expect(formatWeekday("not-a-date", "metric")).toBeNull();
+    expect(formatWeekday("not-a-date", "short", "en-GB")).toBeNull();
   });
 });
 
 describe("formatStamp", () => {
   it("lowercases the meridiem and optionally leads with the date", () => {
-    expect(formatStamp(AT, TZ, "imperial", false)).toBe("3:45 pm");
-    expect(formatStamp(AT, TZ, "metric", false)).toBe("15:45");
-    expect(formatStamp(AT, TZ, "imperial", true)).toBe("Sat, Aug 15, 3:45 pm");
-    expect(formatStamp(AT, TZ, "metric", true)).toBe("Sat 15 Aug, 15:45");
+    expect(formatStamp(AT, TZ, false, "en-US")).toBe("3:45 pm");
+    expect(formatStamp(AT, TZ, false, "en-GB")).toBe("15:45");
+    expect(formatStamp(AT, TZ, true, "en-US")).toBe("Sat, Aug 15, 3:45 pm");
+    expect(formatStamp(AT, TZ, true, "en-GB")).toBe("Sat 15 Aug, 15:45");
   });
 
   it("returns a dash for an unknown time zone", () => {
-    expect(formatStamp(AT, "Mars/Olympus", "metric", true)).toBe("—");
+    expect(formatStamp(AT, "Mars/Olympus", true, "en-GB")).toBe("—");
   });
 });
