@@ -1,18 +1,21 @@
 import { SnowflakeIcon, UmbrellaIcon } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import type { DayPrecip, Measure } from "@/api/types";
+import { UnitValue } from "@/components/unit-value";
 import { useUnitSystem } from "@/hooks/use-unit-system";
 import { cn } from "@/lib/utils";
 
 interface PrecipStripProps {
   day: DayPrecip | undefined;
   className?: string;
+  /** This day's place in the unit sweep. See `sweep`. */
+  delay?: number;
 }
 
 /** One line per kind of precipitation, under the day column it belongs to.
  *  The rain line always renders, so a day's height does not depend on whether
  *  it snows. Each line carries its amount whenever the Worker sends one. */
-export function PrecipStrip({ day, className }: PrecipStripProps) {
+export function PrecipStrip({ day, className, delay = 0 }: PrecipStripProps) {
   const system = useUnitSystem();
   const snow = day?.totalSnow?.[system] ?? null;
 
@@ -27,6 +30,7 @@ export function PrecipStrip({ day, className }: PrecipStripProps) {
             name="Chance of rain"
             chance={day.chanceOfRain}
             amount={day.totalPrecip?.[system] ?? null}
+            delay={delay}
           />
           {(day.willItSnow || snow) && (
             <Line
@@ -34,6 +38,7 @@ export function PrecipStrip({ day, className }: PrecipStripProps) {
               name="Chance of snow"
               chance={day.chanceOfSnow}
               amount={snow}
+              delay={delay + 20}
             />
           )}
         </>
@@ -47,11 +52,13 @@ function Line({
   name,
   chance,
   amount,
+  delay,
 }: {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   name: string;
   chance: number;
   amount: Measure | null;
+  delay: number;
 }) {
   return (
     // `role="img"` gives the line one accessible name instead of per-glyph output.
@@ -67,7 +74,7 @@ function Line({
           <span className="text-foreground/40" aria-hidden="true">
             ·
           </span>
-          {amount.text}
+          <UnitValue text={amount.text} delay={delay} />
         </>
       )}
     </span>

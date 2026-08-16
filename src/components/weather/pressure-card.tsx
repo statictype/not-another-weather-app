@@ -1,7 +1,13 @@
 import type { MeasurePair } from "@/api/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { UnitValue } from "@/components/unit-value";
 import { useUnitSystem } from "@/hooks/use-unit-system";
+import { sweep } from "@/lib/scramble";
 import { read } from "@/lib/units";
+
+/** The suffix trails its own value by one step, so a split reading settles
+ *  left to right the way an undivided one does. */
+const SUFFIX_STEP = 40;
 
 interface PressureCardProps {
   pressureMb: number;
@@ -89,8 +95,10 @@ export function PressureCard({ pressureMb, pressure }: PressureCardProps) {
               aria-label={reading.spoken}
               className="text-2xl leading-none tracking-tight"
             >
-              {reading.value}
-              <span className="ml-1 text-sm text-foreground/70">{reading.suffix}</span>
+              <UnitValue text={reading.value} delay={sweep(8)} />
+              <span className="ml-1 text-sm text-foreground/70">
+                <UnitValue text={reading.suffix} delay={sweep(8, SUFFIX_STEP)} />
+              </span>
             </p>
             <Tooltip>
               <TooltipTrigger className="label-sub pointer-events-auto mt-1.5 cursor-help underline decoration-dotted underline-offset-4">

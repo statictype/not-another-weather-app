@@ -23,7 +23,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { UnitValue } from "@/components/unit-value";
 import { useUnitSystem } from "@/hooks/use-unit-system";
+import { sweep } from "@/lib/scramble";
 import { read, type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
@@ -119,8 +121,8 @@ export function NowCard({ current }: NowCardProps) {
             </span>
 
             <span className="block divide-y divide-foreground/10 md:w-[340px] md:shrink-0 lg:w-auto">
-              {face.map((r) => (
-                <FaceRow key={r.key} reading={r} />
+              {face.map((r, i) => (
+                <FaceRow key={r.key} reading={r} delay={sweep(2, i * 20)} />
               ))}
             </span>
           </span>
@@ -134,7 +136,7 @@ export function NowCard({ current }: NowCardProps) {
   );
 }
 
-function FaceRow({ reading }: { reading: Reading }) {
+function FaceRow({ reading, delay }: { reading: Reading; delay: number }) {
   const { icon: Icon, key, label, value } = reading;
   return (
     <span className="flex items-center justify-between gap-3 py-3">
@@ -144,7 +146,7 @@ function FaceRow({ reading }: { reading: Reading }) {
       </span>
       {/* Wind is the one worded value on the face; the others are figures. */}
       <span className={cn("text-base tracking-tight", key === "wind" && "text-sm xl:text-base")}>
-        {value}
+        <UnitValue text={value} delay={delay} />
       </span>
     </span>
   );
@@ -180,7 +182,7 @@ function NowDialog({
 
       <DialogScroll className="px-6 pt-2 pb-6 sm:px-8 sm:pb-8">
         <dl className="divide-y divide-foreground/10">
-          {readings.map(({ key, icon: Icon, label, value }) => (
+          {readings.map(({ key, icon: Icon, label, value }, i) => (
             <div key={key} className="flex items-center justify-between gap-4 py-3.5">
               <dt className="flex items-center gap-2.5">
                 <Icon
@@ -190,7 +192,9 @@ function NowDialog({
                 />
                 <span className="label-sub">{label}</span>
               </dt>
-              <dd className="text-right text-base tracking-tight tabular-nums">{value}</dd>
+              <dd className="text-right text-base tracking-tight">
+                <UnitValue text={value} delay={i * 20} />
+              </dd>
             </div>
           ))}
         </dl>

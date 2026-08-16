@@ -338,7 +338,9 @@ describe("Oasis (integration)", () => {
 
     await user.click(screen.getByRole("button", { name: /imperial units/i }));
 
-    expect(screen.getAllByText("54°").length).toBeGreaterThan(0);
+    // Every figure churns to its new reading over the sweep in `scramble.ts`,
+    // so the settled text arrives a few hundred ms after the click.
+    expect((await screen.findAllByText("54°")).length).toBeGreaterThan(0);
     expect(screen.getByRole("img", { name: "9 miles per hour" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "29.97 inches of mercury" })).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "14 kilometres per hour" })).not.toBeInTheDocument();

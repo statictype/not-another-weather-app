@@ -9,8 +9,11 @@ import {
 } from "lucide-react";
 import type { ComponentType, CSSProperties, ReactNode, SVGProps } from "react";
 import type { HourlyForecast } from "@/api/types";
+import { UnitValue } from "@/components/unit-value";
 import { useUnitSystem } from "@/hooks/use-unit-system";
 import { formatHour, formatWeekday, spokenHour } from "@/lib/clock";
+import { prefersReducedMotion } from "@/lib/motion";
+import { sweep } from "@/lib/scramble";
 import { read, type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
@@ -25,8 +28,12 @@ interface HourRow {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   name: string;
   lead?: boolean;
-  cell: (slot: HourlyForecast, system: UnitSystem) => ReactNode;
+  cell: (slot: HourlyForecast, system: UnitSystem, column: number) => ReactNode;
 }
+
+/** Per-column step of the unit sweep. 24 columns of it run 184 ms, so the last
+ *  one still starts before the first has settled. */
+const COLUMN_STEP = 8;
 
 const ROWS: HourRow[] = [
   {
@@ -34,13 +41,17 @@ const ROWS: HourRow[] = [
     icon: ThermometerIcon,
     name: "Temperature",
     lead: true,
-    cell: (slot, system) => read(slot.temp, system).text,
+    cell: (slot, system, column) => (
+      <UnitValue text={read(slot.temp, system).text} delay={sweep(3, column * COLUMN_STEP)} />
+    ),
   },
   {
     key: "feels",
     icon: PersonStandingIcon,
     name: "Feels like",
-    cell: (slot, system) => read(slot.feelsLike, system).text,
+    cell: (slot, system, column) => (
+      <UnitValue text={read(slot.feelsLike, system).text} delay={sweep(3, column * COLUMN_STEP)} />
+    ),
   },
   {
     key: "precip",
@@ -178,7 +189,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
             <th scope="row" className="hour-gut-cell">
               <span className="sr-only">{row.name}</span>
             </th>
-            {columns.map(({ slot, isBreak }) => (
+            {columns.map(({ slot, isBreak }, i) => (
               <td
                 key={slot.time}
                 className={cn(
@@ -187,7 +198,7 @@ function HourTable({ slots }: { slots: HourlyForecast[] }) {
                   isBreak && "hour-daybreak",
                 )}
               >
-                {row.cell(slot, system)}
+                {row.cell(slot, system, i)}
               </td>
             ))}
           </tr>
@@ -252,14 +263,6 @@ function HourTableSkeleton() {
         ))}
       </tbody>
     </table>
-  );
-}
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
 

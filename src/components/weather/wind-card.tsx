@@ -1,7 +1,13 @@
 import { useId } from "react";
 import type { Measure, MeasurePair } from "@/api/types";
+import { UnitValue } from "@/components/unit-value";
 import { useUnitSystem } from "@/hooks/use-unit-system";
+import { sweep } from "@/lib/scramble";
 import { read } from "@/lib/units";
+
+/** The suffix trails its own value by one step, so a split reading settles
+ *  left to right the way an undivided one does. */
+const SUFFIX_STEP = 40;
 
 interface WindCardProps {
   wind: MeasurePair;
@@ -25,8 +31,10 @@ export function WindCard({ wind, windDir, windDegree, gust }: WindCardProps) {
             aria-label={gusts.spoken}
             className="mt-0.5 text-sm leading-tight tracking-tight"
           >
-            {gusts.value}
-            <span className="ml-1 text-foreground/70">{gusts.suffix}</span>
+            <UnitValue text={gusts.value} delay={sweep(7)} />
+            <span className="ml-1 text-foreground/70">
+              <UnitValue text={gusts.suffix} delay={sweep(7, SUFFIX_STEP)} />
+            </span>
           </p>
         </div>
       </div>
@@ -120,8 +128,10 @@ function Compass({
 
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <p role="img" aria-label={wind.spoken} className="text-2xl leading-none tracking-tight">
-          {wind.value}
-          <span className="ml-1 text-sm text-foreground/70">{wind.suffix}</span>
+          <UnitValue text={wind.value} delay={sweep(7)} />
+          <span className="ml-1 text-sm text-foreground/70">
+            <UnitValue text={wind.suffix} delay={sweep(7, SUFFIX_STEP)} />
+          </span>
         </p>
         <p className="label-sub">{windDir}</p>
       </div>

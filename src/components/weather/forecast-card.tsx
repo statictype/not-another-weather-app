@@ -1,6 +1,8 @@
 import type { ForecastDay } from "@/api/types";
+import { UnitValue } from "@/components/unit-value";
 import { useUnitSystem } from "@/hooks/use-unit-system";
 import { formatWeekday } from "@/lib/clock";
+import { sweep } from "@/lib/scramble";
 import { read, type UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
 import { ConditionIcon } from "./condition-icon";
@@ -48,7 +50,12 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
         {days
           ? days.map((day, i) => (
               <div key={day.date} className="min-w-0 py-3 sm:py-0">
-                <DayColumn day={day} label={forecastLabel(day.date, i)} system={system} />
+                <DayColumn
+                  day={day}
+                  label={forecastLabel(day.date, i)}
+                  system={system}
+                  delay={sweep(4, i * 40)}
+                />
               </div>
             ))
           : Array.from({ length: SKELETON_DAYS }, (_, i) => (
@@ -68,10 +75,12 @@ function DayColumn({
   day,
   label,
   system,
+  delay,
 }: {
   day: ForecastDay;
   label: string;
   system: UnitSystem;
+  delay: number;
 }) {
   return (
     <div className="fc-day min-w-0">
@@ -86,11 +95,13 @@ function DayColumn({
         aria-hidden="true"
       />
       <span className="fc-temp text-2xl leading-none tracking-tight tabular-nums whitespace-nowrap">
-        {read(day.max, system).text}
-        <span className="ml-1 text-base text-foreground/70">/ {read(day.min, system).text}</span>
+        <UnitValue text={read(day.max, system).text} delay={delay} />
+        <span className="ml-1 text-base text-foreground/70">
+          / <UnitValue text={read(day.min, system).text} delay={delay + 20} />
+        </span>
       </span>
       <span className="fc-cond truncate text-sm text-foreground/70">{day.conditionText}</span>
-      <PrecipStrip day={day} className="fc-prec" />
+      <PrecipStrip day={day} className="fc-prec" delay={delay + 40} />
     </div>
   );
 }
