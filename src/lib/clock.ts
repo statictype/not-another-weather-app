@@ -106,8 +106,8 @@ export function parseClockMinutes(time: string): number | null {
   return hour * 60 + minute;
 }
 
-/** Hour-only in every locale: `--hour-col-w` is a fixed 4rem below the
- *  breakpoint, so the hour drops the words some locales attach to it
+/** Hour-only in every locale: `--hour-col-w` is a fixed 3.5rem, 4rem from `sm`,
+ *  so the hour drops the minutes, drops the words some locales attach to it
  *  (`15 Uhr`, `15時`) and keeps the meridiem where there is one. */
 export function formatHour(hour: number, locale = DEVICE_LOCALE): string {
   const config = clockFor(locale);

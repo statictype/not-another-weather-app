@@ -124,7 +124,7 @@ export function HourlyCard({ hourly, tz }: HourlyCardProps) {
         <div className="relative min-w-0 flex-1">
           <div
             ref={ref}
-            className="hour-fade scrollbar-none overflow-x-auto"
+            className="hour-fade hour-scroll scrollbar-none overflow-x-auto"
             data-fade-l={canLeft ? "" : undefined}
             data-fade-r={canRight ? "" : undefined}
           >
@@ -245,18 +245,25 @@ function HourTableSkeleton() {
           {columns.map((i) => (
             <td key={i} className="hour-head-cell">
               <span className="hour-head-inner">
-                <span className="h-2.5 w-7 animate-pulse rounded bg-foreground/10" />
-                <span className="size-5 animate-pulse rounded-full bg-foreground/10" />
+                <span className="h-2.5 w-6 animate-pulse rounded bg-foreground/10" />
+                <span className="size-7 animate-pulse rounded-xl bg-foreground/10" />
               </span>
             </td>
           ))}
         </tr>
+        {/* Each bar stands as tall as the type it replaces, so the lead row
+            reads as the taller one before the payload lands. */}
         {ROWS.map((row) => (
           <tr key={row.key}>
             <td className="hour-gut-cell" />
             {columns.map((i) => (
-              <td key={i} className="hour-cell">
-                <span className="mx-auto block h-3 w-6 animate-pulse rounded bg-foreground/10" />
+              <td key={i} className={cn("hour-cell", row.lead && "hour-cell-lead")}>
+                <span
+                  className={cn(
+                    "mx-auto block animate-pulse rounded bg-foreground/10",
+                    row.lead ? "h-3.5 w-7" : "h-3 w-6",
+                  )}
+                />
               </td>
             ))}
           </tr>

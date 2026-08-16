@@ -547,18 +547,21 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 .hour-frame {
-  --hour-gutter-w: 1.75rem;
+  --hour-gutter-w: 1.5rem;
 
   --hour-head-h: 4.6rem;
   --hour-row-h: 1.9rem;
-  --hour-col-w: 4.5rem;
+  --hour-col-w: 3.5rem;
   --hour-rule: color-mix(in oklab, var(--foreground) 10%, transparent);
   --hour-rule-col: color-mix(in oklab, var(--foreground) 6%, transparent);
-  --hour-rule-break: color-mix(in oklab, var(--foreground) 22%, transparent);
+  --hour-rule-break: color-mix(in oklab, var(--foreground) 25%, transparent);
 
- 
-  --hour-fade-l-w: calc(var(--hour-col-w) * 0.6);
-  --hour-fade-r-w: var(--hour-col-w);
+  --hour-step-size: 2.25rem;
+
+  /* One button wide, so a step button never covers a reading at full ink, and
+     under a column wide, so no reading is dimmed to the point of reading as
+     unavailable rather than as continuing. */
+  --hour-fade-w: var(--hour-step-size);
   --hour-fade-l: 0px;
   --hour-fade-r: 0px;
 
@@ -575,7 +578,7 @@ html, body { background: oklch(0.97 0.02 230); }
 .night .hour-frame {
   --hour-rule: oklch(1 0 0 / 0.1);
   --hour-rule-col: oklch(1 0 0 / 0.06);
-  --hour-rule-break: oklch(1 0 0 / 0.24);
+  --hour-rule-break: oklch(1 0 0 / 0.25);
 
   --hour-step-fill: oklch(0.24 0.018 255 / 0.88);
   --hour-step-fill-hover: oklch(0.3 0.02 255 / 0.96);
@@ -585,15 +588,16 @@ html, body { background: oklch(0.97 0.02 230); }
 .hour-gutter {
   flex: none;
   width: var(--hour-gutter-w);
-  transition: opacity 0.18s ease;
 }
 .hour-gutter-head {
   height: var(--hour-head-h);
 }
+/* Flush left, so the row key starts on the tile's padding edge like every other
+   icon in the app and the gutter costs the table only the mark plus its gap. */
 .hour-gutter-cell {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: start;
   height: var(--hour-row-h);
 }
 
@@ -602,6 +606,10 @@ html, body { background: oklch(0.97 0.02 230); }
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
+}
+
+.hour-scroll {
+  scroll-snap-type: x proximity;
 }
 
 .hour-gut-cell {
@@ -615,15 +623,26 @@ html, body { background: oklch(0.97 0.02 230); }
   font-weight: inherit;
   text-align: center;
   vertical-align: middle;
+  scroll-snap-align: start;
 }
 
+/* The hour sits at the top of the head; the condition icon takes the space
+   under it, centred by the auto margins whatever the head measures. */
 .hour-head-inner {
   display: flex;
   height: var(--hour-head-h);
   flex-direction: column;
   align-items: center;
   justify-content: start;
-  gap: 1.1rem;
+}
+.hour-head-inner > :last-child {
+  margin-block: auto;
+}
+
+/* `.label-sub` tracks at 0.18em, and the trailing space is inside the centred
+   box. Cancelling it puts the glyphs on the column's centre line. */
+.hour-head-inner > .label-sub {
+  margin-right: -0.18em;
 }
 
 .hour-cell {
@@ -638,10 +657,11 @@ html, body { background: oklch(0.97 0.02 230); }
   text-align: center;
   vertical-align: middle;
 }
-
-
+/* Temperature is the row the card is read for, so it takes the size step up to
+   Body. The other two stay at Caption. */
 .hour-cell-lead {
   color: var(--foreground);
+  font-size: 16px;
 }
 
 .hour-head-cell:nth-child(n + 3),
@@ -671,10 +691,10 @@ html, body { background: oklch(0.97 0.02 230); }
   );
 }
 .hour-fade[data-fade-l] {
-  --hour-fade-l: var(--hour-fade-l-w);
+  --hour-fade-l: var(--hour-fade-w);
 }
 .hour-fade[data-fade-r] {
-  --hour-fade-r: var(--hour-fade-r-w);
+  --hour-fade-r: var(--hour-fade-w);
 }
 
 
@@ -683,8 +703,8 @@ html, body { background: oklch(0.97 0.02 230); }
   top: 50%;
   z-index: 1;
   display: flex;
-  height: 2.25rem;
-  width: 2.25rem;
+  height: var(--hour-step-size);
+  width: var(--hour-step-size);
   translate: 0 -50%;
   align-items: center;
   justify-content: center;
@@ -701,10 +721,10 @@ html, body { background: oklch(0.97 0.02 230); }
     opacity 0.18s ease,
     background 0.18s ease;
 }
-/* The wrapper starts after the gutter, so the left button is pulled back
-   across it to sit the same distance from the tile edge as the right one. */
+/* Both buttons sit inside the scroller, over the edge they scroll away from.
+   The row-key gutter is outside it and stays legible while they are shown. */
 .hour-step-l {
-  left: calc(var(--hour-gutter-w) * -1);
+  left: 0;
 }
 .hour-step-r {
   right: 0;
@@ -728,19 +748,8 @@ html, body { background: oklch(0.97 0.02 230); }
   outline-offset: 2px;
 }
 
-
-@media (hover: hover) {
-  .hour-frame:hover:has(.hour-step-l:not(:disabled)) .hour-gutter {
-    opacity: 0;
-  }
-}
-.hour-frame:focus-within:has(.hour-step-l:not(:disabled)) .hour-gutter {
-  opacity: 0;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hour-step,
-  .hour-gutter {
+  .hour-step {
     transition: none;
   }
 }
