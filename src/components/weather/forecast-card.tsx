@@ -70,9 +70,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
   );
 }
 
-/** Placement is `.fc-day`'s, in `index.css`: a row below `sm`, a stack above
- *  it. Source order is the spoken order in both — name, high/low, condition,
- *  precipitation, with the icon skipped. */
+
 function DayColumn({
   day,
   label,

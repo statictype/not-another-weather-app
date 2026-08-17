@@ -4,10 +4,7 @@ import { scrambleTo } from "@/lib/scramble";
 import { cn } from "@/lib/utils";
 
 interface UnitValueProps {
-  /** An already-formatted display string — `read(pair, system).text`, or one
-   *  of its parts where a tile sets the value and the suffix apart. */
   text: string;
-  /** Milliseconds after the toggle before this reading starts. See `sweep`. */
   delay?: number;
   className?: string;
 }

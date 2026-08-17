@@ -8,8 +8,6 @@ interface TabButtonProps {
   children: ReactNode;
 }
 
-/** `min-w-9` with `px-2` keeps an 18px icon child on a 36px square and lets a
- *  text child set its own width. */
 export function TabButton({ active, onClick, label, children }: TabButtonProps) {
   return (
     <button

@@ -1,6 +1,3 @@
-/** RFC 012. Bands are lower-inclusive, upper-exclusive, and read canonical
- *  Celsius / kph, so a viewer flipping the toggle cannot change the wording. */
-
 import type { AirComfort, AirLabel, ThermalLabel } from "@/lib/schemas";
 
 export interface AirComfortInput {

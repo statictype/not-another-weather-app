@@ -1,10 +1,7 @@
-/** Upstream `severity` is unconstrained: CAP names, Meteoalarm colours, empty strings. */
-
 import { ALERT_SEVERITIES, type AlertSeverity, type WeatherAlert } from "@/lib/schemas";
 
 export const MAX_ALERTS = 5;
 
-/** Rank is the array position in `ALERT_SEVERITIES`. */
 const SEVERITY_ALIASES = {
   extreme: ["red"],
   severe: ["orange"],

@@ -1,5 +1,3 @@
-/** Mirrors the grid's spans, so the first paint does not reflow when data
- *  lands. Each card's own skeleton takes over from there. */
 export function WeatherSkeleton() {
   return (
     <div

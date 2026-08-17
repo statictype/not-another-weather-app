@@ -15,7 +15,6 @@ interface WeatherResultProps {
   onCitySelect: (query: string) => void;
 }
 
-/** `not_found` / `invalid_query` are input errors, surfaced under the search input. */
 export function WeatherResult({
   query,
   activeQuery,

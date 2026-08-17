@@ -34,17 +34,12 @@ export function WeatherGrid({ query, current: c, isStale }: WeatherGridProps) {
         // 8 columns from `md` to `xl`, so the Now column can take 3 of them —
         // 1.5 of the 4-column track the other breakpoints use.
         "grid w-full auto-rows-[minmax(150px,auto)] grid-cols-1 gap-5 transition-opacity duration-300 sm:grid-cols-4 sm:gap-6 md:grid-cols-8 xl:grid-cols-4",
-        // Row 2 holds the alert strip alone from `md` to `xl`, so it is sized by
-        // its content instead of the 150px floor `auto-rows` puts on every row.
         hasAlerts && "md:grid-rows-[auto_auto] xl:grid-rows-none",
         isStale && "opacity-60",
       )}
     >
       <HeroCard location={c.location} current={c.current} />
 
-      {/* One cell below `md` and from `xl`: `auto-rows` floors a row at 150px,
-          which is taller than the alert strip. Between them the wrapper is
-          `display: contents`, so both cards place themselves on the grid. */}
       <div className="flex flex-col gap-5 sm:col-span-4 sm:gap-6 md:contents xl:order-2 xl:col-span-1 xl:row-span-1 xl:flex">
         <AlertsCard
           alerts={alerts}

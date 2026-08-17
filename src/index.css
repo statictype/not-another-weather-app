@@ -631,12 +631,6 @@ html, body { background: oklch(0.97 0.02 230); }
   to   { opacity: 1; transform: none; }
 }
 
-/* The astro tab switch. Coordinates are SVG user units on the 320x76 viewBox;
-   the clip path ends at the horizon, so a body past it has set. */
-/* The astro tab switch. The body travels the arc it is drawn on: `offset-path`
-   is set inline from the same `d`, and 50% of that path is the apex. One body
-   sets at the right marker, the next rises at the left — both westward, and
-   both half under the horizon clip at the ends. */
 .astro-body {
   transform: translate(160px, 36px);
 }
@@ -647,8 +641,7 @@ html, body { background: oklch(0.97 0.02 230); }
     offset-rotate: 0deg;
   }
 }
-/* The fade is the last third of each descent and the first fifth of each
-   climb — extinction into the horizon haze, not a crossfade. */
+
 @keyframes astro-body-set {
   from { offset-distance: 50%;  opacity: 1; }
   62%  { opacity: 1; }
@@ -659,14 +652,11 @@ html, body { background: oklch(0.97 0.02 230); }
   12%  { opacity: 1; }
   to   { offset-distance: 50%; opacity: 1; }
 }
-/* The reduced-motion substitute for the rise. */
 @keyframes astro-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-/* The side info, whose two views are different shapes and so cannot churn. It
-   is out before `drawn` swaps its content, and takes twice as long to return. */
 .astro-info {
   transition: opacity 0.52s cubic-bezier(0.33, 1, 0.68, 1);
 }
@@ -674,10 +664,6 @@ html, body { background: oklch(0.97 0.02 230); }
   opacity: 0;
   transition: opacity 0.26s cubic-bezier(0.55, 0.085, 0.68, 0.53);
 }
-
-/* Leaving the apex starts slow and accelerates into the horizon; arriving does
-   the reverse. SET_MS in `astro-card.tsx` is 40 ms short of the set, to cover
-   the render the swap costs — by then the body is at 95% and nearly gone. */
 .astro-body-set  { animation: astro-body-set  0.32s cubic-bezier(0.55, 0.085, 0.68, 0.53) both; }
 .astro-body-rise { animation: astro-body-rise 0.62s cubic-bezier(0.33, 1, 0.68, 1) both; }
 
@@ -751,8 +737,7 @@ html, body { background: oklch(0.97 0.02 230); }
 .hour-gutter-head {
   height: var(--hour-head-h);
 }
-/* Flush left, so the row key starts on the tile's padding edge like every other
-   icon in the app and the gutter costs the table only the mark plus its gap. */
+
 .hour-gutter-cell {
   display: flex;
   align-items: center;
@@ -785,8 +770,7 @@ html, body { background: oklch(0.97 0.02 230); }
   scroll-snap-align: start;
 }
 
-/* The hour sits at the top of the head; the condition icon takes the space
-   under it, centred by the auto margins whatever the head measures. */
+
 .hour-head-inner {
   display: flex;
   height: var(--hour-head-h);
@@ -798,8 +782,7 @@ html, body { background: oklch(0.97 0.02 230); }
   margin-block: auto;
 }
 
-/* `.label-sub` tracks at 0.18em, and the trailing space is inside the centred
-   box. Cancelling it puts the glyphs on the column's centre line. */
+
 .hour-head-inner > .label-sub {
   margin-right: -0.18em;
 }
@@ -822,7 +805,6 @@ html, body { background: oklch(0.97 0.02 230); }
   font-size: 0.88rem;
 }
 
-/* The precipitation row is last in `ROWS` in both the table and its skeleton. */
 .hour-table tbody tr:last-child .hour-cell {
   font-size: 0.75rem;
   color: var(--foreground);
@@ -885,8 +867,7 @@ html, body { background: oklch(0.97 0.02 230); }
     opacity 0.18s ease,
     background 0.18s ease;
 }
-/* Both buttons sit inside the scroller, over the edge they scroll away from.
-   The row-key gutter is outside it and stays legible while they are shown. */
+
 .hour-step-l {
   left: 0;
 }
@@ -958,14 +939,12 @@ html, body { background: oklch(0.97 0.02 230); }
   .fc-prec { margin-top: 0.125rem; align-items: center; }
 }
 
-/* Every day column is one grid track wide, so the query answers the same for
-   all of them and the card cannot stack one column and not its neighbour. */
+
 .fc-col {
   container-type: inline-size;
 }
 
-/* A chance and its amount need ~129px side by side; below that they take a
-   line each and the separator between them goes. */
+
 @container (max-width: 10rem) {
   .fc-line {
     flex-direction: column;
@@ -1142,7 +1121,6 @@ html, body { background: oklch(0.97 0.02 230); }
   --dialog-fade-b: 2.75rem;
 }
 
-/* Below `sm` the two content dialogs are sheets, not centred cards */
 @media (width < 40rem) {
   .dialog-sheet {
     top: auto;
@@ -1205,14 +1183,11 @@ html, body { background: oklch(0.97 0.02 230); }
   [data-slot="dialog-content"] > [data-slot="dialog-close"] {
     transition: none;
   }
-  /* Both start from opacity 0 with `both`; dropping the animation leaves the
-     element's own styles, which are the end state. */
+
   .rise,
   .swap-in {
     animation: none;
   }
-  /* The switch keeps an acknowledgement, without the travel along the arc.
-     `drawn` updates in the same tick, so the body never leaves the apex. */
   .astro-body-set {
     animation: none;
   }

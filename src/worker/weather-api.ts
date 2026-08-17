@@ -17,8 +17,6 @@ import { WeatherApiError } from "./errors";
 import { distance, pressure, speed, temperature } from "./format";
 import { precipAmountPair, precipPair } from "./precip";
 
-/* Upstream (WeatherAPI.com) shapes, private to this file. */
-
 const UpstreamLocationSchema = z.object({
   name: z.string(),
   region: z.string(),
@@ -143,10 +141,8 @@ const UPSTREAM_CURRENT = "https://api.weatherapi.com/v1/current.json";
 const UPSTREAM_FORECAST = "https://api.weatherapi.com/v1/forecast.json";
 const UPSTREAM_SEARCH = "https://api.weatherapi.com/v1/search.json";
 
-/** Asks for today + 3. Free keys silently cap the response at 3 days total, so
- *  `forecast` carries 2 or 3 future days depending on the plan; the card renders
- *  whatever arrives. */
-const FORECAST_DAYS = "4";
+
+const FORECAST_DAYS = "3";
 
 export interface SearchResult {
   id: number;
