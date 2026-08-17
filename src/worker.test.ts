@@ -344,8 +344,8 @@ describe("Worker /api/weather/forecast", () => {
     const params = new URLSearchParams(seenPath.slice(seenPath.indexOf("?")));
     expect(params.get("alerts")).toBe("yes");
     expect(params.get("aqi")).toBe("yes");
-    // Asks for today + 3; free keys cap the reply at 3 days total.
-    expect(params.get("days")).toBe("4");
+    // Asks for today + 2; free keys cap the reply at 3 days total.
+    expect(params.get("days")).toBe("3");
   });
 
   it("shapes the hourly precipitation fields", async () => {

@@ -34,7 +34,7 @@ A single Cloudflare Worker ships both the SPA (static-asset binding) and three `
 The weather pipeline is split into two independently-cacheable tiers so the hero can paint without waiting for the full payload:
 
 - `GET /api/weather` → current conditions, LCP-critical (10 min edge TTL)
-- `GET /api/weather/forecast` → today + future days + astro + hourly (1 h edge TTL). Asks upstream for `days=4`; free keys cap the reply at 3 days total, so `forecast` carries 3 or 4 days starting with today and `ForecastCard` renders whatever arrives — one column per day, each with its own precipitation line.
+- `GET /api/weather/forecast` → today + future days + astro + hourly (1 h edge TTL). Asks upstream for `days=3`, which is also the free-key cap, so `forecast` carries up to 3 days starting with today and `ForecastCard` renders whatever arrives — one column per day, each with its own precipitation line.
 - `GET /api/search` → autocomplete (no edge cache; 60 s client-side staleTime in `useSuggestions`)
 
 Key contracts that span multiple files:
