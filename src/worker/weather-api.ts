@@ -141,7 +141,6 @@ const UPSTREAM_CURRENT = "https://api.weatherapi.com/v1/current.json";
 const UPSTREAM_FORECAST = "https://api.weatherapi.com/v1/forecast.json";
 const UPSTREAM_SEARCH = "https://api.weatherapi.com/v1/search.json";
 
-
 const FORECAST_DAYS = "3";
 
 export interface SearchResult {

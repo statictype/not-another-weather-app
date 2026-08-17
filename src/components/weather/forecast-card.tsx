@@ -70,7 +70,6 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
   );
 }
 
-
 function DayColumn({
   day,
   label,
