@@ -70,9 +70,11 @@ interface AlertsCardProps {
   tz: string;
   /** The modal portals onto `<body>`, outside the `.night` root, so it needs the class itself. */
   isNight: boolean;
+  /** Grid placement, which changes with the breakpoint — see `WeatherGrid`. */
+  className?: string;
 }
 
-export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
+export function AlertsCard({ alerts, tz, isNight, className }: AlertsCardProps) {
   const [open, setOpen] = useState(false);
   const top = alerts?.[0];
   if (!alerts || !top) return null;
@@ -89,6 +91,7 @@ export function AlertsCard({ alerts, tz, isNight }: AlertsCardProps) {
           "overflow-hidden text-left",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           rail,
+          className,
         )}
       >
         <span

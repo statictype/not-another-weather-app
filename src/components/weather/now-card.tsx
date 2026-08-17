@@ -81,9 +81,11 @@ function readingsOf(c: CurrentConditions, system: UnitSystem): Reading[] {
 
 interface NowCardProps {
   current: CurrentConditions;
+  /** Grid placement, which changes with the breakpoint — see `WeatherGrid`. */
+  className?: string;
 }
 
-export function NowCard({ current }: NowCardProps) {
+export function NowCard({ current, className }: NowCardProps) {
   const [open, setOpen] = useState(false);
   const system = useUnitSystem();
   const sentence = current.comfort?.sentence ?? "—";
@@ -102,6 +104,7 @@ export function NowCard({ current }: NowCardProps) {
             "flex flex-col gap-5",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
             "md:flex-1",
+            className,
           )}
         >
           <span
