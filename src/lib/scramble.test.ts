@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scrambleFrame, sweep } from "@/lib/scramble";
+import { scrambleFrame, sweep, WORD_POOLS } from "@/lib/scramble";
 
 /** Always the last member of whichever pool the character belongs to. */
 const last = () => 0.999;
@@ -42,6 +42,29 @@ describe("scrambleFrame", () => {
 
   it("passes the em dash of an absent reading through untouched", () => {
     expect(scrambleFrame("—", 0, first)).toBe("—");
+  });
+});
+
+describe("scrambleFrame with the word pools", () => {
+  it("substitutes each case from its own alphabet", () => {
+    expect(scrambleFrame("Sunrise", 0, first, WORD_POOLS)).toBe("Aaaaaaa");
+    expect(scrambleFrame("Sunrise", 0, last, WORD_POOLS)).toBe("Zzzzzzz");
+  });
+
+  it("churns the uppercase the unit pools hold still", () => {
+    expect(scrambleFrame("6:24 AM", 0, first, WORD_POOLS)).toBe("0:00 AA");
+  });
+
+  it("holds the target's length across a longer replacement", () => {
+    for (let revealed = 0; revealed <= 15; revealed++) {
+      expect(scrambleFrame("Waxing Gibbous", revealed, last, WORD_POOLS)).toHaveLength(14);
+    }
+  });
+
+  it("leaves the punctuation of a clock reading in place", () => {
+    const frame = scrambleFrame("6:24 AM", 0, last, WORD_POOLS);
+    expect(frame[1]).toBe(":");
+    expect(frame[4]).toBe(" ");
   });
 });
 

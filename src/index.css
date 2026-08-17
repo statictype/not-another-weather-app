@@ -354,18 +354,55 @@ html, body { background: oklch(0.97 0.02 230); }
   }
 }
 
-/* Sun and moon share one geometry per cascade; the moon differs by hue. */
-.tile-astro {
+/* Sun and moon share one geometry per cascade; the moon differs by hue. No
+   browser interpolates a gradient, so the two skies are stacked layers that
+   crossfade — the same technique as `.sky::before` / `.sky::after`. The tile
+   itself carries no background, so each sky composites over the page sky alone,
+   whichever is showing. `.astro-content` holds the card above both. */
+.tile-astro,
+.tile-astro-moon {
+  background: transparent;
+}
+.tile-astro::before,
+.tile-astro::after,
+.tile-astro-moon::before,
+.tile-astro-moon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.9s;
+}
+/* The layer arriving eases out and the one leaving eases in, so their sum stays
+   near one and the pane does not brighten as they cross. */
+.tile-astro::before,
+.tile-astro-moon::after {
+  opacity: 1;
+  transition-timing-function: cubic-bezier(0, 0, 0.5, 1);
+}
+.tile-astro::after,
+.tile-astro-moon::before {
+  opacity: 0;
+  transition-timing-function: cubic-bezier(0.5, 0, 1, 1);
+}
+
+/* `::before` is the sun sky, `::after` the moon. */
+.tile-astro::before,
+.tile-astro-moon::before {
   background:
     radial-gradient(60% 80% at 80% 100%, oklch(0.96 0.09 60 / 0.7), transparent 65%),
     linear-gradient(170deg, oklch(0.9 0.07 280 / 0.8), oklch(0.96 0.05 80 / 0.85));
-  transition: background 0.4s ease;
 }
-.tile-astro-moon {
+.tile-astro::after,
+.tile-astro-moon::after {
   background:
     radial-gradient(60% 80% at 80% 100%, oklch(0.97 0.015 250 / 0.7), transparent 65%),
     linear-gradient(170deg, oklch(0.9 0.05 280 / 0.8), oklch(0.97 0.012 250 / 0.85));
-  transition: background 0.4s ease;
+}
+
+/* z-index only; each of these already carries its own position. */
+.astro-content {
+  z-index: 1;
 }
 
 
@@ -437,12 +474,19 @@ html, body { background: oklch(0.97 0.02 230); }
     #DCEBFF02 80%,
     #DCEBFF00 100%);
 }
-.night .tile-astro {
+/* Two classes, to beat `.night .bento-tile` above. */
+.night .tile-astro,
+.night .tile-astro-moon {
+  background: transparent;
+}
+.night .tile-astro::before,
+.night .tile-astro-moon::before {
   background:
     radial-gradient(55% 70% at 78% 0%, oklch(0.32 0.06 270 / 0.6), transparent 65%),
     linear-gradient(170deg, oklch(0.2 0.04 270 / 0.95), oklch(0.13 0.03 260 / 0.7));
 }
-.night .tile-astro-moon {
+.night .tile-astro::after,
+.night .tile-astro-moon::after {
   background:
     radial-gradient(55% 70% at 78% 0%, oklch(0.34 0.025 250 / 0.55), transparent 65%),
     linear-gradient(170deg, oklch(0.19 0.022 258 / 0.95), oklch(0.125 0.018 250 / 0.7));
@@ -587,11 +631,60 @@ html, body { background: oklch(0.97 0.02 230); }
   to   { opacity: 1; transform: none; }
 }
 
-@keyframes astro-fade {
+/* The astro tab switch. Coordinates are SVG user units on the 320x76 viewBox;
+   the clip path ends at the horizon, so a body past it has set. */
+/* The astro tab switch. The body travels the arc it is drawn on: `offset-path`
+   is set inline from the same `d`, and 50% of that path is the apex. One body
+   sets at the right marker, the next rises at the left — both westward, and
+   both half under the horizon clip at the ends. */
+.astro-body {
+  transform: translate(160px, 36px);
+}
+@supports (offset-distance: 50%) {
+  .astro-body {
+    transform: none;
+    offset-distance: 50%;
+    offset-rotate: 0deg;
+  }
+}
+/* The fade is the last third of each descent and the first fifth of each
+   climb — extinction into the horizon haze, not a crossfade. */
+@keyframes astro-body-set {
+  from { offset-distance: 50%;  opacity: 1; }
+  62%  { opacity: 1; }
+  to   { offset-distance: 100%; opacity: 0; }
+}
+@keyframes astro-body-rise {
+  from { offset-distance: 0%;  opacity: 0; }
+  12%  { opacity: 1; }
+  to   { offset-distance: 50%; opacity: 1; }
+}
+/* The reduced-motion substitute for the rise. */
+@keyframes astro-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-.astro-fade { animation: astro-fade 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* The side info, whose two views are different shapes and so cannot churn. It
+   is out before `drawn` swaps its content, and takes twice as long to return. */
+.astro-info {
+  transition: opacity 0.52s cubic-bezier(0.33, 1, 0.68, 1);
+}
+.astro-info[data-leaving] {
+  opacity: 0;
+  transition: opacity 0.26s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+
+/* Leaving the apex starts slow and accelerates into the horizon; arriving does
+   the reverse. SET_MS in `astro-card.tsx` is 40 ms short of the set, to cover
+   the render the swap costs — by then the body is at 95% and nearly gone. */
+.astro-body-set  { animation: astro-body-set  0.32s cubic-bezier(0.55, 0.085, 0.68, 0.53) both; }
+.astro-body-rise { animation: astro-body-rise 0.62s cubic-bezier(0.33, 1, 0.68, 1) both; }
+
+/* The arc stays; it is the track. Only its colour follows the body. */
+.astro-arc  { transition: opacity 0.42s ease; }
+.astro-node { transition: fill 0.42s ease; }
+
 .swap-in { animation: swap-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .swap-d-1 { animation-delay: 0.00s; }
 .swap-d-2 { animation-delay: 0.05s; }
@@ -1112,12 +1205,23 @@ html, body { background: oklch(0.97 0.02 230); }
   [data-slot="dialog-content"] > [data-slot="dialog-close"] {
     transition: none;
   }
-  /* All three start from opacity 0 with `both`; dropping the animation leaves
-     the element's own styles, which are the end state. */
+  /* Both start from opacity 0 with `both`; dropping the animation leaves the
+     element's own styles, which are the end state. */
   .rise,
-  .swap-in,
-  .astro-fade {
+  .swap-in {
     animation: none;
+  }
+  /* The switch keeps an acknowledgement, without the travel along the arc.
+     `drawn` updates in the same tick, so the body never leaves the apex. */
+  .astro-body-set {
+    animation: none;
+  }
+  .astro-body-rise {
+    animation: astro-fade-in 0.3s ease-out both;
+  }
+  .astro-arc,
+  .astro-node {
+    transition: none;
   }
   .start-action {
     transition: none;
