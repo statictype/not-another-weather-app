@@ -30,6 +30,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Test
         run: pnpm test:run
 

@@ -1,5 +1,14 @@
 # RFC 011 — Unify mobile/desktop search menu, fix focus model
 
+> **Status note (issue 010).** The core result stands: one `<Input>`, one
+> `useSearchMenu`, one `<Menu>` renderer, `buildMenuModel` as a pure ladder.
+> Superseded is narrower — the mobile overlay geometry, the `SLIDE_*` slide over
+> the mark, the Cancel button, and the focus-derived open model. `useSearchMenu`
+> is now controlled: it takes `onClose`, reports selections through `onCommit`,
+> and `isFocused` is gone from it entirely. The field lives in the nav panel and
+> unmounts with it, so the no-remount constraint this RFC was built around no
+> longer applies.
+
 ## Context
 
 After RFC 002 split `search-bar.tsx` by responsibility, a follow-up pass

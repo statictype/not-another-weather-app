@@ -115,6 +115,17 @@ const londonSuggestion: SuggestionItem = {
   url: "london-greater-london-united-kingdom",
 };
 
+/** Searching now starts with a trigger click — there is no field in the closed
+ *  bar. Both triggers render the same panel; only initial focus differs. */
+async function openSearch(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Search" }));
+  return screen.getByRole("searchbox");
+}
+
+async function openSettings(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Settings" }));
+}
+
 function renderAppAt(url: string) {
   __resetHistoryStoreForTests();
   __resetUnitSystemForTests("metric");
@@ -134,9 +145,10 @@ beforeEach(() => {
   __resetFirstRunForTests();
   window.history.replaceState(null, "", "/");
 
-  // Desktop layout: the mobile overlay remounts the input on focus.
+  // A 1100 px viewport: md and lg match, xl does not — the bar is a left rail
+  // and the panel is fullscreen.
   vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("min-width: 1024px"),
+    matches: query.includes("min-width: 768px") || query.includes("min-width: 1024px"),
     media: query,
     onchange: null,
     addListener: vi.fn(),
@@ -193,7 +205,7 @@ describe("Oasis (integration)", () => {
     const user = userEvent.setup();
     renderAppAt("/");
 
-    const input = screen.getByLabelText(/city/i);
+    const input = await openSearch(user);
     await user.type(input, "London");
 
     const suggestion = await screen.findByRole("button", { name: /search weather for london/i });
@@ -207,7 +219,10 @@ describe("Oasis (integration)", () => {
 
     await screen.findByRole("heading", { name: /london/i });
 
-    await user.click(input);
+    // The panel held until the query settled, then collapsed on success.
+    await waitFor(() => expect(screen.queryByRole("searchbox")).not.toBeInTheDocument());
+
+    await openSearch(user);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();
     });
@@ -233,19 +248,21 @@ describe("Oasis (integration)", () => {
 
     const user = userEvent.setup();
     renderAppAt("/");
-    const input = screen.getByLabelText(/city/i);
 
     for (let i = 0; i < readings.length; i++) {
-      await user.click(input);
+      await openSearch(user);
       const myLocation = await screen.findByRole("button", { name: "My location" });
       await user.click(myLocation);
       await waitFor(() => {
         expect(new URL(window.location.href).searchParams.get("city")).toBeTruthy();
       });
       await screen.findByRole("heading", { name: /london/i });
+      // A repeat read resolves to the coordinates already in the URL; the hold
+      // settles on that rather than waiting for a change that never comes.
+      await waitFor(() => expect(screen.queryByRole("searchbox")).not.toBeInTheDocument());
     }
 
-    await user.click(input);
+    await openSearch(user);
     const recentButtons = await screen.findAllByRole("button", {
       name: /load weather for/i,
     });
@@ -256,7 +273,7 @@ describe("Oasis (integration)", () => {
     const user = userEvent.setup();
     renderAppAt("/");
 
-    const input = screen.getByLabelText(/city/i);
+    const input = await openSearch(user);
     await user.type(input, "xyzgibberish");
     await user.keyboard("{Enter}");
 
@@ -266,32 +283,36 @@ describe("Oasis (integration)", () => {
     expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 
-  it("names the failed city under the search input when the lookup 404s", async () => {
+  it("names the failed city under the search field when the lookup 404s", async () => {
+    const user = userEvent.setup();
     renderAppAt("/?city=Llanfairpwllgwyngyll");
 
+    const input = await openSearch(user);
     const alert = screen.getByRole("alert");
     await waitFor(() => {
       expect(alert).toHaveTextContent(/no weather for “Llanfairpwllgwyngyll”/i);
     });
-    expect(screen.getByLabelText(/city/i)).toHaveAttribute("aria-describedby", alert.id);
+    expect(input).toHaveAttribute("aria-describedby", alert.id);
   });
 
   it("clears the input error once a real city lands", async () => {
     const user = userEvent.setup();
     renderAppAt("/?city=Nowhereville");
 
-    const alert = screen.getByRole("alert");
-    await waitFor(() => expect(alert).toHaveTextContent(/try a different spelling/i));
+    const input = await openSearch(user);
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(/try a different spelling/i);
+    });
 
-    const input = screen.getByLabelText(/city/i);
     await user.type(input, "London");
     await user.click(await screen.findByRole("button", { name: /search weather for london/i }));
 
     await screen.findByRole("heading", { name: /london/i });
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toBeEmptyDOMElement();
-    });
-    expect(screen.getByLabelText(/city/i)).not.toHaveAttribute("aria-describedby");
+    await waitFor(() => expect(screen.queryByRole("searchbox")).not.toBeInTheDocument());
+
+    const reopened = await openSearch(user);
+    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+    expect(reopened).not.toHaveAttribute("aria-describedby");
   });
 
   it("paints the hero before the forecast", async () => {
@@ -339,6 +360,7 @@ describe("Oasis (integration)", () => {
     expect(screen.getByRole("img", { name: "14 kilometres per hour" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "1015 millibars" })).toBeInTheDocument();
 
+    await openSettings(user);
     await user.click(screen.getByRole("button", { name: /imperial units/i }));
 
     // Every figure churns to its new reading over the sweep in `scramble.ts`,
@@ -365,6 +387,7 @@ describe("Oasis (integration)", () => {
 
     const before = [sentence().length, beaufort().length, band().textContent, needle()];
 
+    await openSettings(user);
     await user.click(screen.getByRole("button", { name: /imperial units/i }));
 
     expect([sentence().length, beaufort().length, band().textContent, needle()]).toEqual(before);
@@ -389,8 +412,7 @@ describe("Oasis (integration)", () => {
     renderAppAt("/?city=London");
 
     await screen.findByRole("heading", { name: /london/i });
-    const input = screen.getByLabelText(/city/i);
-    await user.click(input);
+    await openSearch(user);
     await screen.findByRole("button", { name: /load weather for london/i });
 
     const removeBtn = await screen.findByRole("button", { name: /remove london/i });
@@ -403,7 +425,6 @@ describe("Oasis (integration)", () => {
     const undoBtn = await screen.findByRole("button", { name: /^undo$/i });
     await user.click(undoBtn);
 
-    await user.click(input);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /load weather for london/i })).toBeInTheDocument();
     });

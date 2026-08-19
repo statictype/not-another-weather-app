@@ -19,23 +19,25 @@ export interface UseSearchMenuArgs {
   onLocationRequest: () => void;
   onRandomSelect: () => void;
   onValueChange?: (next: string) => void;
+  /** Fires after any row runs, with the row that ran. The owner decides what
+   *  happens to the panel — the hook never closes on a selection. */
+  onCommit?: (item: NavigableItem) => void;
+  /** The close control, Escape and the scrim. Clears the value first. */
+  onClose: () => void;
 }
 
 export interface UseSearchMenuReturn {
   value: string;
-  isOpen: boolean;
   model: MenuModel;
   focusedKey: string | null;
   inputRef: RefObject<HTMLInputElement | null>;
   inputProps: {
     value: string;
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-    onFocus: () => void;
-    onBlur: () => void;
     onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
   };
   formProps: { onSubmit: (e: FormEvent<HTMLFormElement>) => void };
-  cancel: () => void;
+  close: () => void;
   hoverKey: (key: string | null) => void;
   /** Wired to row onMouseDown so the row owns its own preventDefault. */
   selectRecent: (item: HistoryItem) => void;
@@ -46,10 +48,14 @@ export interface UseSearchMenuReturn {
   setDialogOpen: (open: boolean) => void;
 }
 
+/**
+ * Controlled. Open state belongs to the nav shell: two triggers open this panel
+ * with different focus intent and one of them never touches the input, so
+ * `isFocused` cannot be the open signal. Blur does not close.
+ */
 export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -66,9 +72,6 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
       ? selectedKey
       : model.defaultFocusKey;
 
-  // The dialog traps focus, blurring the input; treat it as a held-open signal.
-  const isOpen = isFocused || isDialogOpen;
-
   const updateValue = (next: string) => {
     setValue(next);
     args.onValueChange?.(next);
@@ -77,8 +80,7 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
   const close = () => {
     updateValue("");
     setSelectedKey(null);
-    setIsFocused(false);
-    inputRef.current?.blur();
+    args.onClose();
   };
 
   const moveFocus = (delta: 1 | -1) => {
@@ -111,12 +113,11 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
     } else {
       args.onRandomSelect();
     }
-    close();
+    args.onCommit?.(item);
   };
 
   return {
     value,
-    isOpen,
     model,
     focusedKey,
     inputRef,
@@ -126,8 +127,6 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
         updateValue(e.target.value);
         setSelectedKey(null);
       },
-      onFocus: () => setIsFocused(true),
-      onBlur: () => setIsFocused(false),
       onKeyDown: (e) => {
         if (e.key === "ArrowDown") {
           e.preventDefault();
@@ -147,7 +146,7 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
         runFocused();
       },
     },
-    cancel: close,
+    close,
     hoverKey: setSelectedKey,
     selectRecent: (item) => runItem({ kind: "recent", key: `recent:${item.id}`, item }),
     selectSuggestion: (item) => runItem({ kind: "suggestion", key: `suggestion:${item.id}`, item }),

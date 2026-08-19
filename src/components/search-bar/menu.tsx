@@ -10,18 +10,12 @@ import { lazy, Suspense } from "react";
 import { LayoutGroup, motion } from "motion/react";
 import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
+import { PILL_SPRING } from "@/lib/motion/constants";
 import { cn } from "@/lib/utils";
 import type { MenuModel, MenuSection, NavigableItem } from "./menu-model";
 import { SectionHeader } from "./section-header";
 
 const ClearAllButton = lazy(() => import("./clear-all-button"));
-
-const PILL_TRANSITION = {
-  type: "spring" as const,
-  stiffness: 480,
-  damping: 36,
-  mass: 0.7,
-};
 
 interface MenuProps {
   model: MenuModel;
@@ -191,7 +185,7 @@ function FocusPill() {
     <motion.div
       layoutId="search-focus-pill"
       className="search-focus-pill absolute inset-0 rounded-xl"
-      transition={PILL_TRANSITION}
+      transition={PILL_SPRING}
       aria-hidden="true"
     />
   );

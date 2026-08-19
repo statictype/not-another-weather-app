@@ -30,10 +30,18 @@ src/
 │   ├── use-unit-system.ts       # In-module pub/sub over localStorage — °C/°F, defaulted from the locale's region
 │   └── use-history/             # Reducer + in-module pub/sub over localStorage
 ├── components/
+│   ├── nav/               # The bar and the panel it expands into — one node, two roles
+│   │   ├── index.tsx            # shell: role swap, focus return, Escape, scrim, hold-until-settled
+│   │   ├── contract.ts          # placement table + geometry + ids; what the browser suite asserts
+│   │   ├── nav-bar.tsx          # bar contents: the mark and the two triggers, four geometries
+│   │   ├── nav-panel.tsx        # field, Menu, unit-toggle footer — mounts and unmounts with open
+│   │   ├── nav-trigger.tsx      # icon button, aria-expanded / aria-controls
+│   │   ├── pending-selection.ts # pure: does the panel hold, close, or show the error inline
+│   │   └── use-nav-placement.ts # three matchMedia subscriptions → NavPlacement
 │   ├── search-bar/        # Composite search input — single Input + useSearchMenu state machine + one Menu renderer
 │   │   ├── index.tsx            # public re-export
-│   │   ├── search-bar.tsx       # composition: form + Input (always in flow) + mobile-overlay backdrop
-│   │   ├── use-search-menu.ts   # state machine: value, isFocused, selectedKey, commit-then-close
+│   │   ├── search-field.tsx     # composition: form + Input + inline error, rendered inside the panel
+│   │   ├── use-search-menu.ts   # state machine: value, selectedKey, commit; controlled open
 │   │   ├── menu-model.ts        # pure buildMenuModel(args) + types — the test surface for the branching ladder
 │   │   ├── menu.tsx             # one Menu component, CSS-driven across breakpoints (no variant prop)
 │   │   ├── constants.ts         # MIN_SUGGESTION_LENGTH
@@ -89,7 +97,9 @@ src/
 - **Autocomplete is the debounced surface, weather fetches are not.** Suggestions (`/api/search`) fire 300 ms after idle typing, gated at 3 chars. The actual weather fetch only fires when the URL changes — selecting a suggestion, picking from recent history, geolocation, or "surprise me". TanStack Query dedupes identical keys and `placeholderData: keepPreviousData` keeps the previous successful card on screen while a new fetch is in flight.
 - **History via `useSyncExternalStore`.** localStorage is React's textbook "external store." Every `useHistory()` consumer subscribes to the same in-module pub/sub, so deletions in one component re-render the others without prop drilling or Context. Cross-tab updates are wired through the native `storage` event. All four history transitions (`add` / `remove` / `clear` / `restore`) live as pure functions in `src/hooks/use-history/reducer.ts` — the hook is plumbing on top. See RFC 010.
 - **`useReversibleHistory` owns the remove + undo + toast story.** Composes `useHistory` + `useUndo` and the sonner toast call so App.tsx gets a single function per destructive action (`removeWithUndo`, `clearAllWithUndo`). The ordering invariant (mutate → stage → toast → wire) is sealed inside the hook; sonner is hard-wired because it's the project's only toast lib and this file is the seam for any swap. See RFC 010.
-- **Search bar — one Input, one state machine, one renderer.** `useSearchMenu` owns input value, focus, and selectedKey; `buildMenuModel` is the pure branching ladder (recents / keep-typing / suggestions / no-results / actions) tested in isolation; `<Menu>` renders the model with breakpoint-driven CSS — no `variant` prop. The input wrapper stays in document flow on every state so y-position is stable across focus/blur; the mobile overlay is a glass backdrop sitting _below_ the page header (emoji + input stay visible above it) plus a Cancel button that slides in with motion `layout`. The default focused row is the first city match on both platforms, so Enter always runs the obvious target (no "Select a city from the list" prompt). See RFC 011.
+- **Search bar — one Input, one state machine, one renderer.** `useSearchMenu` owns input value and selectedKey; `buildMenuModel` is the pure branching ladder (recents / keep-typing / suggestions / no-results / actions) tested in isolation; `<Menu>` renders the model with breakpoint-driven CSS — no `variant` prop. The default focused row is the first city match on both platforms, so Enter always runs the obvious target (no "Select a city from the list" prompt). See RFC 011. Issue 010 made the hook controlled and moved the field into the nav panel: there is no input in the closed chrome, so there is no in-flow wrapper, no mobile overlay and no Cancel button.
+- **The nav bar is the menu.** One `position: fixed` element over the sky layer, on the bottom edge below 768, the top edge to 1023 and a left rail above that. Opening springs its box from `barGeometry` to `panelGeometry` — fullscreen below 1280, a 420 px rail beside the grid above it — and swaps `<nav aria-label="Main">` for `role="dialog" aria-modal="true"` on the same node. Radix `Dialog` is not used because it portals its content and owns the mount, which would make the panel a different element from the bar. `<main>` carries `inert` while the panel is open, so no focus trap is needed. The placement table, the pixel geometry and the element ids live in `src/components/nav/contract.ts` and are asserted against real `getBoundingClientRect()` numbers by the `browser` vitest project. See issue 010.
+- **Selecting a city holds the panel open until the query settles.** `resolveHold` in `src/components/nav/pending-selection.ts` is pure: it waits for the URL to catch up with the selection, then for the query behind it. Success collapses the panel; any error keeps it up and renders the message where `search-error.tsx` renders it. `not_found`, `invalid_query` and `quota_exceeded` never retry, so a city that does not exist settles in one round trip.
 
 ## Gotchas
 

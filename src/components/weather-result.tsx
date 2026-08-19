@@ -10,6 +10,7 @@ interface WeatherResultProps {
   query: UseWeatherResult;
   activeQuery: string | null;
   onRetry: () => void;
+  onSearchRequest: () => void;
   onLocationRequest: () => void;
   onRandomSelect: () => void;
   onCitySelect: (query: string) => void;
@@ -19,6 +20,7 @@ export function WeatherResult({
   query,
   activeQuery,
   onRetry,
+  onSearchRequest,
   onLocationRequest,
   onRandomSelect,
   onCitySelect,
@@ -55,6 +57,7 @@ export function WeatherResult({
 
   return (
     <EmptyState
+      onSearchRequest={onSearchRequest}
       onLocationRequest={onLocationRequest}
       onRandomSelect={onRandomSelect}
       onCitySelect={onCitySelect}

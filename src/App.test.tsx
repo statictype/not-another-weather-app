@@ -15,14 +15,17 @@ function renderApp() {
 }
 
 describe("App (smoke)", () => {
-  it("renders the header and the inviting empty state", () => {
+  it("renders the mark and the inviting empty state", () => {
     renderApp();
     expect(screen.getByRole("heading", { name: /weather/i, level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 
-  it("renders the search input with a label", () => {
+  it("closed, the bar is a nav carrying the two triggers and no field", () => {
     renderApp();
-    expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 });

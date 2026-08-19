@@ -1,27 +1,11 @@
-import { motion } from "motion/react";
 import { TabButton } from "@/components/tab-button";
 import { useUnitSystemControl } from "@/hooks/use-unit-system";
 
-interface UnitToggleProps {
-  /** The mobile search overlay spans the full header, so the toggle gives its
-   *  width back for as long as that surface is open. */
-  collapsed: boolean;
-}
-
-const collapseTransition = { type: "spring" as const, stiffness: 400, damping: 30 };
-
-export function UnitToggle({ collapsed }: UnitToggleProps) {
+export function UnitToggle() {
   const [system, setSystem] = useUnitSystemControl();
 
   return (
-    <motion.div
-      role="group"
-      aria-label="Units"
-      className="flex shrink-0 flex-col items-center gap-0.5 overflow-hidden sm:flex-row"
-      initial={false}
-      animate={{ width: collapsed ? 0 : "auto", opacity: collapsed ? 0 : 1 }}
-      transition={collapseTransition}
-    >
+    <div role="group" aria-label="Units" className="flex shrink-0 flex-row items-center gap-0.5">
       <TabButton
         active={system === "metric"}
         onClick={() => setSystem("metric")}
@@ -36,6 +20,6 @@ export function UnitToggle({ collapsed }: UnitToggleProps) {
       >
         <span className="text-sm tracking-tight">°F</span>
       </TabButton>
-    </motion.div>
+    </div>
   );
 }

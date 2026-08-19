@@ -15,7 +15,7 @@ beforeEach(() => {
 
 describe("UnitToggle", () => {
   it("names the group and each option by what the control does", () => {
-    render(<UnitToggle collapsed={false} />);
+    render(<UnitToggle />);
 
     expect(screen.getByRole("group", { name: "Units" })).toBeInTheDocument();
     expect(metric()).toHaveTextContent("°C");
@@ -24,7 +24,7 @@ describe("UnitToggle", () => {
 
   it("reflects the active system through aria-pressed", async () => {
     const user = userEvent.setup();
-    render(<UnitToggle collapsed={false} />);
+    render(<UnitToggle />);
 
     expect(metric()).toHaveAttribute("aria-pressed", "true");
     expect(imperial()).toHaveAttribute("aria-pressed", "false");

@@ -2,8 +2,9 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { MotionConfig } from "motion/react";
 import { toast } from "sonner";
 import type { SuggestionItem } from "@/api/types";
-import { SearchBar } from "@/components/search-bar";
-import { UnitToggle } from "@/components/unit-toggle";
+import { type LocationCallbacks, Nav, type NavIntent } from "@/components/nav";
+import { mainPadding } from "@/components/nav/contract";
+import { useNavPlacement } from "@/components/nav/use-nav-placement";
 
 const Toaster = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,9 +20,12 @@ import { pickRandomCity } from "@/lib/random-cities";
 
 export function App() {
   const [inputValue, setInputValue] = useState("");
-  const [isSearchOverlayOpen, setSearchOverlayOpen] = useState(false);
+  // Open state lives here rather than in `Nav` because the empty state's
+  // "Search a city" row is a third way in, and `<main>` reads it for `inert`.
+  const [navIntent, setNavIntent] = useState<NavIntent | null>(null);
 
   const activeQuery = useSearchParam("city");
+  const placement = useNavPlacement();
 
   const { history, add: addHistory, removeWithUndo, clearAllWithUndo } = useReversibleHistory();
 
@@ -54,9 +58,10 @@ export function App() {
     setSearchParam("city", item.query);
   };
 
-  const handleLocationRequest = useCallback(() => {
+  const handleLocationRequest = useCallback((callbacks?: LocationCallbacks) => {
     if (!navigator.geolocation) {
       toast("Geolocation is not supported by your browser");
+      callbacks?.onFailure?.();
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -64,16 +69,21 @@ export function App() {
         // ~100m, coarser than GPS noise, so repeated reads dedupe in history.
         const lat = position.coords.latitude.toFixed(3);
         const lon = position.coords.longitude.toFixed(3);
-        setSearchParam("city", `${lat},${lon}`);
+        const query = `${lat},${lon}`;
+        setSearchParam("city", query);
+        callbacks?.onResolve?.(query);
       },
       () => {
         toast("Could not determine your location");
+        callbacks?.onFailure?.();
       },
     );
   }, []);
 
   const handleRandomSelect = useCallback(() => {
-    setSearchParam("city", pickRandomCity());
+    const city = pickRandomCity();
+    setSearchParam("city", city);
+    return city;
   }, []);
 
   const handleCitySelect = useCallback((city: string) => {
@@ -105,45 +115,49 @@ export function App() {
         >
           <div className={cn("sky", isNight && "night")} aria-hidden="true" />
 
-          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
-            <header className="relative z-30 mb-8 flex items-center gap-2 md:gap-6">
-              <h1 className="text-5xl sm:text-7xl shrink-0 leading-none" aria-label="Weather">
-                <span aria-hidden="true">😶‍🌫️</span>
-              </h1>
-              <div className="flex-1 min-w-0">
-                <SearchBar
-                  recentItems={history}
-                  suggestions={suggestions.data}
-                  isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
-                  error={query.error}
+          <Nav
+            intent={navIntent}
+            onOpen={setNavIntent}
+            onClose={() => setNavIntent(null)}
+            activeQuery={activeQuery}
+            settle={{
+              isFetching: query.isFetching,
+              isSuccess: query.isSuccess,
+              isPlaceholderData: query.isPlaceholderData,
+              hasError: query.error != null,
+            }}
+            error={query.error}
+            recentItems={history}
+            suggestions={suggestions.data}
+            isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
+            onValueChange={setInputValue}
+            onSuggestionSelect={handleSuggestionSelect}
+            onRecentSelect={handleHistorySelect}
+            onRecentRemove={removeWithUndo}
+            onRecentClearAll={clearAllWithUndo}
+            onLocationRequest={handleLocationRequest}
+            onRandomSelect={handleRandomSelect}
+          />
+
+          <div className="relative z-10 min-h-screen" style={mainPadding(placement)}>
+            <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
+              <main
+                className="rise rise-3 flex flex-1 flex-col"
+                aria-live="polite"
+                aria-busy={query.isFetching}
+                inert={navIntent !== null}
+              >
+                <WeatherResult
+                  query={query}
                   activeQuery={activeQuery}
-                  onValueChange={setInputValue}
-                  onSuggestionSelect={handleSuggestionSelect}
-                  onRecentSelect={handleHistorySelect}
-                  onRecentRemove={removeWithUndo}
-                  onRecentClearAll={clearAllWithUndo}
+                  onRetry={handleRetry}
+                  onSearchRequest={() => setNavIntent("search")}
                   onLocationRequest={handleLocationRequest}
                   onRandomSelect={handleRandomSelect}
-                  onOpenChange={setSearchOverlayOpen}
+                  onCitySelect={handleCitySelect}
                 />
-              </div>
-              <UnitToggle collapsed={isSearchOverlayOpen} />
-            </header>
-
-            <main
-              className="rise rise-3 flex flex-1 flex-col"
-              aria-live="polite"
-              aria-busy={query.isFetching}
-            >
-              <WeatherResult
-                query={query}
-                activeQuery={activeQuery}
-                onRetry={handleRetry}
-                onLocationRequest={handleLocationRequest}
-                onRandomSelect={handleRandomSelect}
-                onCitySelect={handleCitySelect}
-              />
-            </main>
+              </main>
+            </div>
           </div>
 
           <Suspense fallback={null}>

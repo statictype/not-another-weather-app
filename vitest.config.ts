@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineWorkersProject } from "@cloudflare/vitest-pool-workers/config";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
@@ -20,7 +21,25 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./src/test/setup.ts"],
           include: ["src/**/*.test.{ts,tsx}"],
-          exclude: ["src/worker/**", "src/worker.test.ts"],
+          exclude: ["src/worker/**", "src/worker.test.ts", "src/**/*.browser.test.tsx"],
+        },
+      },
+      // Browser project — real layout. Assertions are on numbers from
+      // getBoundingClientRect() and computed styles; there are no screenshots
+      // and no baseline images.
+      {
+        plugins: [react(), tailwindcss()],
+        resolve: { alias },
+        test: {
+          name: "browser",
+          include: ["src/**/*.browser.test.tsx"],
+          setupFiles: ["./src/test/setup.browser.ts"],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: "playwright",
+            instances: [{ browser: "chromium" }],
+          },
         },
       },
       // Worker project — runs in workerd via @cloudflare/vitest-pool-workers.

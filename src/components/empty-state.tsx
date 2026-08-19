@@ -1,14 +1,22 @@
-import { LocateFixedIcon, ShuffleIcon } from "lucide-react";
+import { LocateFixedIcon, SearchIcon, ShuffleIcon } from "lucide-react";
 import { hasVisitedBefore } from "@/lib/first-run";
 import { STARTER_CITIES } from "@/lib/random-cities";
 
 interface EmptyStateProps {
+  /** Opens the nav panel with the field focused. Without it a first visit with
+   *  no `?city=` has no visible typing affordance. */
+  onSearchRequest: () => void;
   onLocationRequest: () => void;
   onRandomSelect: () => void;
   onCitySelect: (query: string) => void;
 }
 
-export function EmptyState({ onLocationRequest, onRandomSelect, onCitySelect }: EmptyStateProps) {
+export function EmptyState({
+  onSearchRequest,
+  onLocationRequest,
+  onRandomSelect,
+  onCitySelect,
+}: EmptyStateProps) {
   const returning = hasVisitedBefore();
 
   return (
@@ -19,6 +27,7 @@ export function EmptyState({ onLocationRequest, onRandomSelect, onCitySelect }: 
         </h2>
 
         <div className="flex flex-col gap-3 sm:flex-row">
+          <StartAction icon={SearchIcon} label="Search a city" onSelect={onSearchRequest} />
           <StartAction
             icon={LocateFixedIcon}
             label="Use my location"
