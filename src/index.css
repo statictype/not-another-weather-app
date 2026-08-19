@@ -190,8 +190,8 @@ html, body { background: oklch(0.97 0.02 230); }
 
 .search-surface {
   background: oklch(1 0 0 / 0.45);
-  backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid oklch(1 0 0 / 0.35);
   box-shadow:
     0 1px 0 0 oklch(1 0 0 / 0.3) inset;
@@ -225,8 +225,8 @@ html, body { background: oklch(0.97 0.02 230); }
    the same act, moved to the middle of the page. */
 .start-action {
   background: oklch(1 0 0 / 0.45);
-  backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid oklch(1 0 0 / 0.35);
   box-shadow:
     0 1px 0 0 oklch(1 0 0 / 0.3) inset,
@@ -572,8 +572,8 @@ html, body { background: oklch(0.97 0.02 230); }
 .glass-panel {
   background:
     linear-gradient(180deg, oklch(1 0 0 / 0.88), oklch(1 0 0 / 0.74));
-  backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid oklch(1 0 0 / 0.7);
   box-shadow:
     0 1px 0 0 oklch(1 0 0 / 0.7) inset,
@@ -598,8 +598,8 @@ html, body { background: oklch(0.97 0.02 230); }
    takes the overlay reach. Four rules, because there are two cascades. */
 .nav-surface {
   background: linear-gradient(180deg, oklch(1 0 0 / 0.82), oklch(1 0 0 / 0.64));
-  backdrop-filter: blur(24px) saturate(155%);
   -webkit-backdrop-filter: blur(24px) saturate(155%);
+  backdrop-filter: blur(24px) saturate(155%);
   border: 1px solid oklch(1 0 0 / 0.6);
   box-shadow:
     0 1px 0 0 oklch(1 0 0 / 0.6) inset,
@@ -611,8 +611,8 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 .nav-surface[data-open="true"] {
   background: linear-gradient(180deg, oklch(1 0 0 / 0.88), oklch(1 0 0 / 0.74));
-  backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
   border-color: oklch(1 0 0 / 0.7);
   box-shadow:
     0 1px 0 0 oklch(1 0 0 / 0.7) inset,
@@ -726,8 +726,8 @@ html, body { background: oklch(0.97 0.02 230); }
 
 .mobile-search-overlay {
   background: oklch(0.97 0.02 230 / 0.85);
-  backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
 }
 .night .mobile-search-overlay {
   background: oklch(0.13 0.008 250 / 0.85);
@@ -899,8 +899,8 @@ html, body { background: oklch(0.97 0.02 230); }
   border: 1px solid var(--hour-step-rim);
   border-radius: 999px;
   background: var(--hour-step-fill);
-  backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
   box-shadow: 0 8px 20px -8px oklch(0.3 0.12 240 / 0.28);
   color: var(--foreground);
   opacity: 0;
@@ -1064,14 +1064,15 @@ html, body { background: oklch(0.97 0.02 230); }
 }
 
 
-/* The nav panel scrims with the dialogs. One rule, so a fix reaches all three
-   — `backdrop-filter` is dropped by the production build today. */
+/* The nav panel scrims with the dialogs — one rule, one blur to keep in step.
+   The prefixed declaration comes first here and everywhere else in this file:
+   Lightning CSS collapses the pair to whichever is written last. */
 [data-slot="dialog-overlay"],
 [data-slot="alert-dialog-overlay"],
 .nav-scrim {
   background: oklch(0.34 0.055 250 / 0.34);
-  backdrop-filter: blur(6px) saturate(105%);
   -webkit-backdrop-filter: blur(6px) saturate(105%);
+  backdrop-filter: blur(6px) saturate(105%);
 }
 .night [data-slot="dialog-overlay"],
 .night [data-slot="alert-dialog-overlay"],
