@@ -1,15 +1,15 @@
 # Issue 008 — Motion foundation
 
 **Status:** Not started
-**Blocks:** 009, 010, 011
+**Blocks:** 009, 011
 **Source:** original item 1 — the shared plumbing
 
 ## Problem
 
-Three separate pieces of motion work are queued. All three need the same four
+Two pieces of motion work are queued, 009 and 011. Both need the same three
 things, none of which exist: a way to keep components mounted across a city
-change, a reduced-motion policy, an assistive-technology policy for text that
-animates, and the value-animation primitives themselves.
+change, an assistive-technology policy for text that animates, and the
+value-animation primitives themselves.
 
 ### No dependency is being added
 
@@ -32,13 +32,6 @@ the astro tile's sun/moon view, and the hourly strip's scroll position. That is
 intended.
 Switching cities should not reset how the reader is reading.
 
-### No reduced-motion handling exists anywhere
-
-`index.css:398-421` defines `rise`, `swap-in` and `astro-fade` with no
-`prefers-reduced-motion` guard. This is already a gap; adding scrambles, rolls
-and morphs on top makes it a live accessibility regression against a project
-that holds a Lighthouse accessibility score of 100.
-
 ## Decision
 
 ### 1. Remove the remount key
@@ -49,29 +42,16 @@ what they did. Keep `aria-busy={isStale}`.
 
 ### 2. Reduced-motion policy
 
-`useReducedMotion()` from `motion/react` gates every transform, scale, scramble,
-digit roll and path morph. **Opacity crossfades survive** — the guideline
-targets movement and scaling, which are the vestibular triggers; fading is not
-one.
+`useReducedMotion()` from `motion/react` gates every scramble, digit roll and
+path morph. **Opacity crossfades survive** — the guideline targets movement and
+scaling, which are the vestibular triggers; fading is not one.
 
-Retrofit `index.css` in the same commit:
-
-```css
-@media (prefers-reduced-motion: reduce) {
-  .rise,
-  .swap-in,
-  .astro-fade {
-    animation: none;
-  }
-}
-```
-
-Reduced motion is not a degraded experience here — content still transitions,
-it just does not move.
+`index.css` needs nothing. Its four `prefers-reduced-motion: reduce` blocks
+already cover the CSS animations.
 
 ### 3. Assistive technology policy
 
-`App.tsx` puts `aria-live="polite"` on `<main>`, wrapping the entire result.
+`App.tsx:135` puts `aria-live="polite"` on `<main>`, wrapping the entire result.
 Any subtree change announces, which is already aggressive and becomes unusable
 once values animate: a digit rolling from 4 to 19 would announce fifteen times.
 
@@ -92,15 +72,14 @@ once values animate: a digit rolling from 4 to 19 would announce fifteen times.
 | `RollingNumber` | `<RollingNumber value={n} format={fn} />` | `animate()` on a `MotionValue` + `useTransform`, rendered as a motion child so the digits update without a React re-render. Under reduced motion, renders `value` directly.                 |
 | `AnimatedText`  | `<AnimatedText value={s} />`              | Wraps `useScramble` and owns the `aria-hidden` + `sr-only` pairing so no call site can forget it.                                                                                           |
 
-Springs, durations and stagger step live in one exported constants module.
-`search-bar.tsx:30-32` and `menu.tsx:12` already define spring configs inline;
-fold them into the same module so the app has one motion vocabulary.
+Springs and durations come from `src/lib/motion/constants.ts`, landed by 010.
+This issue adds the stagger step to it.
 
 ## Acceptance criteria
 
 - No component uses `key` to force a remount on data change.
-- With `prefers-reduced-motion: reduce`, no element translates, scales, rotates,
-  scrambles or rolls; crossfades still run; the CSS animations are off.
+- With `prefers-reduced-motion: reduce`, nothing scrambles, rolls or morphs;
+  crossfades still run.
 - A screen reader announces a city change once, not per frame, and never
   announces scrambled characters.
 - Bundle size does not grow beyond the cost of the new source files — assert no
@@ -110,6 +89,6 @@ fold them into the same module so the app has one motion vocabulary.
 
 ## Out of scope
 
-Any actual visible transition. 008 lands the plumbing; 009, 010 and 011 spend
-it. Landing 008 alone should produce no visual change except the removal of the
+Any actual visible transition. 008 lands the plumbing; 009 and 011 spend it.
+Landing 008 alone should produce no visual change except the removal of the
 `.swap-in` cascade.
