@@ -12,9 +12,11 @@ import {
   REDUCED_MOTION_FADE,
   SCRIM_FADE,
 } from "@/lib/motion/constants";
-import { cn } from "@/lib/utils";
 import {
+  BAR_THICKNESS,
   barGeometry,
+  type NavPlacement,
+  PANEL_RADIUS,
   NAV_LABEL_CLOSED,
   NAV_LABEL_OPEN,
   NAV_PANEL_ID,
@@ -22,9 +24,21 @@ import {
   panelGeometry,
 } from "./contract";
 import { NavBar } from "./nav-bar";
+import { NavGeometryContext } from "./nav-geometry";
+import { BarLayer, NavMark, PanelLayer } from "./nav-layers";
 import { type NavIntent, NavPanel } from "./nav-panel";
 import { type PendingSelection, resolveHold, type SettleState } from "./pending-selection";
+import { useDismissDrag } from "./use-dismiss-drag";
 import { useNavPlacement } from "./use-nav-placement";
+
+/** Closed the bar is a pill; open it takes the dialog corner, or none at all
+ *  when it runs edge to edge. A fullscreen panel pulled away from its edge by a
+ *  dismiss drag takes the dialog corner too, because its edge is now visible. */
+function containerRadius(placement: NavPlacement, isOpen: boolean, isDragging: boolean): number {
+  if (!isOpen) return BAR_THICKNESS / 2;
+  if (placement.panel === "partial") return PANEL_RADIUS;
+  return isDragging ? PANEL_RADIUS : 0;
+}
 
 export type { NavIntent };
 
@@ -104,7 +118,11 @@ export function Nav(props: NavProps) {
   // state's "Search a city" row.
   useEffect(() => {
     if (isOpen) {
-      openerRef.current = document.activeElement as HTMLElement | null;
+      // The panel's own initial focus has already landed by the time this runs,
+      // so anything inside the nav is never the opener — the trigger that was
+      // clicked is covered by the fallback below.
+      const active = document.activeElement as HTMLElement | null;
+      openerRef.current = active?.closest(`#${NAV_ROOT_ID}`) ? null : active;
       return;
     }
     setPending(null);
@@ -169,6 +187,13 @@ export function Nav(props: NavProps) {
   };
 
   const geometry = isOpen ? panelGeometry(placement) : barGeometry(placement);
+  const transition = reduced ? REDUCED_MOTION_FADE : isOpen ? EXPAND_SPRING : COLLAPSE_SPRING;
+
+  const dismiss = useDismissDrag({
+    axis: placement.drag,
+    enabled: isOpen && !reduced,
+    onDismiss: props.onClose,
+  });
 
   return (
     <>
@@ -176,67 +201,75 @@ export function Nav(props: NavProps) {
         {isOpen && (
           <motion.div
             key="nav-scrim"
-            className="nav-scrim fixed inset-0 z-40 bg-foreground/10"
+            className="nav-scrim fixed inset-0 z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={SCRIM_FADE}
+            transition={reduced ? REDUCED_MOTION_FADE : SCRIM_FADE}
             onClick={props.onClose}
             aria-hidden="true"
           />
         )}
       </AnimatePresence>
 
-      <motion.nav
-        id={NAV_ROOT_ID}
-        layout={!reduced}
-        initial={false}
-        transition={reduced ? REDUCED_MOTION_FADE : isOpen ? EXPAND_SPRING : COLLAPSE_SPRING}
-        style={{ position: "fixed", ...geometry }}
-        className={cn(
-          "glass-panel z-50 overflow-hidden",
-          isOpen
-            ? placement.panel === "partial"
-              ? "rounded-3xl"
-              : "rounded-none"
-            : "rounded-full",
-        )}
-        {...(isOpen
-          ? { role: "dialog" as const, "aria-modal": true, "aria-label": NAV_LABEL_OPEN }
-          : { "aria-label": NAV_LABEL_CLOSED })}
+      <NavGeometryContext
+        value={{ placement, containerIsPanel: isOpen, reduced: reduced === true, transition }}
       >
-        <div id={NAV_PANEL_ID} className="h-full w-full">
-          {props.intent === null ? (
-            <NavBar
-              placement={placement}
-              isOpen={false}
-              onOpenSearch={() => props.onOpen("search")}
-              onOpenSettings={() => props.onOpen("settings")}
-              searchRef={searchRef}
-              settingsRef={settingsRef}
-            />
-          ) : (
-            <NavPanel
-              intent={props.intent}
-              placement={placement}
-              recentItems={props.recentItems}
-              suggestions={props.suggestions}
-              isSuggestionsLoading={props.isSuggestionsLoading}
-              errorMessage={errorMessage}
-              pending={pending}
-              onValueChange={props.onValueChange}
-              onSuggestionSelect={props.onSuggestionSelect}
-              onRecentSelect={props.onRecentSelect}
-              onRecentRemove={props.onRecentRemove}
-              onRecentClearAll={props.onRecentClearAll}
-              onLocationRequest={requestLocation}
-              onRandomSelect={selectRandom}
-              onCommit={commit}
-              onClose={props.onClose}
-            />
-          )}
-        </div>
-      </motion.nav>
+        <motion.nav
+          id={NAV_ROOT_ID}
+          layout={!reduced}
+          initial={false}
+          animate={{ borderRadius: containerRadius(placement, isOpen, dismiss.isDragging) }}
+          transition={transition}
+          style={{ position: "fixed", ...geometry }}
+          className="nav-surface z-50 overflow-hidden"
+          data-open={isOpen}
+          {...dismiss.containerProps}
+          {...(isOpen
+            ? { role: "dialog" as const, "aria-modal": true, "aria-label": NAV_LABEL_OPEN }
+            : { "aria-label": NAV_LABEL_CLOSED })}
+        >
+          <div id={NAV_PANEL_ID} className="h-full w-full">
+            <AnimatePresence initial={false}>
+              {props.intent === null ? (
+                <BarLayer key="bar">
+                  <NavBar
+                    placement={placement}
+                    isOpen={false}
+                    onOpenSearch={() => props.onOpen("search")}
+                    onOpenSettings={() => props.onOpen("settings")}
+                    searchRef={searchRef}
+                    settingsRef={settingsRef}
+                  />
+                </BarLayer>
+              ) : (
+                <PanelLayer key="panel" onPointerDown={dismiss.onPointerDown}>
+                  <NavPanel
+                    intent={props.intent}
+                    placement={placement}
+                    recentItems={props.recentItems}
+                    suggestions={props.suggestions}
+                    isSuggestionsLoading={props.isSuggestionsLoading}
+                    errorMessage={errorMessage}
+                    pending={pending}
+                    onValueChange={props.onValueChange}
+                    onSuggestionSelect={props.onSuggestionSelect}
+                    onRecentSelect={props.onRecentSelect}
+                    onRecentRemove={props.onRecentRemove}
+                    onRecentClearAll={props.onRecentClearAll}
+                    onLocationRequest={requestLocation}
+                    onRandomSelect={selectRandom}
+                    onCommit={commit}
+                    onClose={props.onClose}
+                  />
+                </PanelLayer>
+              )}
+            </AnimatePresence>
+
+            <NavMark isOpen={isOpen} />
+          </div>
+        </motion.nav>
+      </NavGeometryContext>
     </>
   );
 }

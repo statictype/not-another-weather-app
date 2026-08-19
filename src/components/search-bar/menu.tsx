@@ -20,6 +20,8 @@ const ClearAllButton = lazy(() => import("./clear-all-button"));
 interface MenuProps {
   model: MenuModel;
   focusedKey: string | null;
+  /** Row the panel is holding open for. Its well carries the indicator. */
+  pendingKey: string | null;
   hoverKey: (key: string | null) => void;
   selectRecent: (item: HistoryItem) => void;
   selectSuggestion: (item: SuggestionItem) => void;
@@ -35,7 +37,7 @@ export function Menu(props: MenuProps) {
   return (
     <LayoutGroup id="search-menu">
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex flex-1 flex-col overflow-y-auto px-3 pb-3 pt-4">
+        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain px-3 pt-4 pb-3">
           {props.model.sections.map((section, idx) => (
             <SectionRenderer key={sectionKey(section, idx)} section={section} {...props} />
           ))}
@@ -66,6 +68,7 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
               key={item.id}
               item={item}
               focused={props.focusedKey === `recent:${item.id}`}
+              pending={props.pendingKey === `recent:${item.id}`}
               hoverKey={props.hoverKey}
               onSelect={props.selectRecent}
               onRemove={props.onRecentRemove}
@@ -117,6 +120,7 @@ function SectionRenderer({ section, ...props }: { section: MenuSection } & MenuP
               key={item.id}
               item={item}
               focused={props.focusedKey === `suggestion:${item.id}`}
+              pending={props.pendingKey === `suggestion:${item.id}`}
               hoverKey={props.hoverKey}
               onSelect={props.selectSuggestion}
             />
@@ -180,6 +184,28 @@ function MenuEmpty({
   );
 }
 
+/** While the panel holds for a selection the row's well carries the wait, so
+ *  the indicator sits where the row's own icon was rather than beside it. */
+function RowWell({ icon: Icon, pending }: { icon: typeof ClockIcon; pending: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150",
+        pending ? "bg-foreground/10" : "bg-foreground/6 group-hover:bg-foreground/10",
+      )}
+    >
+      {pending ? (
+        <span
+          className="border-foreground/10 border-t-foreground size-3.5 rounded-full border-2 motion-safe:animate-spin"
+          aria-hidden="true"
+        />
+      ) : (
+        <Icon className="text-foreground/70 size-3.5" strokeWidth={1.75} aria-hidden="true" />
+      )}
+    </span>
+  );
+}
+
 function FocusPill() {
   return (
     <motion.div
@@ -194,12 +220,14 @@ function FocusPill() {
 function RecentRow({
   item,
   focused,
+  pending,
   hoverKey,
   onSelect,
   onRemove,
 }: {
   item: HistoryItem;
   focused: boolean;
+  pending: boolean;
   hoverKey: (key: string | null) => void;
   onSelect: (item: HistoryItem) => void;
   onRemove: (item: HistoryItem) => void;
@@ -217,18 +245,13 @@ function RecentRow({
         }}
         className="relative flex w-full items-center gap-3 px-3 py-3 pr-11 text-left focus-visible:outline-none"
         aria-label={`Load weather for ${item.displayName}`}
+        aria-busy={pending || undefined}
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/6 transition-colors duration-150 group-hover:bg-foreground/10">
-          <ClockIcon
-            className="size-3.5 text-foreground/70"
-            strokeWidth={1.75}
-            aria-hidden="true"
-          />
-        </span>
+        <RowWell icon={ClockIcon} pending={pending} />
         <span
           className={cn(
             "flex-1 truncate text-base tracking-tight transition-colors duration-150",
-            focused ? "text-foreground" : "text-foreground/70",
+            focused || pending ? "text-foreground" : "text-foreground/70",
           )}
         >
           {item.displayName}
@@ -246,6 +269,7 @@ function RecentRow({
           // Always visible on touch; hover-to-reveal on desktop.
           "opacity-100 lg:opacity-0 lg:group-hover:opacity-100",
           focused && "lg:opacity-100",
+          pending && "pointer-events-none opacity-0",
         )}
         aria-label={`Remove ${item.displayName} from history`}
       >
@@ -258,11 +282,13 @@ function RecentRow({
 function SuggestionRow({
   item,
   focused,
+  pending,
   hoverKey,
   onSelect,
 }: {
   item: SuggestionItem;
   focused: boolean;
+  pending: boolean;
   hoverKey: (key: string | null) => void;
   onSelect: (item: SuggestionItem) => void;
 }) {
@@ -281,19 +307,14 @@ function SuggestionRow({
         }}
         className="relative flex w-full items-center gap-3 px-3 py-3 text-left focus-visible:outline-none"
         aria-label={`Search weather for ${item.name}`}
+        aria-busy={pending || undefined}
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/6 transition-colors duration-150 group-hover:bg-foreground/10">
-          <MapPinIcon
-            className="size-3.5 text-foreground/70"
-            strokeWidth={1.75}
-            aria-hidden="true"
-          />
-        </span>
+        <RowWell icon={MapPinIcon} pending={pending} />
         <span className="flex min-w-0 flex-1 flex-col">
           <span
             className={cn(
               "truncate text-base tracking-tight transition-colors duration-150",
-              focused ? "text-foreground" : "text-foreground/70",
+              focused || pending ? "text-foreground" : "text-foreground/70",
             )}
           >
             {item.name}
@@ -313,6 +334,7 @@ function ActionFooter(props: MenuProps) {
           key={nav.key}
           nav={nav}
           focused={props.focusedKey === nav.key}
+          pending={props.pendingKey === nav.key}
           hoverKey={props.hoverKey}
           requestLocation={props.requestLocation}
           selectRandom={props.selectRandom}
@@ -326,6 +348,7 @@ function ActionFooter(props: MenuProps) {
 function ActionButton({
   nav,
   focused,
+  pending,
   hoverKey,
   requestLocation,
   selectRandom,
@@ -333,6 +356,7 @@ function ActionButton({
 }: {
   nav: NavigableItem;
   focused: boolean;
+  pending: boolean;
   hoverKey: (key: string | null) => void;
   requestLocation: () => void;
   selectRandom: () => void;
@@ -359,16 +383,31 @@ function ActionButton({
           handler();
         }}
         className="group flex h-full w-full items-center justify-center gap-2 px-3 py-4 focus-visible:outline-none lg:py-3.5"
+        aria-busy={pending || undefined}
       >
-        <Icon
+        {pending ? (
+          <span
+            className="border-foreground/10 border-t-foreground size-4 shrink-0 rounded-full border-2 motion-safe:animate-spin"
+            aria-hidden="true"
+          />
+        ) : (
+          <Icon
+            className={cn(
+              "text-foreground/70 size-4 shrink-0 motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:rotate-180",
+              focused && "motion-safe:rotate-180",
+            )}
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
+        )}
+        <span
           className={cn(
-            "size-4 shrink-0 text-foreground/70 motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:rotate-180",
-            focused && "motion-safe:rotate-180",
+            "text-sm tracking-tight transition-colors duration-150",
+            pending ? "text-foreground" : "text-foreground/70",
           )}
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
-        <span className="text-sm tracking-tight text-foreground/70">{label}</span>
+        >
+          {label}
+        </span>
       </button>
     </li>
   );

@@ -14,6 +14,8 @@ interface SearchFieldProps {
   inputRef: RefObject<HTMLInputElement | null>;
   inputProps: UseSearchMenuReturn["inputProps"];
   formProps: UseSearchMenuReturn["formProps"];
+  /** Leading slot in the field row — the space the nav mark occupies. */
+  leading?: ReactNode;
   /** Trailing slot in the field row — the panel's close control. */
   trailing?: ReactNode;
 }
@@ -27,6 +29,7 @@ export function SearchField({
   inputRef,
   inputProps,
   formProps,
+  leading,
   trailing,
 }: SearchFieldProps) {
   return (
@@ -37,7 +40,8 @@ export function SearchField({
         </label>
 
         <div className="flex items-center gap-3">
-          <div className="search-surface flex flex-1 items-center gap-3 rounded-[1.75rem] px-5 py-3">
+          {leading}
+          <div className="search-surface flex h-13 min-w-0 flex-1 items-center gap-3 rounded-[1.75rem] px-5">
             <SearchIcon
               className="size-5 shrink-0 text-foreground/70"
               strokeWidth={1.75}
@@ -55,7 +59,7 @@ export function SearchField({
               autoFocus={autoFocus}
               {...inputProps}
               aria-describedby={errorMessage ? errorId : undefined}
-              className="h-auto flex-1 border-0 bg-transparent p-0 text-xl font-normal tracking-tight shadow-none placeholder:text-foreground/70 focus-visible:ring-0"
+              className="placeholder:text-foreground/70 h-auto min-w-0 flex-1 border-0 bg-transparent p-0 text-xl font-normal tracking-tight shadow-none focus-visible:ring-0 disabled:opacity-100"
             />
           </div>
           {trailing}
