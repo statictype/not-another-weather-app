@@ -15,10 +15,10 @@ weather payload: `current` and `forecast`. Defined once as the
 renaming a tier is a one-row change on each side. See RFC 001.
 
 **Active city** — the city currently rendered. Driven entirely by the
-URL's `?city=` query param, read via `useSearchParam("city")`. Every
-weather fetch keys off this; no internal "current city" state exists.
-Bootstrapped from history on cold load via `replaceState` in `main.tsx`.
-See RFC 007.
+URL's `?city=` query param, written only by `selectCity` (see **City
+selection**) and read via `useSearchParam("city")`. Every weather fetch
+keys off this; no internal "current city" state exists. Bootstrapped
+from history on cold load via `replaceState` in `main.tsx`. See RFC 007.
 
 **Normalized query** — the canonical form of a user's city query:
 trimmed, lowercased, internal whitespace collapsed. Produced by
@@ -39,9 +39,28 @@ fetched debounced (300 ms) at a 3-char minimum via `useSuggestions`.
 
 ## State + flow
 
+**City selection** — turning a selection intent into the active city.
+`selectCity` (`src/lib/city-selection.ts`) is the only writer of
+`?city=`. It takes a `CitySelectionIntent` — `recent | suggestion |
+random | location | starter` — resolves it to a query, writes the URL,
+and returns what it committed, or `null` when the intent produced no
+city. Every intent resolves on a promise, including the four
+synchronous ones, so callers have one ordering to handle. The
+geolocation read, its ~100 m coarsening and both failure toasts live
+here; Sonner is hard-wired, as in **Reversible history**. The
+invariant: the query written to the URL and the query a caller waits
+for come from one call, so they cannot drift.
+
+**Pending selection** — the nav panel's hold on a selected row
+(`src/components/nav/pending-selection.ts`). `Nav.commit` opens the
+hold with `query: null`, awaits `selectCity`, then patches the hold
+with the committed query, or drops it on `null`. `hasArrived` compares
+that query against the active city; until it is known it falls back to
+"the active city changed at all".
+
 **History-commit** — the act of writing the just-fetched city into
 history after a successful weather response. Lives in the
-history-commit effect at `src/App.tsx:46–56`. The effect is the
+history-commit effect at `src/App.tsx:34–45`. The effect is the
 canonical victim of the **placeholder-data window** below.
 
 **Placeholder-data window** — the window between a query-key change
@@ -56,8 +75,8 @@ under a fresh key. Rule: when gating on `isSuccess`, also gate on
 `useReversibleHistory` (`src/hooks/use-reversible-history.ts`): mutate
 → stage for undo → fire toast → wire restore callback. Sealed inside
 the hook so App.tsx gets a single `removeWithUndo` /
-`clearAllWithUndo` per action. Sonner is hard-wired because this hook
-is the only seam that would need touching for a toast-lib swap. See
+`clearAllWithUndo` per action. Sonner is hard-wired here and in
+`city-selection.ts`; nothing else in the app raises a toast. See
 RFC 010.
 
 **Commit-on-success** — generic term for any effect that derives state
@@ -152,10 +171,12 @@ variant prop. See RFC 011.
 
 **Search menu state machine** — `useSearchMenu`
 (`src/components/search-bar/use-search-menu.ts`). Owns input value,
-focus, and selected key for the search bar. `buildMenuModel`
-(`menu-model.ts`) is the pure branching ladder it consumes (recents /
-keep-typing / suggestions / no-results / actions), tested in
-isolation. See RFC 011.
+focus, and selected key for the search bar. Every row reports through
+one channel, `onSelect(item)`; the hook never acts on a selection and
+never closes on one. `buildMenuModel` (`menu-model.ts`) is the pure
+branching ladder it consumes (recents / keep-typing / suggestions /
+no-results / actions), tested in isolation; `itemIntent` in the same
+file maps a row to the intent `selectCity` takes. See RFC 011.
 
 ---
 

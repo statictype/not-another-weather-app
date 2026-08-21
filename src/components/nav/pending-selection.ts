@@ -12,8 +12,8 @@ import { normalizeQuery } from "@/lib/query";
 export interface PendingSelection {
   /** Menu row key, for the pending indicator. */
   key: string;
-  /** City the row commits to. `null` when it is resolved elsewhere, as the
-   *  location action's coordinates are. */
+  /** City the row commits to. `null` until `selectCity` resolves, which every
+   *  row waits on. */
   query: string | null;
   /** `activeQuery` at the moment of selection. */
   startQuery: string | null;

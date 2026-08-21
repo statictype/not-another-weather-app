@@ -4,7 +4,7 @@
 > `useSearchMenu`, one `<Menu>` renderer, `buildMenuModel` as a pure ladder.
 > Superseded is narrower — the mobile overlay geometry, the `SLIDE_*` slide over
 > the mark, the Cancel button, and the focus-derived open model. `useSearchMenu`
-> is now controlled: it takes `onClose`, reports selections through `onCommit`,
+> is now controlled: it takes `onClose`, reports selections through `onSelect`,
 > and `isFocused` is gone from it entirely. The field lives in the nav panel and
 > unmounts with it, so the no-remount constraint this RFC was built around no
 > longer applies.

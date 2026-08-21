@@ -5,15 +5,14 @@ import { QuotaExceededState } from "@/components/quota-exceeded-state";
 import { WeatherGrid } from "@/components/weather/grid";
 import { WeatherSkeleton } from "@/components/weather-skeleton";
 import type { UseWeatherResult } from "@/hooks/use-weather";
+import type { CitySelectionIntent } from "@/lib/city-selection";
 
 interface WeatherResultProps {
   query: UseWeatherResult;
   activeQuery: string | null;
   onRetry: () => void;
   onSearchRequest: () => void;
-  onLocationRequest: () => void;
-  onRandomSelect: () => void;
-  onCitySelect: (query: string) => void;
+  onSelectCity: (intent: CitySelectionIntent) => Promise<string | null>;
 }
 
 export function WeatherResult({
@@ -21,9 +20,7 @@ export function WeatherResult({
   activeQuery,
   onRetry,
   onSearchRequest,
-  onLocationRequest,
-  onRandomSelect,
-  onCitySelect,
+  onSelectCity,
 }: WeatherResultProps) {
   const { data, error, isLoading, isFetching, isPlaceholderData } = query;
 
@@ -55,12 +52,5 @@ export function WeatherResult({
     );
   }
 
-  return (
-    <EmptyState
-      onSearchRequest={onSearchRequest}
-      onLocationRequest={onLocationRequest}
-      onRandomSelect={onRandomSelect}
-      onCitySelect={onCitySelect}
-    />
-  );
+  return <EmptyState onSearchRequest={onSearchRequest} onSelectCity={onSelectCity} />;
 }

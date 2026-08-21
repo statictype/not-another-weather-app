@@ -1,22 +1,19 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { MotionConfig } from "motion/react";
-import { toast } from "sonner";
-import type { SuggestionItem } from "@/api/types";
-import { type LocationCallbacks, Nav } from "@/components/nav";
+import { Nav } from "@/components/nav";
 import { mainPadding } from "@/components/nav/contract";
 import { useNavPlacement } from "@/components/nav/use-nav-placement";
 
 const Toaster = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WeatherResult } from "@/components/weather-result";
-import type { HistoryItem } from "@/hooks/use-history";
 import { useReversibleHistory } from "@/hooks/use-reversible-history";
-import { setSearchParam, useSearchParam } from "@/hooks/use-search-param";
+import { useSearchParam } from "@/hooks/use-search-param";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { useWeather } from "@/hooks/use-weather";
+import { selectCity } from "@/lib/city-selection";
 import { markVisited } from "@/lib/first-run";
 import { cn } from "@/lib/utils";
-import { pickRandomCity } from "@/lib/random-cities";
 
 export function App() {
   const [inputValue, setInputValue] = useState("");
@@ -46,49 +43,6 @@ export function App() {
       displayName: formatDisplayName(query.data),
     });
   }, [query.isSuccess, query.data, query.isPlaceholderData, activeQuery, addHistory]);
-
-  const handleSuggestionSelect = (item: SuggestionItem) => {
-    const q = item.region
-      ? `${item.name}, ${item.region}, ${item.country}`
-      : `${item.name}, ${item.country}`;
-    setSearchParam("city", q);
-  };
-
-  const handleHistorySelect = (item: HistoryItem) => {
-    setSearchParam("city", item.query);
-  };
-
-  const handleLocationRequest = useCallback((callbacks?: LocationCallbacks) => {
-    if (!navigator.geolocation) {
-      toast("Geolocation is not supported by your browser");
-      callbacks?.onFailure?.();
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        // ~100m, coarser than GPS noise, so repeated reads dedupe in history.
-        const lat = position.coords.latitude.toFixed(3);
-        const lon = position.coords.longitude.toFixed(3);
-        const query = `${lat},${lon}`;
-        setSearchParam("city", query);
-        callbacks?.onResolve?.(query);
-      },
-      () => {
-        toast("Could not determine your location");
-        callbacks?.onFailure?.();
-      },
-    );
-  }, []);
-
-  const handleRandomSelect = useCallback(() => {
-    const city = pickRandomCity();
-    setSearchParam("city", city);
-    return city;
-  }, []);
-
-  const handleCitySelect = useCallback((city: string) => {
-    setSearchParam("city", city);
-  }, []);
 
   const handleRetry = () => {
     void query.refetch();
@@ -131,12 +85,9 @@ export function App() {
             suggestions={suggestions.data}
             isSuggestionsLoading={suggestions.isLoading || suggestions.isPending}
             onValueChange={setInputValue}
-            onSuggestionSelect={handleSuggestionSelect}
-            onRecentSelect={handleHistorySelect}
             onRecentRemove={removeWithUndo}
             onRecentClearAll={clearAllWithUndo}
-            onLocationRequest={handleLocationRequest}
-            onRandomSelect={handleRandomSelect}
+            onSelectCity={selectCity}
           />
 
           <div className="relative z-10 min-h-screen" style={mainPadding(placement)}>
@@ -157,9 +108,7 @@ export function App() {
                   activeQuery={activeQuery}
                   onRetry={handleRetry}
                   onSearchRequest={() => setNavOpen(true)}
-                  onLocationRequest={handleLocationRequest}
-                  onRandomSelect={handleRandomSelect}
-                  onCitySelect={handleCitySelect}
+                  onSelectCity={selectCity}
                 />
               </main>
             </div>

@@ -1,5 +1,6 @@
 import type { SuggestionItem } from "@/api/types";
 import type { HistoryItem } from "@/hooks/use-history";
+import type { CitySelectionIntent } from "@/lib/city-selection";
 import { MIN_SUGGESTION_LENGTH } from "./constants";
 
 export type ActionKind = "location" | "random";
@@ -31,10 +32,16 @@ export interface BuildMenuModelArgs {
   isSuggestionsLoading: boolean;
 }
 
-export function suggestionToQuery(item: SuggestionItem): string {
-  return item.region
-    ? `${item.name}, ${item.region}, ${item.country}`
-    : `${item.name}, ${item.country}`;
+/** The menu's own row shape, in the vocabulary `selectCity` takes. */
+export function itemIntent(item: NavigableItem): CitySelectionIntent {
+  switch (item.kind) {
+    case "recent":
+      return { kind: "recent", item: item.item };
+    case "suggestion":
+      return { kind: "suggestion", item: item.item };
+    case "action":
+      return item.action === "location" ? { kind: "location" } : { kind: "random" };
+  }
 }
 
 const LOCATION_ACTION: NavigableItem = {

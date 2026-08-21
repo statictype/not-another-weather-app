@@ -26,10 +26,7 @@ function makeArgs(overrides: Partial<Parameters<typeof useSearchMenu>[0]> = {}) 
     recentItems: [],
     suggestions: [],
     isSuggestionsLoading: false,
-    onSuggestionSelect: vi.fn(),
-    onRecentSelect: vi.fn(),
-    onLocationRequest: vi.fn(),
-    onRandomSelect: vi.fn(),
+    onSelect: vi.fn(),
     onClose: vi.fn(),
     ...overrides,
   };
@@ -62,19 +59,18 @@ describe("useSearchMenu", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("running a row reports through onCommit and never closes by itself", () => {
+  it("running a row reports through onSelect and never closes by itself", () => {
     const onClose = vi.fn();
-    const onCommit = vi.fn();
-    const onRecentSelect = vi.fn();
+    const onSelect = vi.fn();
     const recents = [recent("a", "Paris")];
     const { result } = renderHook(() =>
-      useSearchMenu(makeArgs({ recentItems: recents, onRecentSelect, onCommit, onClose })),
+      useSearchMenu(makeArgs({ recentItems: recents, onSelect, onClose })),
     );
 
     act(() => result.current.selectRecent(recents[0]!));
 
-    expect(onRecentSelect).toHaveBeenCalledWith(recents[0]);
-    expect(onCommit).toHaveBeenCalledWith({ kind: "recent", key: "recent:a", item: recents[0] });
+    expect(onSelect).toHaveBeenCalledWith({ kind: "recent", key: "recent:a", item: recents[0] });
+    expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onClose).not.toHaveBeenCalled();
     expect(result.current.value).toBe("");
   });
@@ -98,32 +94,25 @@ describe("useSearchMenu", () => {
   });
 
   it("submit runs the focused row", () => {
-    const onRecentSelect = vi.fn();
-    const onCommit = vi.fn();
+    const onSelect = vi.fn();
     const recents = [recent("a", "Paris")];
     const { result } = renderHook(() =>
-      useSearchMenu(makeArgs({ recentItems: recents, onRecentSelect, onCommit })),
+      useSearchMenu(makeArgs({ recentItems: recents, onSelect })),
     );
 
     act(() => result.current.formProps.onSubmit(submit()));
 
-    expect(onRecentSelect).toHaveBeenCalledWith(recents[0]);
-    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith({ kind: "recent", key: "recent:a", item: recents[0] });
+    expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
   it("submit with no rows is a silent no-op (no select-prompt flash)", () => {
-    const onRecentSelect = vi.fn();
-    const onSuggestionSelect = vi.fn();
-    const onCommit = vi.fn();
-    const { result } = renderHook(() =>
-      useSearchMenu(makeArgs({ onRecentSelect, onSuggestionSelect, onCommit })),
-    );
+    const onSelect = vi.fn();
+    const { result } = renderHook(() => useSearchMenu(makeArgs({ onSelect })));
 
     act(() => result.current.formProps.onSubmit(submit()));
 
-    expect(onRecentSelect).not.toHaveBeenCalled();
-    expect(onSuggestionSelect).not.toHaveBeenCalled();
-    expect(onCommit).not.toHaveBeenCalled();
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it("ArrowDown / ArrowUp move the focused key through the navigable list", () => {
@@ -153,29 +142,31 @@ describe("useSearchMenu", () => {
     expect(onValueChange).toHaveBeenLastCalledWith("");
   });
 
-  it("each row kind reaches its own callback and reports its own key", () => {
-    const onSuggestionSelect = vi.fn();
-    const onLocationRequest = vi.fn();
-    const onRandomSelect = vi.fn();
-    const onCommit = vi.fn();
+  it("each row kind reports itself, with its own key, down the one channel", () => {
+    const onSelect = vi.fn();
     const suggestions = [sugg(1, "Paris")];
-    const { result } = renderHook(() =>
-      useSearchMenu(
-        makeArgs({ suggestions, onSuggestionSelect, onLocationRequest, onRandomSelect, onCommit }),
-      ),
-    );
+    const { result } = renderHook(() => useSearchMenu(makeArgs({ suggestions, onSelect })));
 
     act(() => result.current.selectSuggestion(suggestions[0]!));
-    expect(onSuggestionSelect).toHaveBeenCalledWith(suggestions[0]);
-    expect(onCommit).toHaveBeenLastCalledWith(expect.objectContaining({ key: "suggestion:1" }));
+    expect(onSelect).toHaveBeenLastCalledWith({
+      kind: "suggestion",
+      key: "suggestion:1",
+      item: suggestions[0],
+    });
 
     act(() => result.current.requestLocation());
-    expect(onLocationRequest).toHaveBeenCalled();
-    expect(onCommit).toHaveBeenLastCalledWith(expect.objectContaining({ key: "action:location" }));
+    expect(onSelect).toHaveBeenLastCalledWith({
+      kind: "action",
+      key: "action:location",
+      action: "location",
+    });
 
     act(() => result.current.selectRandom());
-    expect(onRandomSelect).toHaveBeenCalled();
-    expect(onCommit).toHaveBeenLastCalledWith(expect.objectContaining({ key: "action:random" }));
+    expect(onSelect).toHaveBeenLastCalledWith({
+      kind: "action",
+      key: "action:random",
+      action: "random",
+    });
   });
 
   it("typing clears any explicitly-selected key (falls back to the new first row)", () => {

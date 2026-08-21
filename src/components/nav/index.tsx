@@ -2,10 +2,10 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { SuggestionItem } from "@/api/types";
 import type { WeatherClientError } from "@/api/weather";
-import type { NavigableItem } from "@/components/search-bar/menu-model";
-import { suggestionToQuery } from "@/components/search-bar/menu-model";
+import { itemIntent, type NavigableItem } from "@/components/search-bar/menu-model";
 import { searchErrorMessage } from "@/components/search-bar/search-error-model";
 import type { HistoryItem } from "@/hooks/use-history";
+import type { CitySelectionIntent } from "@/lib/city-selection";
 import {
   COLLAPSE_SPRING,
   EXPAND_SPRING,
@@ -40,15 +40,6 @@ function containerRadius(placement: NavPlacement, isOpen: boolean, isDragging: b
   return isDragging ? PANEL_RADIUS : 0;
 }
 
-export interface LocationCallbacks {
-  /** The coordinates the fix resolved to. A repeat read of the same position
-   *  produces the query already in the URL, which settles the hold at once. */
-  onResolve?: (query: string) => void;
-  /** Permission denied, or no fix. Stops the panel holding for a city that
-   *  will never be requested. */
-  onFailure?: () => void;
-}
-
 interface NavProps {
   isOpen: boolean;
   onOpen: () => void;
@@ -60,13 +51,11 @@ interface NavProps {
   suggestions: SuggestionItem[];
   isSuggestionsLoading: boolean;
   onValueChange: (next: string) => void;
-  onSuggestionSelect: (item: SuggestionItem) => void;
-  onRecentSelect: (item: HistoryItem) => void;
   onRecentRemove: (item: HistoryItem) => void;
   onRecentClearAll: () => void;
-  onLocationRequest: (callbacks?: LocationCallbacks) => void;
-  /** Returns the city it picked, so the hold knows what it is waiting for. */
-  onRandomSelect: () => string;
+  /** Resolves the row to a city and writes `?city=`. Its result is the query
+   *  the hold waits for; `null` means the row produced no city. */
+  onSelectCity: (intent: CitySelectionIntent) => Promise<string | null>;
 }
 
 /**
@@ -87,8 +76,6 @@ export function Nav(props: NavProps) {
 
   const searchRef = useRef<HTMLButtonElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
-  /** Filled by the action wrappers below, read by `commit` in the same tick. */
-  const actionQuery = useRef<string | null>(null);
 
   const [pending, setPending] = useState<PendingSelection | null>(null);
 
@@ -149,33 +136,16 @@ export function Nav(props: NavProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  /** The hold opens before the query is known — every intent resolves on a
+   *  promise — and is patched with what `onSelectCity` committed. */
   const commit = (item: NavigableItem) => {
-    const query =
-      item.kind === "recent"
-        ? item.item.query
-        : item.kind === "suggestion"
-          ? suggestionToQuery(item.item)
-          : actionQuery.current;
-    setPending({ key: item.key, query, startQuery: props.activeQuery });
-  };
-
-  /** Both orderings are live: a synchronous fix resolves before `commit` runs
-   *  and is read off the ref; an async one arrives after and patches `pending`. */
-  const resolveAction = (query: string) => {
-    actionQuery.current = query;
-    setPending((p) => (p && p.query === null ? { ...p, query } : p));
-  };
-
-  const requestLocation = () => {
-    actionQuery.current = null;
-    props.onLocationRequest({
-      onResolve: resolveAction,
-      onFailure: () => setPending(null),
+    setPending({ key: item.key, query: null, startQuery: props.activeQuery });
+    void props.onSelectCity(itemIntent(item)).then((query) => {
+      setPending((p) => {
+        if (!p || p.key !== item.key) return p;
+        return query === null ? null : { ...p, query };
+      });
     });
-  };
-
-  const selectRandom = () => {
-    resolveAction(props.onRandomSelect());
   };
 
   const geometry = isOpen ? panelGeometry(placement) : barGeometry(placement);
@@ -242,13 +212,9 @@ export function Nav(props: NavProps) {
                     errorMessage={errorMessage}
                     pending={pending}
                     onValueChange={props.onValueChange}
-                    onSuggestionSelect={props.onSuggestionSelect}
-                    onRecentSelect={props.onRecentSelect}
                     onRecentRemove={props.onRecentRemove}
                     onRecentClearAll={props.onRecentClearAll}
-                    onLocationRequest={requestLocation}
-                    onRandomSelect={selectRandom}
-                    onCommit={commit}
+                    onSelect={commit}
                     onClose={props.onClose}
                   />
                 </PanelLayer>

@@ -14,14 +14,10 @@ export interface UseSearchMenuArgs {
   recentItems: HistoryItem[];
   suggestions: SuggestionItem[];
   isSuggestionsLoading: boolean;
-  onSuggestionSelect: (item: SuggestionItem) => void;
-  onRecentSelect: (item: HistoryItem) => void;
-  onLocationRequest: () => void;
-  onRandomSelect: () => void;
   onValueChange?: (next: string) => void;
-  /** Fires after any row runs, with the row that ran. The owner decides what
-   *  happens to the panel — the hook never closes on a selection. */
-  onCommit?: (item: NavigableItem) => void;
+  /** The only selection channel: every row reports here and nowhere else. The
+   *  owner decides what happens to the panel — the hook never closes on one. */
+  onSelect: (item: NavigableItem) => void;
   /** The close control, Escape and the scrim. Clears the value first. */
   onClose: () => void;
 }
@@ -100,20 +96,7 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
     if (!focusedKey) return;
     const item = model.navigable.find((i) => i.key === focusedKey);
     if (!item) return;
-    runItem(item);
-  };
-
-  const runItem = (item: NavigableItem) => {
-    if (item.kind === "recent") {
-      args.onRecentSelect(item.item);
-    } else if (item.kind === "suggestion") {
-      args.onSuggestionSelect(item.item);
-    } else if (item.action === "location") {
-      args.onLocationRequest();
-    } else {
-      args.onRandomSelect();
-    }
-    args.onCommit?.(item);
+    args.onSelect(item);
   };
 
   return {
@@ -148,10 +131,12 @@ export function useSearchMenu(args: UseSearchMenuArgs): UseSearchMenuReturn {
     },
     close,
     hoverKey: setSelectedKey,
-    selectRecent: (item) => runItem({ kind: "recent", key: `recent:${item.id}`, item }),
-    selectSuggestion: (item) => runItem({ kind: "suggestion", key: `suggestion:${item.id}`, item }),
-    requestLocation: () => runItem({ kind: "action", key: "action:location", action: "location" }),
-    selectRandom: () => runItem({ kind: "action", key: "action:random", action: "random" }),
+    selectRecent: (item) => args.onSelect({ kind: "recent", key: `recent:${item.id}`, item }),
+    selectSuggestion: (item) =>
+      args.onSelect({ kind: "suggestion", key: `suggestion:${item.id}`, item }),
+    requestLocation: () =>
+      args.onSelect({ kind: "action", key: "action:location", action: "location" }),
+    selectRandom: () => args.onSelect({ kind: "action", key: "action:random", action: "random" }),
     isDialogOpen,
     setDialogOpen: setIsDialogOpen,
   };

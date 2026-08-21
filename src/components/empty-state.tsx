@@ -1,4 +1,5 @@
 import { LocateFixedIcon, SearchIcon, ShuffleIcon } from "lucide-react";
+import type { CitySelectionIntent } from "@/lib/city-selection";
 import { hasVisitedBefore } from "@/lib/first-run";
 import { STARTER_CITIES } from "@/lib/random-cities";
 
@@ -6,17 +7,10 @@ interface EmptyStateProps {
   /** Opens the nav panel with the field focused. Without it a first visit with
    *  no `?city=` has no visible typing affordance. */
   onSearchRequest: () => void;
-  onLocationRequest: () => void;
-  onRandomSelect: () => void;
-  onCitySelect: (query: string) => void;
+  onSelectCity: (intent: CitySelectionIntent) => Promise<string | null>;
 }
 
-export function EmptyState({
-  onSearchRequest,
-  onLocationRequest,
-  onRandomSelect,
-  onCitySelect,
-}: EmptyStateProps) {
+export function EmptyState({ onSearchRequest, onSelectCity }: EmptyStateProps) {
   const returning = hasVisitedBefore();
 
   return (
@@ -31,9 +25,13 @@ export function EmptyState({
           <StartAction
             icon={LocateFixedIcon}
             label="Use my location"
-            onSelect={onLocationRequest}
+            onSelect={() => void onSelectCity({ kind: "location" })}
           />
-          <StartAction icon={ShuffleIcon} label="Surprise me" onSelect={onRandomSelect} />
+          <StartAction
+            icon={ShuffleIcon}
+            label="Surprise me"
+            onSelect={() => void onSelectCity({ kind: "random" })}
+          />
         </div>
 
         <div className="flex flex-col items-center gap-3">
@@ -43,7 +41,7 @@ export function EmptyState({
               <li key={city.query}>
                 <button
                   type="button"
-                  onClick={() => onCitySelect(city.query)}
+                  onClick={() => void onSelectCity({ kind: "starter", query: city.query })}
                   className="start-city rounded-full px-3.5 py-1.5 text-sm tracking-tight"
                   aria-label={`Weather in ${city.label}`}
                 >

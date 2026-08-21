@@ -26,13 +26,9 @@ interface NavPanelProps {
   errorMessage: string | null;
   pending: PendingSelection | null;
   onValueChange: (next: string) => void;
-  onSuggestionSelect: (item: SuggestionItem) => void;
-  onRecentSelect: (item: HistoryItem) => void;
   onRecentRemove: (item: HistoryItem) => void;
   onRecentClearAll: () => void;
-  onLocationRequest: () => void;
-  onRandomSelect: () => void;
-  onCommit: (item: NavigableItem) => void;
+  onSelect: (item: NavigableItem) => void;
   onClose: () => void;
 }
 
@@ -44,13 +40,9 @@ export function NavPanel({
   errorMessage,
   pending,
   onValueChange,
-  onSuggestionSelect,
-  onRecentSelect,
   onRecentRemove,
   onRecentClearAll,
-  onLocationRequest,
-  onRandomSelect,
-  onCommit,
+  onSelect,
   onClose,
 }: NavPanelProps) {
   const inputId = useId();
@@ -61,12 +53,8 @@ export function NavPanel({
     recentItems,
     suggestions,
     isSuggestionsLoading,
-    onSuggestionSelect,
-    onRecentSelect,
-    onLocationRequest,
-    onRandomSelect,
     onValueChange,
-    onCommit,
+    onSelect,
     onClose,
   });
 
