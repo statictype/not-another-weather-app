@@ -17,7 +17,7 @@ function renderApp() {
 describe("App (smoke)", () => {
   it("renders the mark and the inviting empty state", () => {
     renderApp();
-    expect(screen.getByRole("heading", { name: /weather/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "air", level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 

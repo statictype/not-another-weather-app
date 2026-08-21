@@ -20,7 +20,7 @@ export async function handleSearch(request: Request, env: Env): Promise<Response
     if (err instanceof WeatherApiError) {
       return errorResponse(err.kind, err.message);
     }
-    console.error("[oasis] unexpected search handler error", err);
+    console.error("[air] unexpected search handler error", err);
     return errorResponse("upstream", "An unexpected error occurred.");
   }
 }

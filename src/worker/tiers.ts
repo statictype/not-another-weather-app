@@ -45,7 +45,7 @@ export function createTierHandler(
     const cached = await cacheGet(cacheKey);
     if (cached) {
       const hit = new Response(cached.body, cached);
-      hit.headers.set("X-Oasis-Cache", "HIT");
+      hit.headers.set("X-Air-Cache", "HIT");
       return hit;
     }
 
@@ -54,7 +54,7 @@ export function createTierHandler(
       const response = Response.json(dto, {
         headers: {
           "Cache-Control": `public, max-age=${config.ttl}, s-maxage=${config.ttl}`,
-          "X-Oasis-Cache": "MISS",
+          "X-Air-Cache": "MISS",
         },
       });
       await cachePut(cacheKey, response, config.ttl);
@@ -63,7 +63,7 @@ export function createTierHandler(
       if (err instanceof WeatherApiError) {
         return errorResponse(err.kind, err.message);
       }
-      console.error(`[oasis] unexpected ${tier} handler error`, err);
+      console.error(`[air] unexpected ${tier} handler error`, err);
       return errorResponse("upstream", "An unexpected error occurred.");
     }
   };

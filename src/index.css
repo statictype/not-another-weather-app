@@ -76,13 +76,13 @@ body,
   --card-foreground: oklch(0.2600 0.0700 245.0000);
   --popover: oklch(0.9950 0.0040 230.0000);
   --popover-foreground: oklch(0.2600 0.0700 245.0000);
-  --primary: oklch(0.6800 0.1500 235.0000);
+  --primary: oklch(0.5411 0.2013 260.0400);
   --primary-foreground: oklch(1.0000 0 0);
   --secondary: oklch(0.9300 0.0400 230.0000);
   --secondary-foreground: oklch(0.3200 0.0900 245.0000);
   --muted: oklch(0.9550 0.0180 230.0000);
   --muted-foreground: oklch(0.5200 0.0500 245.0000);
-  --accent: oklch(0.8200 0.1100 200.0000);
+  --accent: oklch(0.2600 0.0700 245.0000 / 0.08);
   --accent-foreground: oklch(0.2600 0.0700 245.0000);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --destructive-foreground: oklch(1.0000 0 0);
@@ -307,29 +307,17 @@ html, body { background: oklch(0.97 0.02 230); }
 
 .tile-now {
   background:
-    radial-gradient(128% 92% at 42% -16% in oklab,
-      #FFFFFF2E 0%,
-      #FFFFFF28 20%,
-      #FFFFFF15 54%,
-      #FFFFFF07 80%,
-      #FFFFFF00 100%),
-    radial-gradient(112% 96% at 98% 104% in oklab,
-      #00CCFF5C 0%,
-      #00CCFF4E 20%,
-      #00CCFF28 54%,
-      #00CCFF0D 80%,
-      #00CCFF00 100%),
-    linear-gradient(168deg in oklab,
-      #C4EFF3 0%,
-      #C0EDF2 100%);
+    linear-gradient(160deg in oklab,
+      #BFEAFF 0%,
+      #A4D6FF 100%);
 }
 
 .tile-now-sweep {
   background-image: radial-gradient(160% 132% at 42% -16% in oklab,
-    #FFFFFF9E 0%,
-    #FFFFFF8F 20%,
-    #FFFFFF52 54%,
-    #FFFFFF21 80%,
+    #FFFFFF5C 0%,
+    #FFFFFF52 20%,
+    #FFFFFF30 54%,
+    #FFFFFF13 80%,
     #FFFFFF00 100%);
   opacity: 0;
   transform: scale(var(--sweep-scale, 0.96));
@@ -449,6 +437,8 @@ html, body { background: oklch(0.97 0.02 230); }
   --popover-foreground: oklch(0.95 0.008 240);
   --muted: oklch(0.22 0.015 250);
   --muted-foreground: oklch(0.70 0.01 240);
+  --accent: oklch(1 0 0 / 0.08);
+  --accent-foreground: oklch(0.95 0.008 240);
   --border: oklch(1 0 0 / 0.08);
   --input: oklch(1 0 0 / 0.08);
 }

@@ -15,7 +15,7 @@ describe("first-run flag", () => {
 
   it("survives history being cleared — the two are separate keys", () => {
     markVisited();
-    window.localStorage.removeItem("oasis:history:v1");
+    window.localStorage.removeItem("air:history:v1");
     expect(hasVisitedBefore()).toBe(true);
   });
 

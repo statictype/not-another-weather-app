@@ -183,7 +183,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("Oasis (integration)", () => {
+describe("air (integration)", () => {
   it("renders the weather for the city in the URL (no click-through)", async () => {
     renderAppAt("/?city=London");
 

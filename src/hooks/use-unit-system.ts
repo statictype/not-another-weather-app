@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import { createSubscription } from "@/lib/external-store";
 import { isUnitSystem, type UnitSystem } from "@/lib/units";
 
-export const UNIT_STORAGE_KEY = "oasis:units";
+export const UNIT_STORAGE_KEY = "air:units";
 
 const IMPERIAL_REGIONS = new Set(["US", "LR", "MM"]);
 

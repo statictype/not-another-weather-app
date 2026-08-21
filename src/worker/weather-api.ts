@@ -183,7 +183,7 @@ async function fetchUpstream<S extends z.ZodType>(
       headers: { Accept: "application/json" },
     });
   } catch (err) {
-    console.error("[oasis] upstream fetch threw", err);
+    console.error("[air] upstream fetch threw", err);
     throw new WeatherApiError("network", "Could not reach weather service.");
   }
 
@@ -191,7 +191,7 @@ async function fetchUpstream<S extends z.ZodType>(
   try {
     body = await res.json();
   } catch (err) {
-    console.error("[oasis] upstream returned non-JSON body", res.status, err);
+    console.error("[air] upstream returned non-JSON body", res.status, err);
     throw new WeatherApiError("upstream", "Weather service returned an invalid response.");
   }
 
@@ -201,7 +201,7 @@ async function fetchUpstream<S extends z.ZodType>(
     if (typeof code === "number") {
       throw mapUpstreamErrorCode(code);
     }
-    console.error("[oasis] upstream non-ok with no error code", res.status);
+    console.error("[air] upstream non-ok with no error code", res.status);
     throw new WeatherApiError("upstream", "Weather service is unavailable.");
   }
 
@@ -209,9 +209,9 @@ async function fetchUpstream<S extends z.ZodType>(
     return schema.parse(body);
   } catch (err) {
     if (err instanceof ZodError) {
-      console.error("[oasis] upstream response failed schema validation", err.issues);
+      console.error("[air] upstream response failed schema validation", err.issues);
     } else {
-      console.error("[oasis] unexpected schema parse error", err);
+      console.error("[air] unexpected schema parse error", err);
     }
     throw new WeatherApiError("upstream", "Weather service returned an unexpected response.");
   }
@@ -399,7 +399,7 @@ export async function fetchSearch(
       headers: { Accept: "application/json" },
     });
   } catch (err) {
-    console.error("[oasis] search upstream fetch threw", err);
+    console.error("[air] search upstream fetch threw", err);
     throw new WeatherApiError("network", "Could not reach weather service.");
   }
 
@@ -407,7 +407,7 @@ export async function fetchSearch(
   try {
     body = await res.json();
   } catch (err) {
-    console.error("[oasis] search upstream returned non-JSON body", res.status, err);
+    console.error("[air] search upstream returned non-JSON body", res.status, err);
     throw new WeatherApiError("upstream", "Weather service returned an invalid response.");
   }
 

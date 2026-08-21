@@ -3,7 +3,7 @@
  * cannot tell them apart — both read as an empty list — so this flag is written
  * once, on the first city that loads, and never removed.
  */
-export const VISITED_STORAGE_KEY = "oasis:visited";
+export const VISITED_STORAGE_KEY = "air:visited";
 
 /** Read at call time, not module load: the flag is written during the session. */
 export function hasVisitedBefore(): boolean {

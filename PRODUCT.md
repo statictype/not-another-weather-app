@@ -96,12 +96,8 @@ Binding:
   may regress it. The one missing performance point is accepted and closed —
   see `docs/decisions/001-lighthouse-ceiling.md`.
 
-**Open decision — name and mark.** The repository currently disagrees with
-itself: `README.md` says "Oasis", while `index.html` `<title>` and
-`package.json` say "not another weather app". The header mark is the 😶‍🌫️ emoji.
-Neither the name nor the mark is settled. Do not treat any of the three as
-authoritative, and do not silently pick one; resolve with the user before any
-work that depends on the answer.
+**The name is `air`**, with a drawn wordmark as the mark. DESIGN.md holds the
+visual specification.
 
 Voice, as written today: plain, lowercase-leaning, mildly self-aware, never
 cute about data. "What's the weather like?" / "Search a city to find out" /
@@ -110,7 +106,7 @@ incumbent evidence.
 
 ## Evidence on Hand
 
-- Live deployment: `oasis.hi-133.workers.dev`
+- Live deployment: `air.hi-133.workers.dev`
 - Screenshots: `docs/screenshot.png`, `docs/screenshot2.png`
 - Measured Lighthouse run with per-metric values: `docs/decisions/001-lighthouse-ceiling.md`
 - 12 RFCs (`docs/rfcs/`) and 3 ADRs (`docs/decisions/`) recording real design

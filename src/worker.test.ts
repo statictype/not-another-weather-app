@@ -146,7 +146,7 @@ describe("Worker /api/weather (current)", () => {
 
     const res = await SELF.fetch("https://example.com/api/weather?q=London-current-success");
     expect(res.status).toBe(200);
-    expect(res.headers.get("X-Oasis-Cache")).toBe("MISS");
+    expect(res.headers.get("X-Air-Cache")).toBe("MISS");
 
     const body = (await res.json()) as Record<string, unknown>;
     expect(body).toMatchObject({
@@ -268,11 +268,11 @@ describe("Worker /api/weather (current)", () => {
       .reply(200, upstreamCurrentFixture);
 
     const first = await SELF.fetch("https://example.com/api/weather?q=CurrentCache1");
-    expect(first.headers.get("X-Oasis-Cache")).toBe("MISS");
+    expect(first.headers.get("X-Air-Cache")).toBe("MISS");
     await first.text();
 
     const second = await SELF.fetch("https://example.com/api/weather?q=CurrentCache1");
-    expect(second.headers.get("X-Oasis-Cache")).toBe("HIT");
+    expect(second.headers.get("X-Air-Cache")).toBe("HIT");
   });
 
   it("normalizes the query so casing / whitespace variants share one cache entry", async () => {
@@ -282,13 +282,13 @@ describe("Worker /api/weather (current)", () => {
       .reply(200, upstreamCurrentFixture);
 
     const first = await SELF.fetch("https://example.com/api/weather?q=CurrentNormalizeCity");
-    expect(first.headers.get("X-Oasis-Cache")).toBe("MISS");
+    expect(first.headers.get("X-Air-Cache")).toBe("MISS");
     await first.text();
 
     const second = await SELF.fetch(
       `https://example.com/api/weather?q=${encodeURIComponent("  currentnormalizecity  ")}`,
     );
-    expect(second.headers.get("X-Oasis-Cache")).toBe("HIT");
+    expect(second.headers.get("X-Air-Cache")).toBe("HIT");
   });
 });
 
@@ -301,7 +301,7 @@ describe("Worker /api/weather/forecast", () => {
 
     const res = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastCity1");
     expect(res.status).toBe(200);
-    expect(res.headers.get("X-Oasis-Cache")).toBe("MISS");
+    expect(res.headers.get("X-Air-Cache")).toBe("MISS");
 
     const body = (await res.json()) as {
       today?: unknown;
@@ -530,11 +530,11 @@ describe("Worker /api/weather/forecast", () => {
       .reply(200, upstreamForecastFixture);
 
     const first = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastCache1");
-    expect(first.headers.get("X-Oasis-Cache")).toBe("MISS");
+    expect(first.headers.get("X-Air-Cache")).toBe("MISS");
     await first.text();
 
     const second = await SELF.fetch("https://example.com/api/weather/forecast?q=ForecastCache1");
-    expect(second.headers.get("X-Oasis-Cache")).toBe("HIT");
+    expect(second.headers.get("X-Air-Cache")).toBe("HIT");
   });
 
   it("rejects empty queries with invalid_query", async () => {

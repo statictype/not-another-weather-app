@@ -3,10 +3,10 @@ export { normalizeQuery } from "@/lib/query";
 export const CACHE_TTL_CURRENT = 600; // 10 min
 export const CACHE_TTL_FORECAST = 3600; // 1 h
 
-const CACHE_KEY_HOST = "https://oasis-cache.local";
+const CACHE_KEY_HOST = "https://air-cache.local";
 const CACHE_VERSION = "10";
 
-/** A synthetic Request used as the Cache API key; `oasis-cache.local` is never fetched. */
+/** A synthetic Request used as the Cache API key; `air-cache.local` is never fetched. */
 export function buildCacheKey(path: string, normalizedQuery: string): Request {
   const url = new URL(path, CACHE_KEY_HOST);
   url.searchParams.set("q", normalizedQuery);

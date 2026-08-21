@@ -71,7 +71,7 @@ export function NavMark({ isOpen }: { isOpen: boolean }) {
       }}
       style={{ position: "absolute", pointerEvents: "none", ...markSlot(placement, isOpen) }}
       className="leading-none select-none"
-      aria-label="Weather"
+      aria-label="air"
     >
       <img
         src={logoUrl}

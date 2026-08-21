@@ -121,7 +121,7 @@ describe("cross-tab sync", () => {
 
     act(() => {
       window.localStorage.setItem(UNIT_STORAGE_KEY, "imperial");
-      window.dispatchEvent(new StorageEvent("storage", { key: "oasis:history" }));
+      window.dispatchEvent(new StorageEvent("storage", { key: "air:history" }));
     });
 
     expect(result.current).toBe("metric");

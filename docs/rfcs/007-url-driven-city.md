@@ -15,7 +15,7 @@ const [source, setSource] = useState<WeatherSource>(() =>
 
 Four consequences fall out of this:
 
-1. **No link sharing.** `oasis.app/` is the only URL the user ever sees,
+1. **No link sharing.** `air.app/` is the only URL the user ever sees,
    regardless of what they've searched. Copy-paste the URL to a friend
    and they land on an empty state.
 2. **No back/forward navigation.** Every selection replaces the visible

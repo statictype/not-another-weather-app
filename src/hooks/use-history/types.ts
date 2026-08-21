@@ -6,4 +6,4 @@ export interface HistoryItem {
 }
 
 export const MAX_HISTORY = 6;
-export const STORAGE_KEY = "oasis:history:v1";
+export const STORAGE_KEY = "air:history:v1";
