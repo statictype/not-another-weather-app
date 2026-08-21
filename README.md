@@ -2,7 +2,7 @@
 
 A small, fast weather forecast app. Search any city, see today's conditions and forecast.
 
-**Live demo:** air.hi-133.workers.dev/
+**Live demo:** air.drifting.workers.dev/
 
 The demo runs on a free WeatherAPI tier with edge caching, which keeps it
 within quota under reasonable load. If the quota is exhausted, the app

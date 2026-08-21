@@ -106,7 +106,7 @@ incumbent evidence.
 
 ## Evidence on Hand
 
-- Live deployment: `air.hi-133.workers.dev`
+- Live deployment: `air.drifting.workers.dev`
 - Screenshots: `docs/screenshot.png`, `docs/screenshot2.png`
 - Measured Lighthouse run with per-metric values: `docs/decisions/001-lighthouse-ceiling.md`
 - 12 RFCs (`docs/rfcs/`) and 3 ADRs (`docs/decisions/`) recording real design

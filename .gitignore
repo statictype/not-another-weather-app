@@ -33,6 +33,8 @@ dist-ssr
 .wrangler
 .dev.vars
 .dev.vars.*
+.env
+.env.*
 !.dev.vars.example
 
 # Test coverage

@@ -6,9 +6,15 @@ The repo deploys to a single Cloudflare Worker via GitHub Actions on every push 
 
 ```bash
 pnpm wrangler login
+export CLOUDFLARE_ACCOUNT_ID=...          # see the dashboard URL
 pnpm wrangler secret put WEATHER_API_KEY  # production secret
 pnpm deploy
 ```
+
+`wrangler.jsonc` carries no `account_id`, so the environment supplies it — the
+same variable CI uses. Without it wrangler picks whichever account the login
+happens to have; with it, a deploy aimed at the wrong account fails instead of
+succeeding somewhere unexpected.
 
 ## CI
 
