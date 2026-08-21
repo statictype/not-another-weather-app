@@ -1,12 +1,11 @@
 import { motion, useIsPresent } from "motion/react";
 import { type PointerEvent as ReactPointerEvent, type ReactNode, use } from "react";
+import logoNightUrl from "@/assets/logo-night.webp";
+import logoUrl from "@/assets/logo.webp";
 import { BAR_FADE_IN, BAR_FADE_OUT, REDUCED_MOTION_FADE } from "@/lib/motion/constants";
-import { barLayer, LOGO_BOX, markSlot, panelLayer, panelSafeArea } from "./contract";
+import { barLayer, markSlot, panelLayer, panelSafeArea } from "./contract";
 import { NavGeometryContext } from "./nav-geometry";
 
-/** A layer stops taking clicks and leaves the accessibility tree the moment it
- *  starts leaving, so a control at 10% opacity is not still hittable. Read from
- *  presence rather than from the container's state, which only correlates. */
 interface LayerProps {
   children: ReactNode;
   className?: string;
@@ -56,26 +55,38 @@ export function PanelLayer({ children, className, onPointerDown }: LayerProps) {
   );
 }
 
-/** One node across both states, so the page never holds two `<h1>`s and the
- *  mark is the one object visibly carried from the bar into the panel. */
+/** Stays mounted while open so the page keeps its `<h1>`, but fades out: the
+ *  field takes the space. `pointerEvents: none` so the invisible box does not
+ *  swallow clicks on the field, or drags that start on the mark. */
 export function NavMark({ isOpen }: { isOpen: boolean }) {
   const { placement, reduced, transition } = use(NavGeometryContext);
+  const fade = isOpen ? BAR_FADE_OUT : BAR_FADE_IN;
   return (
     <motion.h1
-      layout={reduced ? false : "position"}
+      layout={!reduced}
       transition={transition}
-      style={{
-        position: "absolute",
-        width: LOGO_BOX,
-        height: LOGO_BOX,
-        ...markSlot(placement, isOpen),
+      animate={{
+        opacity: isOpen ? 0 : 1,
+        transition: reduced ? REDUCED_MOTION_FADE : fade,
       }}
-      className="flex items-center justify-center leading-none select-none"
+      style={{ position: "absolute", pointerEvents: "none", ...markSlot(placement, isOpen) }}
+      className="leading-none select-none"
       aria-label="Weather"
     >
-      <span aria-hidden="true" className="text-2xl">
-        😶‍🌫️
-      </span>
+      <img
+        src={logoUrl}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className="nav-mark-day absolute inset-0 size-full object-cover"
+      />
+      <img
+        src={logoNightUrl}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className="nav-mark-night absolute inset-0 size-full object-cover"
+      />
     </motion.h1>
   );
 }

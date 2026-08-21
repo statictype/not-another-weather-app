@@ -14,9 +14,6 @@ interface SearchFieldProps {
   inputRef: RefObject<HTMLInputElement | null>;
   inputProps: UseSearchMenuReturn["inputProps"];
   formProps: UseSearchMenuReturn["formProps"];
-  /** Leading slot in the field row — the space the nav mark occupies. */
-  leading?: ReactNode;
-  /** Trailing slot in the field row — the panel's close control. */
   trailing?: ReactNode;
 }
 
@@ -29,7 +26,6 @@ export function SearchField({
   inputRef,
   inputProps,
   formProps,
-  leading,
   trailing,
 }: SearchFieldProps) {
   return (
@@ -40,7 +36,6 @@ export function SearchField({
         </label>
 
         <div className="flex items-center gap-3">
-          {leading}
           <div className="search-surface flex h-13 min-w-0 flex-1 items-center gap-3 rounded-[1.75rem] px-5">
             <SearchIcon
               className="size-5 shrink-0 text-foreground/70"

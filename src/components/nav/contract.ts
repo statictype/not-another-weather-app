@@ -93,8 +93,6 @@ export function panelGeometry(placement: NavPlacement): BoxStyle {
   return { left: "0px", right: "0px", top: "0px", bottom: "0px" };
 }
 
-/** `<main>` is padded by the bar's footprint on the side the bar sits on, and
- *  the 1400 px column centres inside what is left rather than in the viewport. */
 export function mainPadding(placement: NavPlacement): BoxStyle & {
   paddingTop?: string;
   paddingBottom?: string;
@@ -108,24 +106,12 @@ export function mainPadding(placement: NavPlacement): BoxStyle & {
   return { paddingLeft: pad };
 }
 
-/** Panel padding, and the header row the mark, the field and the close control
- *  share. `HEADER_ROW` is taller than `ICON_BUTTON`, so the two 44 px controls
- *  centre against a 52 px field. */
 export const PANEL_PAD = 12;
 export const HEADER_ROW = 52;
 
 const SAFE_TOP = "env(safe-area-inset-top, 0px)";
 const FULL = { top: "0px", right: "0px", bottom: "0px", left: "0px" } as const;
 
-/**
- * Both content layers are laid out at their own final size and clipped by the
- * container, so neither reflows while the box springs — the growth reads as a
- * mask opening rather than as content being stretched.
- *
- * Each layer is therefore positioned against whichever geometry the container
- * currently holds, so that its box in viewport coordinates is the same number
- * before and after the state flips and only the container moves.
- */
 export function barLayer(placement: NavPlacement, containerIsPanel: boolean): BoxStyle {
   if (!containerIsPanel) return { ...FULL };
   if (placement.panel === "partial") {
@@ -146,20 +132,18 @@ export function panelLayer(placement: NavPlacement, containerIsPanel: boolean): 
   return { left: `-${INSET}`, top: `-${INSET}`, ...size };
 }
 
-/** The mark is one persistent node rather than one per layer, so it is never
- *  duplicated and stays the page's only `<h1>`. Closed it sits at the bar's
- *  leading corner; open it sits in the panel's header row. */
 export function markSlot(placement: NavPlacement, isOpen: boolean): BoxStyle {
-  const barInset = `${(BAR_THICKNESS - LOGO_BOX) / 2}px`;
-  if (!isOpen) return { left: barInset, top: barInset };
+  if (!isOpen) {
+    const bleed = `${BAR_THICKNESS}px`;
+    return { left: "0px", top: "0px", width: bleed, height: bleed };
+  }
+  const size = { width: `${LOGO_BOX}px`, height: `${LOGO_BOX}px` };
   const left = `${PANEL_PAD}px`;
   const top = `${PANEL_PAD + (HEADER_ROW - LOGO_BOX) / 2}px`;
-  if (placement.panel === "partial") return { left, top };
-  return { left, top: `calc(${top} + ${SAFE_TOP})` };
+  if (placement.panel === "partial") return { left, top, ...size };
+  return { left, top: `calc(${top} + ${SAFE_TOP})`, ...size };
 }
 
-/** Fullscreen runs edge to edge, so the panel keeps its own content clear of a
- *  notch and a home indicator. `env()` is 0 everywhere else. */
 export function panelSafeArea(placement: NavPlacement): {
   paddingTop?: string;
   paddingBottom?: string;

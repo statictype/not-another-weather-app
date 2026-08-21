@@ -12,11 +12,6 @@ interface NavBarProps {
   searchRef: Ref<HTMLButtonElement>;
 }
 
-/**
- * The bar's controls. The mark holds the leading corner as its own layer, so
- * what is left here is the trailing group — which on the rail reads as the
- * bottom of the column.
- */
 export function NavBar({ placement, isOpen, onOpenSearch, searchRef }: NavBarProps) {
   const isRail = placement.edge === "left";
 

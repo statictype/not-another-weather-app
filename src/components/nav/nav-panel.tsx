@@ -14,7 +14,7 @@ import {
   PANEL_STAGGER,
   REDUCED_MOTION_FADE,
 } from "@/lib/motion/constants";
-import { ICON_BUTTON, type NavPlacement } from "./contract";
+import type { NavPlacement } from "./contract";
 import { NavIconButton } from "./nav-trigger";
 import type { PendingSelection } from "./pending-selection";
 
@@ -36,14 +36,6 @@ interface NavPanelProps {
   onClose: () => void;
 }
 
-/**
- * Two regions: the field pinned at the top beside the mark and the close
- * control, the menu scrolling below it. The unit switch is not here — it is in
- * the bar, at every placement.
- *
- * Mounts and unmounts with the open state. There is no field in the closed bar,
- * so there is no caret, selection or IME state to carry across.
- */
 export function NavPanel({
   placement,
   recentItems,
@@ -97,7 +89,6 @@ export function NavPanel({
           inputRef={menu.inputRef}
           inputProps={menu.inputProps}
           formProps={menu.formProps}
-          leading={<div aria-hidden="true" className="shrink-0" style={{ width: ICON_BUTTON }} />}
           trailing={<NavIconButton icon={XIcon} label="Close" onClick={onClose} />}
         />
       </Region>
