@@ -122,10 +122,6 @@ async function openSearch(user: ReturnType<typeof userEvent.setup>) {
   return screen.getByRole("searchbox");
 }
 
-async function openSettings(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: "Settings" }));
-}
-
 function renderAppAt(url: string) {
   __resetHistoryStoreForTests();
   __resetUnitSystemForTests("metric");
@@ -360,7 +356,6 @@ describe("Oasis (integration)", () => {
     expect(screen.getByRole("img", { name: "14 kilometres per hour" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "1015 millibars" })).toBeInTheDocument();
 
-    await openSettings(user);
     await user.click(screen.getByRole("button", { name: /imperial units/i }));
 
     // Every figure churns to its new reading over the sweep in `scramble.ts`,
@@ -387,7 +382,6 @@ describe("Oasis (integration)", () => {
 
     const before = [sentence().length, beaufort().length, band().textContent, needle()];
 
-    await openSettings(user);
     await user.click(screen.getByRole("button", { name: /imperial units/i }));
 
     expect([sentence().length, beaufort().length, band().textContent, needle()]).toEqual(before);

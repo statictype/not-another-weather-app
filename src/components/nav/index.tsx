@@ -26,7 +26,7 @@ import {
 import { NavBar } from "./nav-bar";
 import { NavGeometryContext } from "./nav-geometry";
 import { BarLayer, NavMark, PanelLayer } from "./nav-layers";
-import { type NavIntent, NavPanel } from "./nav-panel";
+import { NavPanel } from "./nav-panel";
 import { type PendingSelection, resolveHold, type SettleState } from "./pending-selection";
 import { useDismissDrag } from "./use-dismiss-drag";
 import { useNavPlacement } from "./use-nav-placement";
@@ -40,8 +40,6 @@ function containerRadius(placement: NavPlacement, isOpen: boolean, isDragging: b
   return isDragging ? PANEL_RADIUS : 0;
 }
 
-export type { NavIntent };
-
 export interface LocationCallbacks {
   /** The coordinates the fix resolved to. A repeat read of the same position
    *  produces the query already in the URL, which settles the hold at once. */
@@ -52,9 +50,8 @@ export interface LocationCallbacks {
 }
 
 interface NavProps {
-  /** `null` is closed. Which intent it holds decides where focus lands. */
-  intent: NavIntent | null;
-  onOpen: (intent: NavIntent) => void;
+  isOpen: boolean;
+  onOpen: () => void;
   onClose: () => void;
   activeQuery: string | null;
   settle: SettleState;
@@ -86,18 +83,14 @@ interface NavProps {
 export function Nav(props: NavProps) {
   const placement = useNavPlacement();
   const reduced = useReducedMotion();
-  const isOpen = props.intent !== null;
+  const isOpen = props.isOpen;
 
   const searchRef = useRef<HTMLButtonElement | null>(null);
-  const settingsRef = useRef<HTMLButtonElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
-  const lastIntentRef = useRef<NavIntent>("search");
   /** Filled by the action wrappers below, read by `commit` in the same tick. */
   const actionQuery = useRef<string | null>(null);
 
   const [pending, setPending] = useState<PendingSelection | null>(null);
-
-  if (props.intent !== null) lastIntentRef.current = props.intent;
 
   const status = resolveHold(pending, props.activeQuery, props.settle);
   const errorMessage = searchErrorMessage(props.error, props.activeQuery);
@@ -128,11 +121,10 @@ export function Nav(props: NavProps) {
     setPending(null);
     const opener = openerRef.current;
     openerRef.current = null;
-    // A trigger is unmounted for as long as the panel is open, so the element
+    // The trigger is unmounted for as long as the panel is open, so the element
     // that was focused at open time is usually gone by now. The trigger that
     // has just remounted in its place is the same control.
-    const fallback = lastIntentRef.current === "settings" ? settingsRef.current : searchRef.current;
-    const target = opener?.isConnected ? opener : fallback;
+    const target = opener?.isConnected ? opener : searchRef.current;
     target?.focus();
   }, [isOpen]);
 
@@ -231,21 +223,18 @@ export function Nav(props: NavProps) {
         >
           <div id={NAV_PANEL_ID} className="h-full w-full">
             <AnimatePresence initial={false}>
-              {props.intent === null ? (
+              {!isOpen ? (
                 <BarLayer key="bar">
                   <NavBar
                     placement={placement}
                     isOpen={false}
-                    onOpenSearch={() => props.onOpen("search")}
-                    onOpenSettings={() => props.onOpen("settings")}
+                    onOpenSearch={props.onOpen}
                     searchRef={searchRef}
-                    settingsRef={settingsRef}
                   />
                 </BarLayer>
               ) : (
                 <PanelLayer key="panel" onPointerDown={dismiss.onPointerDown}>
                   <NavPanel
-                    intent={props.intent}
                     placement={placement}
                     recentItems={props.recentItems}
                     suggestions={props.suggestions}

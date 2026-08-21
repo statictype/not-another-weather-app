@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { MotionConfig } from "motion/react";
 import { toast } from "sonner";
 import type { SuggestionItem } from "@/api/types";
-import { type LocationCallbacks, Nav, type NavIntent } from "@/components/nav";
+import { type LocationCallbacks, Nav } from "@/components/nav";
 import { mainPadding } from "@/components/nav/contract";
 import { useNavPlacement } from "@/components/nav/use-nav-placement";
 
@@ -21,8 +21,8 @@ import { pickRandomCity } from "@/lib/random-cities";
 export function App() {
   const [inputValue, setInputValue] = useState("");
   // Open state lives here rather than in `Nav` because the empty state's
-  // "Search a city" row is a third way in, and `<main>` reads it for `inert`.
-  const [navIntent, setNavIntent] = useState<NavIntent | null>(null);
+  // "Search a city" row is a second way in, and `<main>` reads it for `inert`.
+  const [isNavOpen, setNavOpen] = useState(false);
 
   const activeQuery = useSearchParam("city");
   const placement = useNavPlacement();
@@ -116,9 +116,9 @@ export function App() {
           <div className={cn("sky", isNight && "night")} aria-hidden="true" />
 
           <Nav
-            intent={navIntent}
-            onOpen={setNavIntent}
-            onClose={() => setNavIntent(null)}
+            isOpen={isNavOpen}
+            onOpen={() => setNavOpen(true)}
+            onClose={() => setNavOpen(false)}
             activeQuery={activeQuery}
             settle={{
               isFetching: query.isFetching,
@@ -142,16 +142,21 @@ export function App() {
           <div className="relative z-10 min-h-screen" style={mainPadding(placement)}>
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-5 py-6 sm:px-8 sm:py-8">
               <main
-                className="rise rise-3 flex flex-1 flex-col"
+                className={cn(
+                  "rise rise-3 flex flex-1 flex-col",
+                  // The left rail leaves a short column; anything that does not
+                  // fill it sits in the middle instead of at the top.
+                  placement.edge === "left" && "justify-center",
+                )}
                 aria-live="polite"
                 aria-busy={query.isFetching}
-                inert={navIntent !== null}
+                inert={isNavOpen}
               >
                 <WeatherResult
                   query={query}
                   activeQuery={activeQuery}
                   onRetry={handleRetry}
-                  onSearchRequest={() => setNavIntent("search")}
+                  onSearchRequest={() => setNavOpen(true)}
                   onLocationRequest={handleLocationRequest}
                   onRandomSelect={handleRandomSelect}
                   onCitySelect={handleCitySelect}

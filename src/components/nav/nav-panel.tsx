@@ -6,7 +6,6 @@ import { Menu } from "@/components/search-bar/menu";
 import type { NavigableItem } from "@/components/search-bar/menu-model";
 import { SearchField } from "@/components/search-bar/search-field";
 import { useSearchMenu } from "@/components/search-bar/use-search-menu";
-import { UnitToggle } from "@/components/unit-toggle";
 import type { HistoryItem } from "@/hooks/use-history";
 import {
   PANEL_REGION_DELAY,
@@ -19,10 +18,7 @@ import { ICON_BUTTON, type NavPlacement } from "./contract";
 import { NavIconButton } from "./nav-trigger";
 import type { PendingSelection } from "./pending-selection";
 
-export type NavIntent = "search" | "settings";
-
 interface NavPanelProps {
-  intent: NavIntent;
   placement: NavPlacement;
   recentItems: HistoryItem[];
   suggestions: SuggestionItem[];
@@ -41,14 +37,14 @@ interface NavPanelProps {
 }
 
 /**
- * Three regions: the field pinned at the top beside the mark and the close
- * control, the menu scrolling between them, the unit toggle pinned as a footer.
+ * Two regions: the field pinned at the top beside the mark and the close
+ * control, the menu scrolling below it. The unit switch is not here — it is in
+ * the bar, at every placement.
  *
  * Mounts and unmounts with the open state. There is no field in the closed bar,
  * so there is no caret, selection or IME state to carry across.
  */
 export function NavPanel({
-  intent,
   placement,
   recentItems,
   suggestions,
@@ -97,19 +93,12 @@ export function NavPanel({
           errorId={errorId}
           errorMessage={errorMessage}
           disabled={pending !== null}
-          autoFocus={intent === "search"}
+          autoFocus
           inputRef={menu.inputRef}
           inputProps={menu.inputProps}
           formProps={menu.formProps}
           leading={<div aria-hidden="true" className="shrink-0" style={{ width: ICON_BUTTON }} />}
-          trailing={
-            <NavIconButton
-              icon={XIcon}
-              label="Close"
-              onClick={onClose}
-              autoFocus={intent === "settings"}
-            />
-          }
+          trailing={<NavIconButton icon={XIcon} label="Close" onClick={onClose} />}
         />
       </Region>
 
@@ -134,18 +123,6 @@ export function NavPanel({
           isDialogOpen={menu.isDialogOpen}
           setDialogOpen={menu.setDialogOpen}
         />
-      </Region>
-
-      <Region
-        index={2}
-        placement={placement}
-        reduced={reduced}
-        className="border-foreground/10 flex shrink-0 items-center justify-between border-t px-6 py-2.5"
-      >
-        <span className="label-section" aria-hidden="true">
-          Units
-        </span>
-        <UnitToggle />
       </Region>
     </div>
   );

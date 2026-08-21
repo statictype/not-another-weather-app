@@ -1,16 +1,15 @@
-import { SearchIcon, SlidersHorizontalIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import type { Ref } from "react";
 import { cn } from "@/lib/utils";
 import type { NavPlacement } from "./contract";
 import { NavTrigger } from "./nav-trigger";
+import { NavUnitToggle } from "./nav-unit-toggle";
 
 interface NavBarProps {
   placement: NavPlacement;
   isOpen: boolean;
   onOpenSearch: () => void;
-  onOpenSettings: () => void;
   searchRef: Ref<HTMLButtonElement>;
-  settingsRef: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -18,14 +17,7 @@ interface NavBarProps {
  * what is left here is the trailing group — which on the rail reads as the
  * bottom of the column.
  */
-export function NavBar({
-  placement,
-  isOpen,
-  onOpenSearch,
-  onOpenSettings,
-  searchRef,
-  settingsRef,
-}: NavBarProps) {
+export function NavBar({ placement, isOpen, onOpenSearch, searchRef }: NavBarProps) {
   const isRail = placement.edge === "left";
 
   return (
@@ -42,13 +34,7 @@ export function NavBar({
         isOpen={isOpen}
         onClick={onOpenSearch}
       />
-      <NavTrigger
-        ref={settingsRef}
-        icon={SlidersHorizontalIcon}
-        label="Settings"
-        isOpen={isOpen}
-        onClick={onOpenSettings}
-      />
+      <NavUnitToggle vertical={isRail} />
     </div>
   );
 }

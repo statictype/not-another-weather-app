@@ -43,7 +43,7 @@ export const NAV_ROOT_ID = "nav-root";
 export const NAV_PANEL_ID = "nav-panel";
 
 export const NAV_LABEL_CLOSED = "Main";
-export const NAV_LABEL_OPEN = "Search and settings";
+export const NAV_LABEL_OPEN = "Search";
 
 export function navPlacement(width: number): NavPlacement {
   if (width < BREAKPOINT_MD) return { edge: "bottom", panel: "fullscreen", drag: "down" };

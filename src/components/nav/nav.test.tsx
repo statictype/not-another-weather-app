@@ -62,7 +62,7 @@ function renderApp(url = "/") {
 }
 
 const searchTrigger = () => screen.getByRole("button", { name: "Search" });
-const settingsTrigger = () => screen.getByRole("button", { name: "Settings" });
+const imperial = () => screen.getByRole("button", { name: /imperial units/i });
 const field = () => screen.getByRole("searchbox");
 
 beforeEach(() => {
@@ -109,44 +109,29 @@ describe("nav shell", () => {
     expect(field()).toHaveFocus();
   });
 
-  it("the settings trigger opens the same panel with the field left alone", async () => {
+  it("switches units from the closed bar, without opening the panel", async () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(settingsTrigger());
+    expect(imperial()).toHaveAttribute("aria-pressed", "false");
 
-    // Same panel — the field is there, it just does not have focus, so the
-    // mobile keyboard stays down.
-    expect(field()).toBeInTheDocument();
-    expect(field()).not.toHaveFocus();
-    expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
-  });
+    await user.click(imperial());
 
-  it("clicking the unit toggle inside the panel does not close it", async () => {
-    const user = userEvent.setup();
-    renderApp();
-
-    await user.click(settingsTrigger());
-    await user.click(screen.getByRole("button", { name: /imperial units/i }));
-
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /imperial units/i })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(imperial()).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("Escape closes and focus returns to the trigger that opened it", async () => {
     const user = userEvent.setup();
     renderApp();
 
-    await user.click(settingsTrigger());
+    await user.click(searchTrigger());
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     await user.keyboard("{Escape}");
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(settingsTrigger()).toHaveFocus();
+    expect(searchTrigger()).toHaveFocus();
   });
 
   it("is one node across open and close, with the role changing under it", async () => {
@@ -178,7 +163,7 @@ describe("nav shell", () => {
     await waitFor(() => expect(main).not.toHaveAttribute("inert"));
   });
 
-  it("both triggers point at the panel and report their own expanded state", async () => {
+  it("the trigger points at the panel and reports its expanded state", async () => {
     const user = userEvent.setup();
     renderApp();
 

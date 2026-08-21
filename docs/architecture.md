@@ -33,9 +33,10 @@ src/
 │   ├── nav/               # The bar and the panel it expands into — one node, two roles
 │   │   ├── index.tsx            # shell: role swap, focus return, Escape, scrim, hold-until-settled
 │   │   ├── contract.ts          # placement table + geometry + ids; what the browser suite asserts
-│   │   ├── nav-bar.tsx          # bar contents: the mark and the two triggers, four geometries
-│   │   ├── nav-panel.tsx        # field, Menu, unit-toggle footer — mounts and unmounts with open
+│   │   ├── nav-bar.tsx          # bar contents: the mark, search trigger, unit switch
+│   │   ├── nav-panel.tsx        # field + Menu — mounts and unmounts with open
 │   │   ├── nav-trigger.tsx      # icon button, aria-expanded / aria-controls
+│   │   ├── nav-unit-toggle.tsx  # °C / °F, along the bar's long axis, at every placement
 │   │   ├── pending-selection.ts # pure: does the panel hold, close, or show the error inline
 │   │   └── use-nav-placement.ts # three matchMedia subscriptions → NavPlacement
 │   ├── search-bar/        # Composite search input — single Input + useSearchMenu state machine + one Menu renderer
@@ -99,6 +100,7 @@ src/
 - **`useReversibleHistory` owns the remove + undo + toast story.** Composes `useHistory` + `useUndo` and the sonner toast call so App.tsx gets a single function per destructive action (`removeWithUndo`, `clearAllWithUndo`). The ordering invariant (mutate → stage → toast → wire) is sealed inside the hook; sonner is hard-wired because it's the project's only toast lib and this file is the seam for any swap. See RFC 010.
 - **Search bar — one Input, one state machine, one renderer.** `useSearchMenu` owns input value and selectedKey; `buildMenuModel` is the pure branching ladder (recents / keep-typing / suggestions / no-results / actions) tested in isolation; `<Menu>` renders the model with breakpoint-driven CSS — no `variant` prop. The default focused row is the first city match on both platforms, so Enter always runs the obvious target (no "Select a city from the list" prompt). See RFC 011. Issue 010 made the hook controlled and moved the field into the nav panel: there is no input in the closed chrome, so there is no in-flow wrapper, no mobile overlay and no Cancel button.
 - **The nav bar is the menu.** One `position: fixed` element over the sky layer, on the bottom edge below 768, the top edge to 1023 and a left rail above that. Opening springs its box from `barGeometry` to `panelGeometry` — fullscreen below 1280, a 420 px rail beside the grid above it — and swaps `<nav aria-label="Main">` for `role="dialog" aria-modal="true"` on the same node. Radix `Dialog` is not used because it portals its content and owns the mount, which would make the panel a different element from the bar. `<main>` carries `inert` while the panel is open, so no focus trap is needed. The placement table, the pixel geometry and the element ids live in `src/components/nav/contract.ts` and are asserted against real `getBoundingClientRect()` numbers by the `browser` vitest project. See issue 010.
+- **The unit switch is in the bar, at every placement.** °C / °F are two controls of the nav's own 44 px icon-button family, laid along the bar's long axis — a column on the rail, a row on the top and bottom bars — in the trailing group beside the search trigger. The active well is one node moving between them under `layoutId`, so the pair reads as one control. There is no settings intent: it opened the same panel as search and differed only in where focus landed, and the one thing it existed for — the panel's unit-toggle footer — is now visible without opening anything.
 - **Selecting a city holds the panel open until the query settles.** `resolveHold` in `src/components/nav/pending-selection.ts` is pure: it waits for the URL to catch up with the selection, then for the query behind it. Success collapses the panel; any error keeps it up and renders the message where `search-error.tsx` renders it. `not_found`, `invalid_query` and `quota_exceeded` never retry, so a city that does not exist settles in one round trip.
 
 ## Gotchas

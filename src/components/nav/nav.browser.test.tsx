@@ -88,6 +88,19 @@ describe.each(WIDTHS)("nav geometry at %ipx", (width) => {
     });
   });
 
+  it("keeps the mark inside the bar, at its leading corner", async () => {
+    renderApp();
+
+    const mark = document.querySelector("h1")!;
+    await whenSettled((bar) => {
+      const rect = mark.getBoundingClientRect();
+      expect(rect.left).toBeGreaterThanOrEqual(bar.left);
+      expect(rect.right).toBeLessThanOrEqual(bar.right);
+      expect(rect.top).toBeGreaterThanOrEqual(bar.top);
+      expect(rect.bottom).toBeLessThanOrEqual(bar.bottom);
+    });
+  });
+
   it(`opens to a ${placement.panel} panel`, async () => {
     renderApp();
     screen.getByRole("button", { name: "Search" }).click();

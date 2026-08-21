@@ -21,11 +21,11 @@ describe("App (smoke)", () => {
     expect(screen.getByRole("heading", { name: /what's the weather/i })).toBeInTheDocument();
   });
 
-  it("closed, the bar is a nav carrying the two triggers and no field", () => {
+  it("closed, the bar is a nav carrying the trigger, the unit switch and no field", () => {
     renderApp();
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Units" })).toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 });
