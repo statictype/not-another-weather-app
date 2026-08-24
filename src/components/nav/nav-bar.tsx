@@ -18,8 +18,8 @@ export function NavBar({ placement, isOpen, onOpenSearch, searchRef }: NavBarPro
   return (
     <div
       className={cn(
-        "flex h-full w-full items-center justify-end gap-1",
-        isRail ? "flex-col py-1.5" : "flex-row px-1.5",
+        "flex h-full w-full items-center justify-end gap-4",
+        isRail ? "flex-col" : "flex-row",
       )}
     >
       <NavTrigger
