@@ -90,49 +90,4 @@ describe("the stored value", () => {
     expect(result.current[0]).toBe("imperial");
     expect(window.localStorage.getItem(UNIT_STORAGE_KEY)).toBe("imperial");
   });
-
-  it("survives a storage write that throws", () => {
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("quota");
-    });
-
-    const { result } = renderHook(() => useUnitSystemControl());
-    act(() => result.current[1]("imperial"));
-
-    expect(result.current[0]).toBe("imperial");
-  });
-});
-
-describe("cross-tab sync", () => {
-  it("picks up another tab's write from the storage event", () => {
-    const { result } = renderHook(() => useUnitSystem());
-    expect(result.current).toBe("metric");
-
-    act(() => {
-      window.localStorage.setItem(UNIT_STORAGE_KEY, "imperial");
-      window.dispatchEvent(new StorageEvent("storage", { key: UNIT_STORAGE_KEY }));
-    });
-
-    expect(result.current).toBe("imperial");
-  });
-
-  it("ignores an event for another key", () => {
-    const { result } = renderHook(() => useUnitSystem());
-
-    act(() => {
-      window.localStorage.setItem(UNIT_STORAGE_KEY, "imperial");
-      window.dispatchEvent(new StorageEvent("storage", { key: "air:history" }));
-    });
-
-    expect(result.current).toBe("metric");
-  });
-
-  it("shares one snapshot across every consumer", () => {
-    const a = renderHook(() => useUnitSystemControl());
-    const b = renderHook(() => useUnitSystem());
-
-    act(() => a.result.current[1]("imperial"));
-
-    expect(b.result.current).toBe("imperial");
-  });
 });

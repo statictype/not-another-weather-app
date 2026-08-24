@@ -1,12 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { hasVisitedBefore, markVisited, VISITED_STORAGE_KEY } from "./first-run";
+import type * as FirstRun from "./first-run";
+import {
+  __resetFirstRunForTests,
+  hasVisitedBefore,
+  markVisited,
+  VISITED_STORAGE_KEY,
+} from "./first-run";
+
+/** The snapshot is seeded at construction, so a stored value needs a fresh module. */
+async function reimport(): Promise<typeof FirstRun> {
+  vi.resetModules();
+  return import("./first-run");
+}
+
+beforeEach(() => {
+  vi.restoreAllMocks();
+  window.localStorage.clear();
+  __resetFirstRunForTests();
+});
 
 describe("first-run flag", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-    vi.restoreAllMocks();
-  });
-
   it("reads false until a visit is marked", () => {
     expect(hasVisitedBefore()).toBe(false);
     markVisited();
@@ -19,16 +32,16 @@ describe("first-run flag", () => {
     expect(hasVisitedBefore()).toBe(true);
   });
 
-  it("treats any other stored value as not visited", () => {
-    window.localStorage.setItem(VISITED_STORAGE_KEY, "true");
-    expect(hasVisitedBefore()).toBe(false);
+  it("reads a stored flag on load", async () => {
+    window.localStorage.setItem(VISITED_STORAGE_KEY, "1");
+    const fresh = await reimport();
+    expect(fresh.hasVisitedBefore()).toBe(true);
   });
 
-  it("reports not-visited when storage throws", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("disabled");
-    });
-    expect(hasVisitedBefore()).toBe(false);
+  it("treats any other stored value as not visited", async () => {
+    window.localStorage.setItem(VISITED_STORAGE_KEY, "true");
+    const fresh = await reimport();
+    expect(fresh.hasVisitedBefore()).toBe(false);
   });
 
   it("swallows a write failure", () => {

@@ -1,6 +1,5 @@
-import { useSyncExternalStore } from "react";
 import { addHistoryItem, clearHistory, removeHistoryItem, restoreHistoryItems } from "./reducer";
-import { getServerSnapshot, getSnapshot, subscribe, writeToStorage } from "./store";
+import { historyStore } from "./store";
 import type { HistoryItem } from "./types";
 
 export interface UseHistoryReturn {
@@ -12,13 +11,13 @@ export interface UseHistoryReturn {
 }
 
 export function useHistory(): UseHistoryReturn {
-  const history = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const history = historyStore.use();
 
   return {
     history,
-    add: (item) => writeToStorage(addHistoryItem(getSnapshot(), item)),
-    remove: (id) => writeToStorage(removeHistoryItem(getSnapshot(), id)),
-    clear: () => writeToStorage(clearHistory()),
-    restore: (items) => writeToStorage(restoreHistoryItems(getSnapshot(), items)),
+    add: (item) => historyStore.set(addHistoryItem(historyStore.get(), item)),
+    remove: (id) => historyStore.set(removeHistoryItem(historyStore.get(), id)),
+    clear: () => historyStore.set(clearHistory()),
+    restore: (items) => historyStore.set(restoreHistoryItems(historyStore.get(), items)),
   };
 }

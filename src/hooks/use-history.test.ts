@@ -10,6 +10,7 @@ import {
   restoreHistoryItems,
   useHistory,
 } from "./use-history";
+import { STORAGE_KEY as HISTORY_STORAGE_KEY } from "./use-history/types";
 
 beforeEach(() => {
   __resetHistoryStoreForTests();
@@ -162,17 +163,22 @@ describe("useHistory", () => {
     expect(result.current.history).toEqual([]);
   });
 
-  it("syncs across multiple hook instances", () => {
-    const a = renderHook(() => useHistory());
-    const b = renderHook(() => useHistory());
+  it("keeps only well-formed items out of a stored array", () => {
+    const { result } = renderHook(() => useHistory());
 
     act(() => {
-      a.result.current.add({ query: "London", displayName: "London, UK" });
+      window.localStorage.setItem(
+        HISTORY_STORAGE_KEY,
+        JSON.stringify([
+          { id: "a", query: "Paris", displayName: "Paris, FR", addedAt: 1 },
+          { id: "b", query: "London" },
+          "not an object",
+        ]),
+      );
+      window.dispatchEvent(new StorageEvent("storage", { key: HISTORY_STORAGE_KEY }));
     });
 
-    expect(a.result.current.history).toHaveLength(1);
-    expect(b.result.current.history).toHaveLength(1);
-    expect(b.result.current.history[0]?.query).toBe("London");
+    expect(result.current.history.map((i) => i.id)).toEqual(["a"]);
   });
 
   it("persists across hook unmount/remount via localStorage", () => {

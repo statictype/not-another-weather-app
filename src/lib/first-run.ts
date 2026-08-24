@@ -1,3 +1,5 @@
+import { createPersistentStore } from "./persistent-store";
+
 /**
  * Separates a first visit from a visit that cleared its history. History alone
  * cannot tell them apart — both read as an empty list — so this flag is written
@@ -5,26 +7,21 @@
  */
 export const VISITED_STORAGE_KEY = "air:visited";
 
-/** Read at call time, not module load: the flag is written during the session. */
-export function hasVisitedBefore(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.localStorage.getItem(VISITED_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
+const firstRunStore = createPersistentStore<boolean>({
+  key: VISITED_STORAGE_KEY,
+  decode: (raw) => (raw === "1" ? true : null),
+  encode: () => "1",
+  fallback: () => false,
+});
 
-export function __resetFirstRunForTests(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(VISITED_STORAGE_KEY);
+export function hasVisitedBefore(): boolean {
+  return firstRunStore.get();
 }
 
 export function markVisited(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(VISITED_STORAGE_KEY, "1");
-  } catch {
-    // Quota exceeded or storage disabled — the first-run state shows again.
-  }
+  firstRunStore.set(true);
+}
+
+export function __resetFirstRunForTests(): void {
+  firstRunStore.reset();
 }

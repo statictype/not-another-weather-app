@@ -84,6 +84,21 @@ from `query.data` once `query.isSuccess` flips true. All such effects
 in this codebase must also check `!query.isPlaceholderData` (see
 above). History-commit is the only live instance.
 
+**Persistent store** — a `localStorage`-backed `useSyncExternalStore`
+source, built by `createPersistentStore` in
+`src/lib/persistent-store.ts`. Three exist: history
+(`src/hooks/use-history/store.ts`), the unit system
+(`src/hooks/use-unit-system.ts`) and the first-run flag
+(`src/lib/first-run.ts`). An adapter supplies a key, a `decode` /
+`encode` pair and a `fallback`; the store owns the cached snapshot, the
+cross-tab `storage` listener filtered on that key, the failure policy —
+a corrupt or rejected value reads as absent and falls back, a failed
+write keeps the in-memory value — and the server snapshot, which is a
+separate option because the unit system serves `metric` while its
+client fallback derives from `navigator.language`'s region.
+`createSubscription` (`src/lib/external-store.ts`) is the listener
+primitive underneath.
+
 ---
 
 ## Errors
