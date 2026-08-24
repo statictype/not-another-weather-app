@@ -14,6 +14,7 @@ import { defaultMessage, type WeatherErrorKind } from "@/lib/errors";
 import { airComfort, beaufort } from "./air-comfort";
 import { normalizeSeverity, sortAndCapAlerts } from "./alerts";
 import { WeatherApiError } from "./errors";
+import { foldAscii, restoreFromQuery, upstreamQuery } from "./fold";
 import { distance, pressure, speed, temperature } from "./format";
 import { precipAmountPair, precipPair } from "./precip";
 
@@ -218,30 +219,31 @@ async function fetchUpstream<S extends z.ZodType>(
 }
 
 export async function fetchCurrent(
+  resolved: string,
   query: string,
   apiKey: string,
   signal?: AbortSignal,
 ): Promise<WeatherCurrent> {
   const url = new URL(UPSTREAM_CURRENT);
   url.searchParams.set("key", apiKey);
-  url.searchParams.set("q", query);
+  url.searchParams.set("q", resolved);
   url.searchParams.set("aqi", "no");
 
   const raw = await fetchUpstream(url, UpstreamCurrentResponseSchema, signal);
   return {
-    location: shapeLocation(raw.location),
+    location: shapeLocation(raw.location, query),
     current: shapeCurrent(raw.current),
   };
 }
 
 export async function fetchForecast(
-  query: string,
+  resolved: string,
   apiKey: string,
   signal?: AbortSignal,
 ): Promise<WeatherForecast> {
   const url = new URL(UPSTREAM_FORECAST);
   url.searchParams.set("key", apiKey);
-  url.searchParams.set("q", query);
+  url.searchParams.set("q", resolved);
   url.searchParams.set("days", FORECAST_DAYS);
   url.searchParams.set("aqi", "yes");
   url.searchParams.set("alerts", "yes");
@@ -264,9 +266,9 @@ export async function fetchForecast(
   };
 }
 
-function shapeLocation(raw: UpstreamLocation): WeatherLocation {
+function shapeLocation(raw: UpstreamLocation, query: string): WeatherLocation {
   return {
-    name: raw.name,
+    name: restoreFromQuery(raw.name, query),
     region: raw.region,
     country: raw.country,
     localTime: raw.localtime,
@@ -383,7 +385,24 @@ function isTrue(flag: number | null | undefined): boolean {
   return flag === 1;
 }
 
+/** The one place a query is matched against upstream's location index — the
+ *  autocomplete list and the id both weather tiers fetch come out of it. */
 export async function fetchSearch(
+  query: string,
+  apiKey: string,
+  signal?: AbortSignal,
+): Promise<SearchResult[]> {
+  const asked = upstreamQuery(query);
+  let hits = await searchUpstream(asked, apiKey, signal);
+  const folded = foldAscii(query);
+  // `łódź` has no record under its own spelling; `lodz` does.
+  if (hits.length === 0 && asked !== folded) {
+    hits = await searchUpstream(folded, apiKey, signal);
+  }
+  return hits.map((hit) => ({ ...hit, name: restoreFromQuery(hit.name, query) }));
+}
+
+async function searchUpstream(
   query: string,
   apiKey: string,
   signal?: AbortSignal,

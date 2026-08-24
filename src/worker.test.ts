@@ -128,6 +128,36 @@ const upstreamAlert = {
   instruction: "Secure loose objects.",
 };
 
+const upstreamSearchHit = {
+  id: 2801268,
+  name: "London",
+  region: "City of London, Greater London",
+  country: "United Kingdom",
+  lat: 51.52,
+  lon: -0.11,
+  url: "london-city-of-london-greater-london-united-kingdom",
+};
+
+/** The `q` a Worker fetch put on the wire. */
+function sentQuery(path: string): string {
+  return new URLSearchParams(path.slice(path.indexOf("?"))).get("q") ?? "";
+}
+
+/** Every weather request resolves its query to a location id first. */
+function mockResolve(hits: unknown[] = [upstreamSearchHit]): void {
+  fetchMock
+    .get("https://api.weatherapi.com")
+    .intercept({ path: (p) => p.startsWith("/v1/search.json") })
+    .reply(200, hits);
+}
+
+function mockSearchFor(query: string, hits: unknown[]): void {
+  fetchMock
+    .get("https://api.weatherapi.com")
+    .intercept({ path: (p) => p.startsWith("/v1/search.json") && sentQuery(p) === query })
+    .reply(200, hits);
+}
+
 beforeAll(() => {
   fetchMock.activate();
   fetchMock.disableNetConnect();
@@ -139,6 +169,7 @@ afterEach(() => {
 
 describe("Worker /api/weather (current)", () => {
   it("returns a shaped current DTO and marks the response as MISS", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -181,6 +212,7 @@ describe("Worker /api/weather (current)", () => {
   });
 
   it("ships no raw Celsius or kph — the readings render, their raw form does not", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -204,6 +236,7 @@ describe("Worker /api/weather (current)", () => {
   });
 
   it("returns 404 with not_found kind for upstream code 1006", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -215,6 +248,7 @@ describe("Worker /api/weather (current)", () => {
   });
 
   it("returns 429 with quota_exceeded for upstream code 2007", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -230,6 +264,7 @@ describe("Worker /api/weather (current)", () => {
       current: { temp_c: unknown };
     };
     broken.current.temp_c = "hot";
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -243,6 +278,7 @@ describe("Worker /api/weather (current)", () => {
   });
 
   it("collapses unknown upstream errors to the generic upstream kind without leaking vendor detail", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -262,6 +298,7 @@ describe("Worker /api/weather (current)", () => {
   });
 
   it("caches a successful response and serves the second call as HIT", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -276,6 +313,7 @@ describe("Worker /api/weather (current)", () => {
   });
 
   it("normalizes the query so casing / whitespace variants share one cache entry", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/current.json") })
@@ -294,6 +332,7 @@ describe("Worker /api/weather (current)", () => {
 
 describe("Worker /api/weather/forecast", () => {
   it("returns today + 3-day forecast + astro, and marks MISS", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -329,6 +368,7 @@ describe("Worker /api/weather/forecast", () => {
 
   it("requests alerts from upstream", async () => {
     let seenPath = "";
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({
@@ -349,6 +389,7 @@ describe("Worker /api/weather/forecast", () => {
   });
 
   it("shapes the hourly precipitation fields", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -392,6 +433,7 @@ describe("Worker /api/weather/forecast", () => {
       delete day0.hour?.[0]?.[key];
     }
 
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -418,6 +460,7 @@ describe("Worker /api/weather/forecast", () => {
   });
 
   it("returns an empty alerts array when upstream omits the block entirely", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -429,6 +472,7 @@ describe("Worker /api/weather/forecast", () => {
   });
 
   it("returns an empty alerts array when the block is present but empty", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -440,6 +484,7 @@ describe("Worker /api/weather/forecast", () => {
   });
 
   it("normalizes alert severity and sorts worst-first", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -466,6 +511,7 @@ describe("Worker /api/weather/forecast", () => {
   });
 
   it("caps alerts at five and drops the fields a reader cannot act on", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -500,6 +546,7 @@ describe("Worker /api/weather/forecast", () => {
   });
 
   it("fills missing alert strings rather than rejecting the response", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -524,6 +571,7 @@ describe("Worker /api/weather/forecast", () => {
   });
 
   it("caches forecast responses independently from current", async () => {
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -548,6 +596,7 @@ describe("Worker /api/weather/forecast", () => {
     };
     // biome-ignore lint/style/noNonNullAssertion: fixture has three days
     broken.forecast.forecastday[0]!.day.mintemp_c = null;
+    mockResolve();
     fetchMock
       .get("https://api.weatherapi.com")
       .intercept({ path: (p) => p.startsWith("/v1/forecast.json") })
@@ -558,6 +607,138 @@ describe("Worker /api/weather/forecast", () => {
     const body = (await res.json()) as { error: { kind: string; message: string } };
     expect(body.error.kind).toBe("upstream");
     expect(body.error.message.toLowerCase()).not.toContain("mintemp");
+  });
+});
+
+describe("Worker location resolution", () => {
+  it("asks for weather by the resolved id, never by the viewer's string", async () => {
+    let asked = "";
+    mockResolve([{ ...upstreamSearchHit, id: 1772504, name: "Tromso" }]);
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({
+        path: (path) => {
+          if (!path.startsWith("/v1/current.json")) return false;
+          asked = sentQuery(path);
+          return true;
+        },
+      })
+      .reply(200, upstreamCurrentFixture);
+
+    const res = await SELF.fetch(
+      `https://example.com/api/weather?q=${encodeURIComponent("Tromsø, Norway")}`,
+    );
+    expect(res.status).toBe(200);
+    expect(asked).toBe("id:1772504");
+  });
+
+  it("folds an accented query before it reaches the location index", async () => {
+    let asked = "";
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({
+        path: (path) => {
+          if (!path.startsWith("/v1/search.json")) return false;
+          asked = sentQuery(path);
+          return true;
+        },
+      })
+      .reply(200, [upstreamSearchHit]);
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (path) => path.startsWith("/v1/current.json") })
+      .reply(200, upstreamCurrentFixture);
+
+    await SELF.fetch(`https://example.com/api/weather?q=${encodeURIComponent("Malmö, Sweden")}`);
+    expect(asked).toBe("malmo, sweden");
+  });
+
+  it("hands back the spelling the viewer asked for, cased as upstream sent it", async () => {
+    mockResolve([{ ...upstreamSearchHit, id: 518116, name: "Medellin" }]);
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (path) => path.startsWith("/v1/current.json") })
+      .reply(200, {
+        ...upstreamCurrentFixture,
+        location: { ...upstreamLocation, name: "Medellin", country: "Colombia" },
+      });
+
+    const res = await SELF.fetch(
+      `https://example.com/api/weather?q=${encodeURIComponent("Medellín, Colombia")}`,
+    );
+    const body = (await res.json()) as { location: { name: string } };
+    expect(body.location.name).toBe("Medellín");
+  });
+
+  it("resolves once for both tiers, so current and forecast cannot land on different cities", async () => {
+    mockResolve([{ ...upstreamSearchHit, id: 769250, name: "Krakow" }]);
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (path) => path.startsWith("/v1/current.json") })
+      .reply(200, upstreamCurrentFixture);
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({ path: (path) => path.startsWith("/v1/forecast.json") })
+      .reply(200, upstreamForecastFixture);
+
+    const city = encodeURIComponent("Kraków, Poland");
+    const current = await SELF.fetch(`https://example.com/api/weather?q=${city}`);
+    const forecast = await SELF.fetch(`https://example.com/api/weather/forecast?q=${city}`);
+
+    expect(current.status).toBe(200);
+    expect(forecast.status).toBe(200);
+    // One search interceptor for two tiers: afterEach fails on a pending one.
+  });
+
+  it("returns not_found without asking for weather when the index has no hit", async () => {
+    mockResolve([]);
+
+    const res = await SELF.fetch("https://example.com/api/weather?q=Zzznowherecity");
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as { error: { kind: string } }).error.kind).toBe("not_found");
+  });
+
+  it("passes coordinates through untouched", async () => {
+    let asked = "";
+    fetchMock
+      .get("https://api.weatherapi.com")
+      .intercept({
+        path: (path) => {
+          if (!path.startsWith("/v1/current.json")) return false;
+          asked = sentQuery(path);
+          return true;
+        },
+      })
+      .reply(200, upstreamCurrentFixture);
+
+    await SELF.fetch("https://example.com/api/weather?q=69.649,18.956");
+    expect(asked).toBe("69.649,18.956");
+  });
+});
+
+describe("Worker /api/search", () => {
+  it("restores the diacritics the viewer typed onto each suggestion", async () => {
+    mockSearchFor("munchen, germany", [
+      { ...upstreamSearchHit, id: 604719, name: "Munchen", region: "Bayern", country: "Germany" },
+    ]);
+
+    const res = await SELF.fetch(
+      `https://example.com/api/search?q=${encodeURIComponent("München, Germany")}`,
+    );
+    const body = (await res.json()) as Array<{ name: string; region: string }>;
+    expect(body[0]?.name).toBe("München");
+    expect(body[0]?.region).toBe("Bayern");
+  });
+
+  it("retries folded when the accented spelling has no record", async () => {
+    mockSearchFor("łódź", []);
+    mockSearchFor("lodz", [
+      { ...upstreamSearchHit, id: 1966663, name: "Lodz", region: "", country: "Poland" },
+    ]);
+
+    const res = await SELF.fetch(`https://example.com/api/search?q=${encodeURIComponent("łódź")}`);
+    const body = (await res.json()) as Array<{ name: string }>;
+    expect(body[0]?.name).toBe("Łódź");
   });
 });
 

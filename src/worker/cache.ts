@@ -2,9 +2,10 @@ export { normalizeQuery } from "@/lib/query";
 
 export const CACHE_TTL_CURRENT = 600; // 10 min
 export const CACHE_TTL_FORECAST = 3600; // 1 h
+export const CACHE_TTL_LOCATION = 86400; // 24 h
 
 const CACHE_KEY_HOST = "https://air-cache.local";
-const CACHE_VERSION = "10";
+const CACHE_VERSION = "11";
 
 /** A synthetic Request used as the Cache API key; `air-cache.local` is never fetched. */
 export function buildCacheKey(path: string, normalizedQuery: string): Request {
