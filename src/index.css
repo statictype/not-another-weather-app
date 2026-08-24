@@ -641,6 +641,67 @@ html, body { background: oklch(0.97 0.02 230); }
   opacity: 1;
 }
 
+/* The unit switch: a track holding two slots, and one plate that moves
+   between them. Long axis is set by the bar; the track only pads it. */
+.unit-switch {
+  padding: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,
+    #1732560f,
+    #17325605);
+  box-shadow:
+    inset 0 0 0 1px #17325614,
+    inset 0 1px 2px #1732560d;
+}
+.night .unit-switch {
+  background: linear-gradient(180deg,
+    #05080f3d,
+    #05080f24);
+  box-shadow:
+    inset 0 0 0 1px #ffffff12,
+    inset 0 1px 2px #0000003d;
+}
+
+.unit-switch-option {
+  border-radius: 999px;
+  color: #17325678;
+}
+.unit-switch-option:hover {
+  color: #173256b8;
+}
+.unit-switch-option[aria-pressed="true"] {
+  color: var(--primary);
+}
+.night .unit-switch-option {
+  color: #ffffff70;
+}
+.night .unit-switch-option:hover {
+  color: #ffffffc4;
+}
+.night .unit-switch-option[aria-pressed="true"] {
+  color: #a8c7fa;
+}
+
+.unit-switch-plate {
+  border-radius: inherit;
+  background: linear-gradient(180deg,
+    #ffffffed,
+    #ffffffc9);
+  box-shadow:
+    inset 0 0 0 1px #ffffffff,
+    0 1px 1px #17325610,
+    0 3px 8px -4px #1732561c;
+}
+.night .unit-switch-plate {
+  background: linear-gradient(180deg,
+    #ffffff1f,
+    #ffffff0d);
+  box-shadow:
+    inset 0 0 0 1px #ffffff29,
+    inset 0 1px 0 #ffffff24,
+    0 2px 6px -2px #00000059;
+}
+
 .search-focus-pill {
   background: oklch(0.55 0.04 240 / 0.08);
   box-shadow: inset 0 0 0 1px oklch(0.55 0.04 240 / 0.06);

@@ -11,10 +11,10 @@ const OPTIONS: readonly { system: UnitSystem; glyph: string; label: string }[] =
 ];
 
 /**
- * The unit switch, in the bar at every placement. Two controls of the nav's own
- * 44 px family, laid along the bar's long axis — a column on the rail, a row on
- * the top and bottom bars. The active well is one node moving between them, so
- * the switch reads as one control rather than two independent buttons.
+ * The unit switch, in the bar at every placement. Two 44 px slots inside one
+ * track, laid along the bar's long axis — stacked on the rail, side by side on
+ * the top and bottom bars. The plate behind the active slot is one node moving
+ * between the two, so the switch reads as one control rather than two buttons.
  */
 export function NavUnitToggle({ vertical }: { vertical: boolean }) {
   const [system, setSystem] = useUnitSystemControl();
@@ -23,7 +23,7 @@ export function NavUnitToggle({ vertical }: { vertical: boolean }) {
     <div
       role="group"
       aria-label="Units"
-      className={cn("flex shrink-0 items-center gap-0.5", vertical ? "flex-col" : "flex-row")}
+      className={cn("unit-switch flex shrink-0 items-center", vertical ? "flex-col" : "flex-row")}
     >
       {OPTIONS.map((option) => {
         const active = system === option.system;
@@ -36,21 +36,20 @@ export function NavUnitToggle({ vertical }: { vertical: boolean }) {
             onClick={() => setSystem(option.system)}
             style={{ width: ICON_BUTTON, height: ICON_BUTTON }}
             className={cn(
-              "relative flex shrink-0 items-center justify-center rounded-full outline-none",
+              "unit-switch-option relative flex shrink-0 items-center justify-center",
               "transition-[color,transform] duration-150 active:scale-95",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-              active ? "text-foreground" : "text-foreground/55 hover:text-foreground",
+              "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
             )}
           >
             {active && (
               <motion.span
-                layoutId="nav-unit-well"
+                layoutId="nav-unit-plate"
                 aria-hidden="true"
-                className="bg-foreground/10 absolute inset-0 rounded-full"
+                className="unit-switch-plate absolute inset-0"
                 transition={PILL_SPRING}
               />
             )}
-            <span className="relative text-[13px] font-medium tracking-tight tabular-nums">
+            <span className="relative text-[13px] font-semibold tracking-tight tabular-nums">
               {option.glyph}
             </span>
           </button>
