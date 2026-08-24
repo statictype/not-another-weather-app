@@ -57,8 +57,9 @@ describe("formatClock", () => {
     expect(formatClock("07:48 PM", "en-US")).toBe("7:48 pm");
   });
 
-  it("passes an unparseable string through", () => {
-    expect(formatClock("No moonrise", "en-GB")).toBe("No moonrise");
+  it("dashes a string with no clock in it", () => {
+    expect(formatClock("Does not rise today", "en-GB")).toBe("—");
+    expect(formatClock("No moonrise", "en-GB")).toBe("—");
   });
 });
 

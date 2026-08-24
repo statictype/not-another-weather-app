@@ -82,10 +82,12 @@ export function formatWeekday(
   return format(parsed, { weekday }, clockFor(locale).locale);
 }
 
-/** Astro times arrive as upstream's `"06:23 AM"`, which carries no date. */
+/** Astro times arrive as upstream's `"06:23 AM"`, which carries no date. Above
+ *  the polar circles a body can skip a rise or a set, and upstream sends a
+ *  sentence — `"Does not rise today"` — where the clock would be. */
 export function formatClock(time: string, locale = DEVICE_LOCALE): string {
   const minutes = parseClockMinutes(time);
-  if (minutes === null) return time;
+  if (minutes === null) return DASH;
   const config = clockFor(locale);
   const at = Date.UTC(2000, 0, 1, Math.floor(minutes / 60), minutes % 60);
   return lowerMeridiem(
