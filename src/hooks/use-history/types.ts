@@ -5,5 +5,5 @@ export interface HistoryItem {
   addedAt: number;
 }
 
-export const MAX_HISTORY = 6;
+export const MAX_HISTORY = 10;
 export const STORAGE_KEY = "air:history:v1";
