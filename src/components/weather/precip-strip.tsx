@@ -65,7 +65,7 @@ function Line({
     <span
       role="img"
       aria-label={`${name}, ${chance} percent${amount ? `, ${amount.spoken}` : ""}`}
-      className="fc-line flex min-h-5 flex-wrap items-center gap-1.5 text-sm text-foreground/70 tabular-nums"
+      className="fc-line flex min-h-5 items-center gap-1.5 text-sm text-foreground/70 tabular-nums"
     >
       <span className="flex h-5 items-center gap-1.5">
         <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />

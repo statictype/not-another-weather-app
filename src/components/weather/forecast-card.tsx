@@ -17,13 +17,15 @@ const MAX_DAYS = 4;
 
 /** Free keys cap the payload at 3 days total, so today plus 2 future days is
  *  what lands; a plan upgrade brings a fourth, and the columns tighten to fit
- *  it. Static strings, because Tailwind scans source text and cannot see an
- *  interpolated column count. */
+ *  it. Every column carries the same padding on both sides and the grid hands
+ *  the outer half back with a matching negative margin, so all columns measure
+ *  the same width. Static strings, because Tailwind scans source text and
+ *  cannot see an interpolated column count. */
 const LAYOUTS: Record<number, string> = {
-  1: "sm:grid-cols-1 sm:[&>*]:px-6",
-  2: "sm:grid-cols-2 sm:[&>*]:px-6",
-  3: "sm:grid-cols-3 sm:[&>*]:px-4",
-  4: "sm:grid-cols-4 sm:[&>*]:px-3",
+  1: "sm:-mx-6 sm:grid-cols-1 sm:[&>*]:px-6",
+  2: "sm:-mx-6 sm:grid-cols-2 sm:[&>*]:px-6",
+  3: "sm:-mx-4 sm:grid-cols-3 sm:[&>*]:px-4",
+  4: "sm:-mx-3 sm:grid-cols-4 sm:[&>*]:px-3",
 };
 
 /** Matches the current plan's 3 days, so the common case does not reflow. */
@@ -44,8 +46,6 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
           "-my-3 grid grid-cols-1 divide-y divide-foreground/10",
           "sm:my-0 sm:divide-y-0",
           "sm:[&>*:not(:last-child)]:border-r sm:[&>*:not(:last-child)]:border-foreground/10",
-          // The outer columns give their outward padding back to the tile's own.
-          "sm:[&>*:first-child]:ps-0 sm:[&>*:last-child]:pe-0",
           layout,
         )}
       >
