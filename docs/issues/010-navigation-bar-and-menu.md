@@ -55,14 +55,29 @@ rounded ends. `.glass-panel` treatment.
 | --------------- | --------------------------------------------------- |
 | Bar thickness   | 56 px                                               |
 | Inset from edge | 12 px, plus `env(safe-area-inset-bottom)` below 768 |
-| Icon button     | 44 × 44 (WCAG 2.5.5 Target Size (Enhanced), AAA)    |
+| Control cell    | 44 × 44 (WCAG 2.5.5 Target Size (Enhanced), AAA)    |
+| Cell inset      | 6 px, across the bar and at its ends                |
+| Group gap       | 28 px between the search cell and the unit pair     |
 | Glyph           | 20 px, `strokeWidth` 1.75                           |
+| Unit letter     | 17 px                                               |
 | Radius          | `rounded-full`                                      |
 | Logo box        | 44 × 44                                             |
 | Rail footprint  | 68 px including inset                               |
 
-Within the bar: the mark at the leading edge, the two triggers grouped at the
-trailing edge. On the rail that reads top and bottom respectively.
+Within the bar: the mark at the leading edge, the search trigger and the unit
+switch grouped at the trailing edge. On the rail that reads top and bottom
+respectively.
+
+Every element in the bar — the mark and all three controls — is a 44 px cell
+with a 6 px ring inside the 56 px pill. The ring runs at the bar's ends too, so
+the mark and the last control are centred on the cap they sit in.
+
+The unit switch is `C` and `F`, two buttons in adjacent cells laid along the
+bar's long axis: side by side on the top and bottom bars, stacked on the rail.
+Nothing separates them; the 28 px gap to the search cell is what groups them.
+No control in the bar has a background in any state; the glyphs and letters
+carry `--primary` in day and `#a8c7fa` at night, and the inactive letter drops
+to 35 %.
 
 ### The bar is the menu
 

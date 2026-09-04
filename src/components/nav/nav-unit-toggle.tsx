@@ -1,21 +1,53 @@
-import { motion } from "motion/react";
 import { useUnitSystemControl } from "@/hooks/use-unit-system";
-import { PILL_SPRING } from "@/lib/motion/constants";
 import type { UnitSystem } from "@/lib/units";
 import { cn } from "@/lib/utils";
-import { BAR_THICKNESS } from "./contract";
+import { ICON_BUTTON } from "./contract";
 
-const OPTIONS: readonly { system: UnitSystem; glyph: string; label: string }[] = [
-  { system: "metric", glyph: "°C", label: "Metric units" },
-  { system: "imperial", glyph: "°F", label: "Imperial units" },
-];
+interface Option {
+  system: UnitSystem;
+  glyph: string;
+  /** Leads with the visible character, so the accessible name contains it. */
+  label: string;
+}
+
+const METRIC: Option = { system: "metric", glyph: "C", label: "C, metric units" };
+const IMPERIAL: Option = { system: "imperial", glyph: "F", label: "F, imperial units" };
+
+/** The same 44 px cell the icon buttons use. */
+const LETTER_BOX = { width: ICON_BUTTON, height: ICON_BUTTON } as const;
+
+function UnitLetter({
+  option,
+  active,
+  onSelect,
+}: {
+  option: Option;
+  active: boolean;
+  onSelect: (system: UnitSystem) => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={option.label}
+      aria-pressed={active}
+      onClick={() => onSelect(option.system)}
+      style={LETTER_BOX}
+      className={cn(
+        "unit-switch-option flex shrink-0 items-center justify-center rounded-full outline-none",
+        "text-[17px] leading-none font-normal transition-colors duration-150",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+      )}
+    >
+      {option.glyph}
+    </button>
+  );
+}
 
 /**
- * The unit switch, in the bar at every placement. Two slots the full thickness
- * of the bar, laid along the bar's long axis — stacked on the rail, side by
- * side on the top and bottom bars. The plate behind the active slot is one node
- * moving between the two, so the switch reads as one control rather than two
- * buttons.
+ * The unit switch, in the bar at every placement. Two letters in adjacent
+ * cells, laid along the bar's long axis — side by side on the top and bottom
+ * bars, stacked on the rail. No track and no plate: ink alone says which system
+ * is active.
  */
 export function NavUnitToggle({ vertical }: { vertical: boolean }) {
   const [system, setSystem] = useUnitSystemControl();
@@ -24,38 +56,10 @@ export function NavUnitToggle({ vertical }: { vertical: boolean }) {
     <div
       role="group"
       aria-label="Units"
-      className={cn("unit-switch flex shrink-0 items-center", vertical ? "flex-col" : "flex-row")}
+      className={cn("flex shrink-0 items-center", vertical ? "flex-col" : "flex-row")}
     >
-      {OPTIONS.map((option) => {
-        const active = system === option.system;
-        return (
-          <button
-            key={option.system}
-            type="button"
-            aria-label={option.label}
-            aria-pressed={active}
-            onClick={() => setSystem(option.system)}
-            style={{ width: BAR_THICKNESS, height: BAR_THICKNESS }}
-            className={cn(
-              "unit-switch-option relative flex shrink-0 items-center justify-center",
-              "transition-[color,transform] duration-150 active:scale-95",
-              "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-            )}
-          >
-            {active && (
-              <motion.span
-                layoutId="nav-unit-plate"
-                aria-hidden="true"
-                className="unit-switch-plate absolute inset-1.5"
-                transition={PILL_SPRING}
-              />
-            )}
-            <span className="relative text-[13px] font-normal tracking-tight tabular-nums">
-              {option.glyph}
-            </span>
-          </button>
-        );
-      })}
+      <UnitLetter option={METRIC} active={system === "metric"} onSelect={setSystem} />
+      <UnitLetter option={IMPERIAL} active={system === "imperial"} onSelect={setSystem} />
     </div>
   );
 }

@@ -3,13 +3,12 @@ import type { ComponentProps, Ref } from "react";
 import { cn } from "@/lib/utils";
 import { GLYPH_SIZE, GLYPH_STROKE, ICON_BUTTON, NAV_PANEL_ID } from "./contract";
 
-/** One control family across the bar and the panel header: a 44 px circle, the
- *  glyph at `foreground/70`, a `foreground/6` well on hover. Focus is the 2 px
- *  outline the rest of the app uses. */
+/** One control family across the bar and the panel header: a 44 px circle with
+ *  no background in any state. The glyph rests at 85 % of the nav ink and goes
+ *  to full on hover. Focus is the 2 px outline the rest of the app uses. */
 const NAV_ICON_BUTTON = cn(
-  "flex shrink-0 items-center justify-center rounded-full text-foreground/70 outline-none",
-  "transition-[background-color,color,transform] duration-150",
-  "hover:bg-foreground/6 hover:text-foreground active:scale-95",
+  "nav-icon-button flex shrink-0 items-center justify-center rounded-full outline-none",
+  "transition-[color,transform] duration-150 active:scale-95",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 );
 

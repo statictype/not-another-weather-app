@@ -28,6 +28,9 @@ export const MEDIA_XL = `(min-width: ${BREAKPOINT_XL}px)`;
 export const BAR_THICKNESS = 56;
 export const BAR_INSET = 12;
 export const ICON_BUTTON = 44;
+/** The ring left when a 44 px cell is centred across the 56 px bar. Also the
+ *  cluster's padding at the bar's ends. */
+export const BAR_END_INSET = (BAR_THICKNESS - ICON_BUTTON) / 2;
 export const LOGO_BOX = 44;
 export const GLYPH_SIZE = 20;
 export const GLYPH_STROKE = 1.75;
@@ -133,11 +136,11 @@ export function panelLayer(placement: NavPlacement, containerIsPanel: boolean): 
 }
 
 export function markSlot(placement: NavPlacement, isOpen: boolean): BoxStyle {
-  if (!isOpen) {
-    const bleed = `${BAR_THICKNESS}px`;
-    return { left: "0px", top: "0px", width: bleed, height: bleed };
-  }
   const size = { width: `${LOGO_BOX}px`, height: `${LOGO_BOX}px` };
+  if (!isOpen) {
+    const inset = `${BAR_END_INSET}px`;
+    return { left: inset, top: inset, ...size };
+  }
   const left = `${PANEL_PAD}px`;
   const top = `${PANEL_PAD + (HEADER_ROW - LOGO_BOX) / 2}px`;
   if (placement.panel === "partial") return { left, top, ...size };

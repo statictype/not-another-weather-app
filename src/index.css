@@ -641,64 +641,40 @@ html, body { background: oklch(0.97 0.02 230); }
   opacity: 1;
 }
 
-/* The unit switch: a track holding two slots, and one plate that moves
-   between them. */
-.unit-switch {
-  border-radius: 999px;
-  background: linear-gradient(180deg,
-    #1732560f,
-    #17325605);
-  box-shadow:
-    inset 0 0 0 1px #17325614,
-    inset 0 1px 2px #1732560d;
+/* The nav's ink: the icon glyphs and the unit letters. Day tracks --primary,
+   night is its own ladder. */
+.nav-icon-button {
+  color: color-mix(in oklab, var(--primary) 85%, transparent);
 }
-.night .unit-switch {
-  background: linear-gradient(180deg,
-    #05080f3d,
-    #05080f24);
-  box-shadow:
-    inset 0 0 0 1px #ffffff12,
-    inset 0 1px 2px #0000003d;
+.nav-icon-button:hover {
+  color: var(--primary);
+}
+.night .nav-icon-button {
+  color: #a8c7fad9;
+}
+.night .nav-icon-button:hover {
+  color: #a8c7fa;
 }
 
+/* The pressed rule sits last in each cascade so hovering the active letter
+   does not dim it. */
 .unit-switch-option {
-  border-radius: 999px;
-  color: #17325678;
+  color: color-mix(in oklab, var(--primary) 35%, transparent);
 }
 .unit-switch-option:hover {
-  color: #173256b8;
+  color: color-mix(in oklab, var(--primary) 65%, transparent);
 }
 .unit-switch-option[aria-pressed="true"] {
   color: var(--primary);
 }
 .night .unit-switch-option {
-  color: #ffffff70;
+  color: #a8c7fa59;
 }
 .night .unit-switch-option:hover {
-  color: #ffffffc4;
+  color: #a8c7faa6;
 }
 .night .unit-switch-option[aria-pressed="true"] {
   color: #a8c7fa;
-}
-
-.unit-switch-plate {
-  border-radius: inherit;
-  background: linear-gradient(180deg,
-    #ffffffed,
-    #ffffffc9);
-  box-shadow:
-    inset 0 0 0 1px #ffffffff,
-    0 1px 1px #17325610,
-    0 3px 8px -4px #1732561c;
-}
-.night .unit-switch-plate {
-  background: linear-gradient(180deg,
-    #ffffff0f,
-    #ffffff05);
-  box-shadow:
-    inset 0 0 0 1px #ffffff17,
-    inset 0 1px 0 #ffffff12,
-    0 2px 6px -2px #00000047;
 }
 
 .search-focus-pill {
@@ -1052,8 +1028,13 @@ html, body { background: oklch(0.97 0.02 230); }
   container-type: inline-size;
 }
 
+.fc-line {
+    flex-direction: row;
+    gap: 0.35rem;
+}
 
-@container (max-width: 10rem) {
+
+@media (min-width: 768px) and (max-width: 900px) { 
   .fc-line {
     flex-direction: column;
     gap: 0;
@@ -1065,6 +1046,7 @@ html, body { background: oklch(0.97 0.02 230); }
     height: 2.5rem;
   }
 }
+
 
 .scrollbar-none {
   scrollbar-width: none;

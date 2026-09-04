@@ -2,7 +2,13 @@ import { motion, useIsPresent } from "motion/react";
 import { type PointerEvent as ReactPointerEvent, type ReactNode, use } from "react";
 import logoNightUrl from "@/assets/logo-night.webp";
 import logoUrl from "@/assets/logo.webp";
-import { BAR_FADE_IN, BAR_FADE_OUT, REDUCED_MOTION_FADE } from "@/lib/motion/constants";
+import {
+  BAR_FADE_IN,
+  BAR_FADE_OUT,
+  PANEL_FADE_IN,
+  PANEL_FADE_OUT,
+  REDUCED_MOTION_FADE,
+} from "@/lib/motion/constants";
 import { barLayer, markSlot, panelLayer, panelSafeArea } from "./contract";
 import { NavGeometryContext } from "./nav-geometry";
 
@@ -39,8 +45,8 @@ export function PanelLayer({ children, className, onPointerDown }: LayerProps) {
       layout={reduced ? false : "position"}
       transition={transition}
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: reduced ? REDUCED_MOTION_FADE : { duration: 0.16 } }}
-      exit={{ opacity: 0, transition: reduced ? REDUCED_MOTION_FADE : { duration: 0.14 } }}
+      animate={{ opacity: 1, transition: reduced ? REDUCED_MOTION_FADE : PANEL_FADE_IN }}
+      exit={{ opacity: 0, transition: reduced ? REDUCED_MOTION_FADE : PANEL_FADE_OUT }}
       inert={!isPresent}
       onPointerDown={onPointerDown}
       style={{
